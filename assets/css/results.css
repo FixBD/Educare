@@ -1,0 +1,154 @@
+/*============================================================
+	* Educare results style dev by FixBD
+	* URL: https://github.com/fixbd/educare/assets/css/results.css
+	* Version: v1.0
+	* License - GPL 2.0
+	# Unlimited modify allowed!!!
+============================================================*/
+
+/* Global style */
+.educare_results {
+	max-width: 960px;
+	margin: 28px auto;
+	font-family: Verdana,Arial,sans-serif;
+}
+.educare_results h1,
+.educare_results h2,
+.educare_results h3,
+.results_not_found {
+	text-align: center;
+}
+.educare_results input,
+.educare_results select,
+.educare_results input[type="number"] {
+	width: 100%;
+	margin: 6px 0;
+	padding: 10px;
+	border: 1px solid #aaa;
+	border-radius: 5px;
+	box-sizing: border-box;
+}
+.educare_results .select {
+	display: flex;
+	flex: 1;
+	margin: 12px 0;
+}
+.educare_results .select p  {
+	width: 100%;
+	margin: 12px 0;
+}
+.educare_results .select p:first-child {
+	margin-right: 12px;
+}
+.educare_results .select p:last-child {
+	margin-left: 12px;
+}
+.educare_results button {
+  color: rgba(0,0,0,.8);
+  background-color: #11b570;
+  text-align: center;
+  padding: 16px 20px;
+  margin: 18px auto;
+  font-weight: 700;
+  border: none;
+  border-radius: 4px;  
+  -webkit-transition: all .2s ease-in-out;
+  -moz-transition: all .2s ease-in-out;
+  -ms-transition: all .2s ease-in-out;
+  -o-transition: all .2s ease-in-out;
+  transition: all .2s ease-in-out;
+}
+.educare_results button:hover {
+	-webkit-box-shadow: box-shadow: 3px 3px 12px 4px rgba(0,0,0,.3), inset 0 0 0 transparent;
+  box-shadow: 3px 3px 12px 3px rgba(0,0,0,.3), inset 0 0 0 transparent;
+}
+
+/* Results Passed or failed Style */
+.educare_results .failed,
+.educare_results .success {
+	background: none;
+	padding: 6px;
+}
+.educare_results .failed,
+.educare_results .errnotice b {
+	background: none;
+	color: red;
+}
+.educare_results .success {
+	color: green;
+}
+/* Results not found */
+.educare_results .error {
+	background: rgba(255, 0, 0, 0.2);
+	color: rgba(255, 0, 0, 1.0);
+}
+
+/* Results body & search forms Style */
+.educare_results .results_form,
+.educare_results .result_body {
+	padding: 0 2%;
+	margin: 0 2%;
+	font-size: 16px;
+}
+.educare_results .table_body {
+	overflow-x: auto;
+	margin-bottom: 8px;
+}
+.educare_results .result_body h2,
+.educare_results .result_body h3 {
+	color: white;
+	background: rgba(0,115,0,0.60);
+	padding: 22px;
+	margin: 0;
+}
+.result_body .student_photos {
+	text-align: center;
+}
+.result_body .student_photos img {
+	width: 40%;
+	height: 40%;
+	max-width: 200px;
+	max-height: 200px;
+	padding: 8px;
+	border-radius: 100%;
+}
+.result_body table {
+	background: #eee;
+	width: 100%;
+	text-align: left;
+	border-collapse: collapse;
+}
+.result_body .result_details td,
+.result_body .grade_sheet td,
+.result_body .grade_sheet th {
+	padding: 8px;
+	border: 1px solid rgba(20,20,20,0.10);
+}
+.result_body .grade_sheet th {
+	background: rgba(0,115,0,0.20);
+}
+
+/* Print Style */
+@media print {
+	.no_print {
+	  display: none;
+	}
+	body {
+		width: 900px;
+		padding: 28px
+	}
+	.educare_results,
+	.educare_results_form,
+	.result_body,
+	.results_form,
+	.result_body .student_photos img {
+		margin: 0 auto;
+	}
+	table, th, td {
+		border: 1px solid #ddd;
+	}
+	table {
+    border-collapse: collapse;
+  }
+}
+
