@@ -5,11 +5,9 @@
 	<?php
 	// save forms data
 	educare_save_results();
-	// get results forms for add results
+	// get results forms for add result
 	educare_get_results_forms('', 'Add');
 	?>
 
-</div> <!-- .educare_result -->
-	
-	
-	
+</div>
+

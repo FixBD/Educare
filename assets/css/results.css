@@ -1,10 +1,12 @@
-/*============================================================
+/** ============================================================
 	* Educare results style dev by FixBD
 	* URL: https://github.com/fixbd/educare/assets/css/results.css
-	* Version: v1.0
+	* @since v1.0.0
+	* @Version: v1.2.0
+	* @last-update v1.2.0
 	* License - GPL 2.0
 	# Unlimited modify allowed!!!
-============================================================*/
+============================================================ **/
 
 /* Global style */
 .educare_results {
@@ -15,18 +17,26 @@
 .educare_results h1,
 .educare_results h2,
 .educare_results h3,
-.results_not_found {
+.error_results {
 	text-align: center;
+}
+.error_results {
+	background-color: #ff000010;
+	padding: 5%;
+	border-radius: 5px;
 }
 .educare_results input,
 .educare_results select,
 .educare_results input[type="number"] {
 	width: 100%;
-	margin: 6px 0;
+	margin: 6px 0px;
 	padding: 10px;
-	border: 1px solid #aaa;
+	border: 1px solid rgba(0,0,0,.15);
 	border-radius: 5px;
 	box-sizing: border-box;
+}
+.educare_results input[type="number"] {
+	margin: 6px 0 12px;
 }
 .educare_results .select {
 	display: flex;
@@ -44,7 +54,7 @@
 	margin-left: 12px;
 }
 .educare_results button {
-  color: rgba(0,0,0,.8);
+  color: rgba(255, 255, 255, 0.8);
   background-color: #11b570;
   text-align: center;
   padding: 16px 20px;
@@ -70,7 +80,7 @@
 	padding: 6px;
 }
 .educare_results .failed,
-.educare_results .errnotice b {
+.educare_results .error_notice b {
 	background: none;
 	color: red;
 }
@@ -79,25 +89,31 @@
 }
 /* Results not found */
 .educare_results .error {
-	background: rgba(255, 0, 0, 0.2);
 	color: rgba(255, 0, 0, 1.0);
+	margin: 4%;
 }
 
 /* Results body & search forms Style */
 .educare_results .results_form,
 .educare_results .result_body {
-	padding: 0 2%;
-	margin: 0 2%;
+	padding: 4%;
+	margin: 0 auto;
 	font-size: 16px;
+	max-width: 1280px;
+	border-radius: 8px;
+}
+.educare_results .results_form {
+	background: rgb(0 0 0 / 5%);
+	max-width: 580px;
 }
 .educare_results .table_body {
 	overflow-x: auto;
 	margin-bottom: 8px;
 }
-.educare_results .result_body h2,
-.educare_results .result_body h3 {
+.result_body h2,
+.result_body h3 {
 	color: white;
-	background: rgba(0,115,0,0.60);
+	background: rgba(0, 156, 0, 0.733);
 	padding: 22px;
 	margin: 0;
 }
@@ -121,8 +137,23 @@
 .result_body .result_details td,
 .result_body .grade_sheet td,
 .result_body .grade_sheet th {
+	text-align: center;
 	padding: 8px;
 	border: 1px solid rgba(20,20,20,0.10);
+}
+.result_body .result_details td {
+	text-align: left;
+	padding: 8px 3%;
+}
+.result_body .grade_sheet th:first-child {
+	padding: 0px;
+	min-width: 100%;
+	max-width: 28px;
+}
+.result_body .grade_sheet td:nth-child(2),
+.result_body .grade_sheet th:nth-child(2) {
+	text-align: left;
+	padding: 0 3%;
 }
 .result_body .grade_sheet th {
 	background: rgba(0,115,0,0.20);
@@ -130,11 +161,14 @@
 
 /* Print Style */
 @media print {
+  body * {
+    visibility: hidden;
+  }
 	.no_print {
 	  display: none;
 	}
 	body {
-		width: 900px;
+		width: 960px;
 		padding: 28px
 	}
 	.educare_results,
@@ -143,6 +177,10 @@
 	.results_form,
 	.result_body .student_photos img {
 		margin: 0 auto;
+		width: 50%;
+		height: 10%;
+		max-width: 100px;
+		max-height: 100px;
 	}
 	table, th, td {
 		border: 1px solid #ddd;
@@ -150,5 +188,24 @@
 	table {
     border-collapse: collapse;
   }
+  .result_body, .result_body * {
+    visibility: visible;
+  }
+  .result_body {
+		width: 100%;
+    position: absolute;
+    top: 0;
+		left: 0;
+  }
+	.result_body h3 {
+		color: white !important;
+		background-color: #1db100 !important;
+		-webkit-print-color-adjust: exact; 
+	}
+	.result_body th {
+		background-color: rgba(0,115,0,0.20) !important;
+		-webkit-print-color-adjust: exact; 
+	}
 }
+
 

@@ -1,7 +1,7 @@
 <div class="educare_post update">
-	
-    <h1>Edit Result</h1>
-    <blockquote>Notes: Please carefully fill out all the details of the forms. If you miss one, you may have problems to see the results. So, verify the student's admission form well and then give all details here. (All fields require).</blockquote>
+    <h1>Edit Results</h1>
+    
+    <blockquote>Note: Please fill all the details in the form carefully. If you miss one, you may have trouble seeing results. So, check the student admission form well and then give all the details here. (All fields are required).</blockquote>
     
     <?php
     // save forms data

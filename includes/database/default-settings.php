@@ -1,9 +1,17 @@
 <?php
-/*
-* function for default settings
-* @param string $list	Settings, Subject, Exam, Class, Year, Extra field
-* @return null
-*/
+
+/** =====================( Functions Details )======================
+	
+	# function for default settings
+
+	* @since 1.0.0
+	* @last-update 1.2.0
+
+	* @param mixed $list			For Settings, Class, Exam, Year, Extra field
+	* @return void
+	
+===================( function for default settings )=================== **/
+
 function educare_add_default_settings($list) {
 	global $wpdb;
 	$table = $wpdb->prefix."Educare_settings";
@@ -14,30 +22,48 @@ function educare_add_default_settings($list) {
 		
 		if ($list == 'Settings') {
 			$target = array(
-				'confirmation'=>'checked',
-				'guide'=>'checked',
-				'photos'=>'checked',
-				'auto_results'=>'checked',
-				'advance'=>'unchecked',
-				'delete_subject'=>'checked',
-				'clear_field'=>'checked',
-				'results_page'=>'results'
-			);
-		}
-		
-		if ($list == 'Subject') {
-			$target = array(
-				'English',
-				'Mathematics',
-				'ICT'
+				'confirmation' => 'checked',
+				'guide' => 'checked',
+				'photos' => 'checked',
+				'auto_results' => 'checked',
+				'advance' => 'unchecked',
+				'delete_subject' => 'checked',
+				'clear_field' => 'checked',
+				'results_page' => 'results',
+				'display' => [
+					'name' => ['Name', 'checked'],
+					'roll_no' => ['Roll No', 'checked'],
+					'regi_no' => ['Regi No', 'checked']
+				],
+				'grade_system' => [
+					'current' => 'Default',
+					'rules' => [
+						'Default' => [
+							'80-100' => [5, 'A+'],
+							'70-79'  => [4, 'A'],
+							'60-69'  => [3.5, 'A-'],
+							'50-59'  => [3, 'B'],
+							'40-49'  => [2, 'C'],
+							'33-39'  => [1, 'D'],
+							'0-32'  => [0, 'F']
+						]
+					]
+				],
+				'educare_info' => [
+					'version' => '1.2.0',
+					'educare_settings' => '1.0',
+					'educare_results' => '1.0',
+					'package' => 'free'
+				]
 			);
 		}
 		
 		if ($list == 'Class') {
+			$subject = array('English', 'Mathematics', 'ICT');
 			$target = array(
-				'Class 6',
-				'Class 7',
-				'Class 8'
+				'Class 6' => $subject,
+				'Class 7' => [],
+				'Class 8' => []
 			);
 		}
 		
@@ -51,9 +77,9 @@ function educare_add_default_settings($list) {
 		
 		if ($list == 'Year') {
 			$target = array(
-				'2020',
-				'2021',
-				'2022'
+				'2022',
+				'2023',
+				'2024'
 			);
 		}
 		
@@ -77,16 +103,14 @@ function educare_add_default_settings($list) {
 	}
 }
 
-// create function for apply default settings/all in one
+// create function for store default settings/all in one
 function educare_default_settings() {
 	educare_add_default_settings('Settings');
-	educare_add_default_settings('Subject');
 	educare_add_default_settings('Class');
 	educare_add_default_settings('Exam');
 	educare_add_default_settings('Year');
 	educare_add_default_settings('Extra_field');
 }
-
 
 
 ?>

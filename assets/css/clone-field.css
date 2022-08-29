@@ -1,0 +1,107 @@
+/**
+== Clone Field ==
+*
+* Contributors: fixbd
+* GitHub link: https://github.com/fixbd/clone-field/css/style.css
+* Tags: jQuery field, jQuery form field copy on click, Clone input field
+* Requires: jQuery
+* Tested up to: jQuery v-2.1.3
+* Stable tag: 1.0
+* License: GPLv2 or later
+* License URI: http://www.gnu.org/licenses/gpl-2.0.html
+*
+*****************************************************************
+*****************************************************************
+*/
+
+.fixbd_cloneField * {
+	box-sizing: border-box;
+}
+
+.fixbd_cloneField .mainField {
+	display: flex; 
+	align-items: center;
+	justify-content: center;
+	height: 48px;
+	margin-bottom: 4px;
+}
+.fixbd_cloneField .mainField > * {
+	height: 100%;
+}
+
+.fixbd_cloneField input {
+	width: 100%;
+	display: block;
+	margin: 4px 0;
+	border-radius: 4px;
+}
+
+.fixbd_cloneField a {
+	color: #fff;
+	font-weight: 700;
+	text-decoration: none;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 4px;
+}
+.fixbd_cloneField a:active {
+	background: green;
+}
+.fixbd_cloneField a.addButton {
+	width: 48px;
+	height: 48px;
+}
+.fixbd_cloneField a.remove_button {
+	background: rgb(210,88,80);
+}
+.fixbd_cloneField a.disabled {
+	background: #ddd;
+}
+
+.fixbd_cloneField #status {
+  position: -webkit-sticky;
+  position: sticky;
+  top: 0;
+  padding: 8px 0;
+  background-color: #eee;
+  border-bottom: 1px solid #ccc;
+  z-index: 200;
+}
+#status.field_over {
+	color: red;
+}
+
+/*Sub Field*/
+.fixbd_cloneField .subField {
+	position: relative;
+	display: none;
+	background-color: #e6e6e6;
+	padding: 12px;
+	margin-bottom: 12px;
+	border-radius: 4px;
+}
+.fixbd_cloneField .subField:hover {
+	background-color: #ddd;
+}
+.fixbd_cloneField .subField::after {
+content: " ";
+  position: absolute;
+  bottom: 100%;  /* At the top of the tooltip */
+  left: 18px;
+  margin-left: -8px;
+  border-width: 8px;
+  border-style: solid;
+  border-color: transparent transparent #ddd transparent;
+}
+.subField b,
+.subField input,
+.subField select {
+	display: block;
+	margin: 4px 0 12px;
+	border: 1px solid #ccc;
+}
+.subField b {
+	border: none;
+}
+
