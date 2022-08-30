@@ -1,43 +1,55 @@
-# Educare
+![Educare](https://github.com/FixBD/Educare/blob/FixBD/assets/img/Educare.svg)
+# Educare - Powerful Results Management System
 
-<b>Educare is a plugin dev by <a href="http://github.com/fixbd" target="_blank"><img src="/assets/img/fixbd.svg" width="50px" alt="FixBD"/></a> that help you to easily control over your institute students at online. It's a School/College students & results management plugin that was created to make WordPress a more powerful CMS.</b>
+> ## Educare is a powerful online School/College students & results management system dev by FixBD. This plugin allows you to manage and publish students results. This is a School/College students & results management plugin that was created to make WordPress a more powerful CMS.
 
 Educare help you to easily control over your institute students at online. You can easily Add/Edit/Delete Students, Results, Class, Exam, Year, Extra field, Custom Result Rules, Auto calculations and much more... Also you can import & export unlimited students and results just one click!
 
-## Current Features
+### Current Features
 
-### Result Rules (Grading Systems):
-<p>In the preview version of Educare, admins can add results with only one (default) grading system. Now by adding (v1.2.0+) this feature admin can add his country result system/rules. So, <strong>Using this feature you (admin) can add, modify, manage or automatically calculate any type of result based your country or demand<strong>. Eg: India, Bangladesh or US result GPA (CGPA) and calculation methods/rules are different. So, maintaining a defined result using one rule is a bit tricky. The result rule feature solves this problem. If you manage results for Indian students, you can add Indian grading system or rules. Also, you can add Bangladesh or US grading system in the same way. We know, it's a bit difficult. Please share your experience while using these features to improve Educare.</p>
+#### Result Rules (Grading Systems):
+<p>In the preview version of Educare, admins can add results with only one (default) grading system. Now by adding (v1.2.0+) this feature admin can add his country result system/rules. So, <strong>Using this feature you (admin) can add, modify, manage or automatically calculate any type of result based on your country or demand</strong>. Eg: India, Bangladesh or US result GPA (CGPA) and calculation methods/rules are different. So, maintaining a defined result using one rule is a bit tricky. The result rule feature solves this problem. If you manage results for Indian students, you can add Indian grading system or rules. Also, you can add Bangladesh or US grading system in the same way. We know, it's a bit difficult. Please share your experience while using these features to improve Educare.</p>
 
-0. Users/Students can find result by Name, Registration number, Roll Number, Exam, Passing Year
-0. Auto/Manual results calculations
-0. Auto GPA (CGPA) - based on your rules
-0. Automatically show letter grade
-0. Results table with students details
-0. Subject marks and grade
-0. Users/Students Photos
-0. Optional subject detection
-0. Field validation
-0. Error notice
-0. Custom Themes
-0. Print results
+1. Users/Students can find result by Name, Registration number, Roll Number, Exam, Passing Year
+1. Auto/Manual results calculations
+1. Auto GPA (CGPA) - based on your (admin) rules
+1. Automatically show letter grade
+1. Results table with students details
+1. Subject marks and grade
+1. Users/Students Photos
+1. Optional subject detection
+1. Field validation
+1. Error notice
+1. Custom Themes
+1. Print results
 
-### Admin Can -
+#### Admin Can -
 
-0. Public Results
-0. Control Settings
-0. Add Custom Result Rules
-0. Modify Grading Systems
-0. Add/Update/Delete Students
-0. Add/Update/Delete Results
-0. Add/Update/Delete Subject
-0. Add/Update/Delete Class
-0. Add/Update/Delete Exam
-0. Add/Update/Delete Year
-0. Add/Update/Delete Extra field
-0. View Results by Class, Exam, Year With Asc/Desc Mode
-0. Change Default Students Photos
-0. Import/Export Results
+1. Public Results
+1. Control Settings
+1. Add Custom Result Rules
+1. Modify Grading Systems
+1. Add/Update/Delete Students
+1. Add/Update/Delete Results
+1. Add/Update/Delete Subject
+1. Add/Update/Delete Class
+1. Add/Update/Delete Exam
+1. Add/Update/Delete Year
+1. Add/Update/Delete Extra field
+1. View Results by Class, Exam, Year With Asc/Desc Mode
+1. Change Default Students Photos
+1. Import/Export Results
+
+Just install and manage  your School, College, Coaching Center & personal website with existing Features of Educare. Remember, all Features of Educare is completely free of charge!
+
+Finally, we are going to add all the features in this plugin which you will not get in any premium plugins. And we will give you all these premium features for free. Because, we believe in freedom and understand the value of your work or dreams! 
+
+If you have face any problems and need our support (Totally Free!), Please contact us with this email:
+[fixbd.org@gmail.com](mailto:fixbd.org@gmail.com)
+
+Also, You can send your feedback here:
+[https://wordpress.org/plugins/educare/#reviews](https://wordpress.org/plugins/educare/#reviews)
+
 
 ## Future Update:
 
