@@ -209,7 +209,7 @@ function educare_default_notice($notice,$default,$where) {
 
 function educare_settings($list) {
 	global $wpdb;
-	$table = $wpdb->prefix."Educare_settings";
+	$table = $wpdb->prefix."educare_settings";
    
 	$search = $wpdb->get_results("SELECT * FROM $table WHERE list='$list'");
 	
@@ -619,7 +619,7 @@ function educare_get_settings() {
 function educare_settings_status($target, $title, $comments) {
 	
 	global $wpdb;
-	$table = $wpdb->prefix."Educare_settings";
+	$table = $wpdb->prefix."educare_settings";
    
 	$search = $wpdb->get_results("SELECT * FROM $table WHERE list='Settings'");
 	
@@ -788,7 +788,7 @@ function educare_settings_status($target, $title, $comments) {
 function educare_content($list) {
 	
 	global $wpdb;
-	$table = $wpdb->prefix."Educare_settings";
+	$table = $wpdb->prefix."educare_settings";
 	// remove all _ characters from the list (normalize the $list)
 	$List = str_replace('_', ' ', $list);
 	// section head
@@ -990,10 +990,10 @@ function educare_replace_key($array, $old_key, $new_key) {
 
 function educare_setting_subject($list) {
 	global $wpdb;
-	$table = $wpdb->prefix."Educare_settings";
+	$table = $wpdb->prefix."educare_settings";
 	
 	// add subject/extra field to (database) results table
-	$Educare_results = $wpdb->prefix . 'Educare_results';
+	$Educare_results = $wpdb->prefix . 'educare_results';
    
 	$search = $wpdb->get_results("SELECT * FROM $table WHERE list='Class'");
 	

@@ -76,7 +76,7 @@ function educare_esc_str($str) {
 function educare_check_status($target, $display = null) {
 	
 	global $wpdb;
-	$table = $wpdb->prefix."Educare_settings";
+	$table = $wpdb->prefix."educare_settings";
    
 	$search = $wpdb->get_results("SELECT * FROM $table WHERE list='Settings'");
 	
@@ -141,12 +141,13 @@ function educare_database_error_notice($fix_form = null) {
 			<form class="add_results" action="<?php echo esc_url($_SERVER['REQUEST_URI']); ?>" method="post">
 				<b>Database Update Required</b>
 				<p>Your current (Educare) database is old or corrupt, you need to update database to run new version of educare, it will only update <strong>Educare related database</strong>. Click to update database</p>
+				<p><strong>Please note:</strong> You should backup your (Educare) database before updating to this new version (only for v1.0.2 or earlier users).</p>
 				<button class="button" name="update_educre_database">Update Educare Database</button>
 			</form>
 			<?php
 		}
 	} else {
-		echo "<div class='notice notice-success is-dismissible'><p>Something went wrong! <a href='/wp-admin/admin.php?page=educare-settings'>Click here to fix</a></p></div>";
+		echo "<div class='notice notice-error is-dismissible'><p>Something went wrong!. Please go to (Educare) settings or <a href='/wp-admin/admin.php?page=educare-settings'>Click here to fix</a></p></div>";
 	}
 	echo '<div>';
 }
@@ -261,7 +262,7 @@ function educare_guide_for($guide, $details = null) {
 
 function educare_value($list, $id, $array = null) {
 	global $wpdb;
-	$table_name = $wpdb->prefix . 'Educare_results';
+	$table_name = $wpdb->prefix . 'educare_results';
 	
 	$educare_results = $wpdb->get_results("SELECT * FROM $table_name WHERE id='$id'");
 	
@@ -321,7 +322,7 @@ function educare_value($list, $id, $array = null) {
 function educare_get_options($list, $id, $selected_class = null) {
 	
 	global $wpdb;
-	$table = $wpdb->prefix."Educare_settings";
+	$table = $wpdb->prefix."educare_settings";
 	
 	if ($list == 'Subject' or $list == 'optinal') {
 		$results = $wpdb->get_results("SELECT * FROM $table WHERE list='Class'");
@@ -575,7 +576,7 @@ function educare_get_subject($class, $id) {
 
 function educare_get_data_by_student($id, $data) {
 	global $wpdb;
-	$table = $wpdb->prefix."Educare_results";
+	$table = $wpdb->prefix."educare_results";
 	$id = sanitize_text_field($id);
 	$results = $wpdb->get_row("SELECT * FROM $table WHERE id='$id'");
 
@@ -610,9 +611,11 @@ function educare_get_data_by_student($id, $data) {
 			foreach ($subject as $name => $marks) {
 				$optinal = strtok($marks, ' ');
 				$mark = $marks;
+				
 				if ($optinal == 1) {
-					$mark = "".substr(strstr($marks, ' '), 1)." ✓";
+					$mark = substr(strstr($marks, ' '), 1) . ' ' . educare_check_status('optional_sybmbol');
 				}
+
 				echo "<tr><td>".esc_html($serial++)."</td><td>".esc_html(str_replace('_', ' ', $name))."</td><td>".esc_html($mark)."</td><td>".wp_kses_post(educare_letter_grade($marks))."</td></tr>";
 		
 				$count++;
@@ -1320,7 +1323,7 @@ function educare_save_results() {
 	
 	
 	global $wpdb;
-	$table_name = $wpdb->prefix . 'Educare_results';
+	$table_name = $wpdb->prefix . 'educare_results';
 	
 	$chek_roll = educare_check_status('roll_no', true);
 	$chek_regi = educare_check_status('regi_no', true);
@@ -1570,7 +1573,7 @@ function educare_save_results() {
 
 function educare_demo_data($list) {
 	global $wpdb;
-	$table = $wpdb->prefix."Educare_settings";
+	$table = $wpdb->prefix."educare_settings";
 	
 	$search = $wpdb->get_results("SELECT * FROM $table WHERE list='$list'");
 	$data = '';

@@ -6,7 +6,7 @@ Tags:                Result management, Results, Students, Education, School, Co
 Requires at least:   3.8
 Tested up to:        6.0.1
 Requires PHP:        5.2.4
-Stable tag:          1.2.0
+Stable tag:          1.2.1
 License:             GPLv2 or later
 License URI:         http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -249,6 +249,10 @@ You need to add all Class, Subject and configure Grading System first. Then, add
 
 == Changelog ==
 
+= 1.2.1 =
+
+* Update issues fixed
+
 = 1.2.0 =
 
 = Improve Core Features =
@@ -264,9 +268,10 @@ You need to add all Class, Subject and configure Grading System first. Then, add
 
 = Improve front-end =
 * Admin can add/change default (front-end) result search form
-* Improved (default) form style search
-* Improved color issues in print results
+* Improved (default) search form style
+* Improved color issues when print results
+* More powerful and excited features coming soon!
 
-* **Please note:** You should backup your database before updating to this new version (only for v1.0.2 or earlier users).
+* **Please note:** You should backup your (Educare) database before updating to this new version (only for v1.0.2 or earlier users).
 
 The (full) change log is located in the `changelog.md` file in the plugin folder. You may also [view the change log](https://github.com/FixBD/Educare/blob/FixBD/changelog.md) online.

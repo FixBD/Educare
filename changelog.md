@@ -1,3 +1,7 @@
+## [1.2.1]
+
+- Update issues fixed
+
 ## [1.2.0]
 
 ### Improve Core Features

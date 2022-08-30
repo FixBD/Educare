@@ -70,7 +70,7 @@ function educare_database_table() {
   global $wpdb;
   $charset_collate = $wpdb->get_charset_collate();
 
-  $Educare_results = $wpdb->prefix."Educare_results";
+  $Educare_results = $wpdb->prefix."educare_results";
    
 	$table1 = "CREATE TABLE $Educare_results (
 		id mediumint(11) NOT NULL AUTO_INCREMENT,
@@ -89,7 +89,7 @@ function educare_database_table() {
    
   
   // Create table for educare (plugins) settings
-  $Educare_settings = $wpdb->prefix."Educare_settings";
+  $Educare_settings = $wpdb->prefix."educare_settings";
 
   $table2 = "CREATE TABLE $Educare_settings (
 		id int(11) NOT NULL AUTO_INCREMENT,

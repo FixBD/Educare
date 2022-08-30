@@ -19,7 +19,7 @@ function educare_import_result() {
 	global $wpdb;
 
 	// Table name, where to import the results
-	$table = $wpdb->prefix."Educare_results";
+	$table = $wpdb->prefix."educare_results";
 
 	// Import CSV
 	if(isset($_POST['educare_import_results'])) {

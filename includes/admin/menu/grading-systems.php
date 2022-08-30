@@ -72,7 +72,7 @@ function educare_grade_system($marks) {
 
 function educare_save_results_system() {
   global $wpdb;
-  $table = $wpdb->prefix . "Educare_settings";
+  $table = $wpdb->prefix . "educare_settings";
 
   $search = $wpdb->get_row("SELECT * FROM $table WHERE list='Settings'");
 

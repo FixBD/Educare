@@ -255,7 +255,7 @@ add_shortcode('educare_results', 'educare_get_results' );
 
 function educare_get_results() {    
 	global $wpdb;
-	$table_name = $wpdb->prefix . 'Educare_results';
+	$table_name = $wpdb->prefix . 'educare_results';
 	$educare_results = false;
 	
 	// Results Functions

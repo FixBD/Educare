@@ -14,7 +14,7 @@
 
 function educare_add_default_settings($list) {
 	global $wpdb;
-	$table = $wpdb->prefix."Educare_settings";
+	$table = $wpdb->prefix."educare_settings";
    
 	$search = $wpdb->get_results("SELECT * FROM $table WHERE list='$list'");
 	

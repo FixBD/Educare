@@ -6,7 +6,7 @@
 <?php
 global $wpdb;
 // Table name
-$tablename = $wpdb->prefix."Educare_results";
+$tablename = $wpdb->prefix."educare_results";
 	
 // define empty variables for ignore error
 $table = $year = $data = $select_year = $order = $time = "";
