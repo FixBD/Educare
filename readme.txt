@@ -4,9 +4,9 @@ Contributors:        fixbd
 GitHub link:         https://github.com/fixbd/educare
 Tags:                Result management, Results, Students, Education, School, College, Coaching Center, Exam, School management, publish results
 Requires at least:   3.8
-Tested up to:        6.0.1
+Tested up to:        6.0.2
 Requires PHP:        5.2.4
-Stable tag:          1.2.1
+Stable tag:          1.2.2
 License:             GPLv2 or later
 License URI:         http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -31,7 +31,7 @@ Also, You can send your feedback here:
 ### Current Features
 
 #### Result Rules (Grading Systems):
-<p>In the preview version of Educare, admins can add results with only one (default) grading system. Now by adding (v1.2.0+) this feature admin can add his country result system/rules. So, <strong>Using this feature you (admin) can add, modify, manage or automatically calculate any type of result based your country or demand</strong>. Eg: India, Bangladesh or US result GPA (CGPA) and calculation methods/rules are different. So, maintaining a defined result using one rule is a bit tricky. The result rule feature solves this problem. If you manage results for Indian students, you can add Indian grading system or rules. Also, you can add Bangladesh or US grading system in the same way. We know, it's a bit difficult. Please share your experience while using these features to improve Educare.</p>
+<p>In the preview version of Educare, admins can add results with only one (default) grading system. Now by adding (v1.2.0+) this feature admin can add his country result system/rules. So, <strong>Using this feature you (admin) can add, modify, manage or automatically calculate any type of result based on your country or demand</strong>. Eg: India, Bangladesh or US result GPA (CGPA) and calculation methods/rules are different. So, maintaining a defined result using one rule is a bit tricky. The result rule feature solves this problem. If you manage results for Indian students, you can add Indian grading system or rules. Also, you can add Bangladesh or US grading system in the same way. We know, it's a bit difficult. Please share your experience while using these features to improve Educare.</p>
 
 1. Users/Students can find result by Name, Registration number, Roll Number, Exam, Passing Year
 1. Auto/Manual results calculations
@@ -205,10 +205,10 @@ More detailed instructions are included in the plugin's `README.md` files.
 
 ### Why was this plugin created?
 
-Currently, there are not any options to manage Students and Results in WordPress by default.
+Currently, there are no alternative way to manage students and publish results in WordPress by default.
 I wasn't satisfied with some educational plugins available in WP plugins directory. Yes, some of them are good, but nothing fit what I had in mind perfectly. And all of this requred a lot of money to use there premium Features.
 
-So, I just built something I actually enjoyed using and use lots of premium fetuses without any charge!.
+So, I just built something that I actually enjoyed and used lots of premium features without any charge!.
 
 ### What is Result Rules Features?
 
@@ -216,21 +216,37 @@ Using this feature you (admin) can add, modify, manage or automatically calculat
 
 We know, it's a bit difficult. Please share your experience while using these features to improve Educare.
 
+### How to show result on (Front End) page?
+
+#### [educare_results]
+
+You need to add `[educare_results]` shortcode into WP post editor, template or any shortcode-ready area for front end results system. This shortcode display search form and results. So, users/students can easily find and view there results.
+
+### Can the result card be custom designed?
+
+Yes, You (admin) can customize results card, search results forms. Everything on the front end is customizable. Please [Follow this topics](https://wordpress.org/support/topic/can-the-result-card-be-custom-designed).
+
 ### How do I use it?
 
-Most things should be fairly straightforward, but we've included an in-depth guide in the plugin download.  It's a file called `readme.md` in the plugin folder.
+Most things of Educare fairly straight-forward, but we've included an in-depth guide in the plugin download.  It's a file called `readme.md` in the plugin folder.
 
 You can also [view the readme](https://github.com/FixBD/Educare/blob/FixBD/README.md) online.
 
 ### Minimum PHP requirements.
 
 Current version of Educare requires PHP 4.4+
-And Wordpress 3.8
+And Wordpress 3.8+
 
 ### Help! All Results status failed !
 
-Please read the documentation for the plugin before actually using it,
-You need to add all Class, Subject and configure Grading System first. Then, add students results
+First, you need to add classes, subjects, exams and configure the grading system, then add student results.
+Please read the documentation for the plugin before actually using it.
+
+### Why is Educare free?
+
+We will give you all these premium features for free. Because, we believe in freedom and understand the value of your work and dreams!
+
+Attention please: You only need to give us 5 stars!
 
 == Screenshots ==
 
@@ -248,6 +264,16 @@ You need to add all Class, Subject and configure Grading System first. Then, add
 12. Add Extra Fields
 
 == Changelog ==
+
+= 1.2.2 =
+
+* Now admin can customize results card
+* Admin can customize search Forms
+* Customize optional subject selection
+* Improved import demo
+* Fixed grading system new rules save issues
+* Improve perfomance
+* Fixed some bugs 
 
 = 1.2.1 =
 

@@ -207,7 +207,7 @@ cloneField({
 	        	// Increment field counter
 	            counter++;
 	            //Add field html
-	            $(s.cloneBody).append('<tr class="cloneField"><td><input type="number" name="rulse1[]" value="" placeholder="Less Mark"/></td><td><input type="number" name="rulse2[]" value="" placeholder="Greater Mark"/></td><td><input class="" type="number" name="point[]" value="" placeholder="Grade point"/></td><td><input class="bold" type="text" name="grade[]" value="" placeholder="Grade"/></td><td><a href="javascript:void(0);" class="remove_button"><i class="dashicons dashicons-no"></i></a></td></tr>');
+	            $(s.cloneBody).append('<tr class="cloneField"><td><input type="number" name="rules1[]" value="" placeholder="Less Mark"/></td><td><input type="number" name="rules2[]" value="" placeholder="Greater Mark"/></td><td><input class="" type="number" name="point[]" value="" placeholder="Grade point"/></td><td><input class="bold" type="text" name="grade[]" value="" placeholder="Grade"/></td><td><a href="javascript:void(0);" class="remove_button"><i class="dashicons dashicons-no"></i></a></td></tr>');
 				
 				/*
 				$(s.cloneBody + ' ' + s.cloneField + ':last')

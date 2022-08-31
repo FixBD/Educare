@@ -632,7 +632,10 @@ function educare_settings_status($target, $title, $comments) {
 		}
 		// for update settings status
 		if (isset($_POST['educare_update_settings_status'])) {
-			$status = $data->$target;
+			$status = 'unchecked';
+			if (property_exists($data, $target)) {
+				$status = $data->$target;
+			}
 
 			if ($target != 'display') {
 				$update_data = sanitize_text_field($_POST[$target]);
@@ -674,15 +677,18 @@ function educare_settings_status($target, $title, $comments) {
 
 		}
 	
-		$status = $data->$target;
+		$status = 'unchecked';
+		if (property_exists($data, $target)) {
+			$status = $data->$target;
+		}
 		// $clear_field = $data->clear_field;
 		// for input field
-		if ( $target == 'results_page' ) {
+		if ( $target == 'results_page' or $target == 'optional_sybmbol' ) {
 			echo "<div class='educare-settings'>";
 			echo "<div class='title'>
 			<h3>".esc_html($title)."<h3>
 			<p class='comments'>".wp_kses_post($comments)."</p>
-			<input type='text' id='".esc_attr($target)."' name='".esc_attr($target)."' value='".esc_attr(educare_check_status('results_page'))."' placeholder='".esc_attr(educare_check_status('results_page'))."'>
+			<input type='text' id='".esc_attr($target)."' name='".esc_attr($target)."' value='".esc_attr(educare_check_status($target))."' placeholder='".esc_attr(educare_check_status($target))."'>
 			</div></div>";
 		}
 		elseif ($target == 'display') {
@@ -696,7 +702,7 @@ function educare_settings_status($target, $title, $comments) {
 				?>
 				<div class="educare-settings">
 					<div class="title">
-						<h3><?php echo esc_html($target);?><h3>
+						<h3><?php echo esc_html(ucwords(str_replace('_', ' ', $target)));?><h3>
 						<p class="comments">
 							<input type='text' id='<?php echo esc_attr($target);?>' name='display_input[]' value='<?php echo esc_attr($field_name);?>' placeholder='Type <?php echo esc_attr($field_name);?>'>
 						</p>
@@ -1507,15 +1513,21 @@ function educare_setting_subject($list) {
 				
 				educare_settings_status('display', 'Delete confirmation', "Anable and disable delete/remove confirmation");
 
-				echo '<h2 class="left">Others</h2>';
+				echo '<h2 class="left">Results System</h2>';
 
-				educare_settings_status('confirmation', 'Delete confirmation', "Anable and disable delete/remove confirmation");
-				
-				educare_settings_status('guide', 'Guidelines', "Anable and disable guide/help messages");
-				
-				educare_settings_status('photos', 'Students Photos', "Show or Hide students photos");
+				educare_settings_status('optional_sybmbol', 'Optional Subject Selection', "Define optional subject identifier character/symbol. In this way educare define and identify optional subjects when you add or import results.");
 				
 				educare_settings_status('auto_results', 'Auto Results', "Automatically calculate students results status Passed/Failed and GPA");
+
+				educare_settings_status('photos', 'Students Photos', "Show or Hide students photos");
+
+				educare_settings_status('custom_results', 'Custom Design Permissions', "You need to permit/allow this options when you add custom functionality or customize results card or searching forms");
+
+				echo '<h2 class="left">Others</h2>';
+
+				educare_settings_status('guide', 'Guidelines', "Anable and disable guide/help messages");
+
+				educare_settings_status('confirmation', 'Delete confirmation', "Anable and disable delete/remove confirmation");
 				
 				educare_settings_status('advance', 'Advance Settings', "Anable and disable Advance/Developers menu. Note: it's only for developers or advance users");
 				

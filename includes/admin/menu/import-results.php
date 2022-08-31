@@ -263,9 +263,15 @@ echo educare_guide_for('import');
 <br>
 
 <div class='demo'>
-	<p>Notes: Please carefully fill out all the details of your import (<b>.csv</b>) files. If you miss one, you may have problems to see the results. So, verify the student's admission form well and then give all the details in your import files. Required field are: <b><i>Name, Roll No, Regi No, Exam, Class and Year</i></b>. So, don't miss all of this required field!</p>
+	<strong>Optional Subject Selection Guide</strong>
+	<p>Educare add 1 before optional subject marks <code>1 [space] Marks</code>.</p>
+	<li style="font-size: small;">Exp: <code>1 85</code></li>
+	<li style="font-size: small;">Here <code>1</code> 	= Define optional subject</li> 
+	<li style="font-size: small;">and <code>85</code> 	= Marks</li>
+	<p>In this way educare define and identify optional subjects. So, when you add a result to the csv files - you need to add <code>1</code> symbol before the optional subject marks.</p>
 	
 	<p>Select class for demo files:</p>
+	
 	<select id="Class" name="Class" class="form-control">
 		<option value="">Select Class</option>
 		<?php educare_get_options('Class', $Class);?>

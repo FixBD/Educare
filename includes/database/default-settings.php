@@ -29,7 +29,9 @@ function educare_add_default_settings($list) {
 				'advance' => 'unchecked',
 				'delete_subject' => 'checked',
 				'clear_field' => 'checked',
+				'custom_results' => 'unchecked',
 				'results_page' => 'results',
+				'optional_sybmbol' => '✓',
 				'display' => [
 					'name' => ['Name', 'checked'],
 					'roll_no' => ['Roll No', 'checked'],

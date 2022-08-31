@@ -609,17 +609,13 @@ function educare_get_data_by_student($id, $data) {
 			$count = 1; // for add specific tags (div/tr/ul) in every 4 foreach loop
 			
 			foreach ($subject as $name => $marks) {
-				$optinal = strtok($marks, ' ');
-				$mark = $marks;
-				
-				if ($optinal == 1) {
-					$mark = substr(strstr($marks, ' '), 1) . ' ' . educare_check_status('optional_sybmbol');
-				}
-
-				echo "<tr><td>".esc_html($serial++)."</td><td>".esc_html(str_replace('_', ' ', $name))."</td><td>".esc_html($mark)."</td><td>".wp_kses_post(educare_letter_grade($marks))."</td></tr>";
-		
-				$count++;
-
+				$mark = educare_display_marks($marks);
+				echo "<tr>
+				<td>".esc_html($serial++)."</td>
+				<td>".esc_html(str_replace('_', ' ', $name))."</td>
+				<td>".esc_html($mark)."</td>
+				<td>".wp_kses_post(educare_letter_grade($marks))."</td>
+				</tr>";
 			}
 		}
 
@@ -1691,10 +1687,10 @@ add_action('wp_ajax_educare_demo', 'educare_demo');
 
 function educare_demo() {
 	$Class = educare_demo_data('Class');
-	// $Exam = educare_demo_data('Exam');
-	$Exam = 'Exam name';
+	$Exam = array_rand(educare_demo_data('Exam'), 1);
+  $Exam = educare_demo_data('Exam')[$Exam];
 	// $Year = educare_demo_data('Year');
-	$Year = '2022';
+	$Year = date("Y");
 	$Extra_field = educare_demo_data('Extra_field');
 
 	$selected_class = sanitize_text_field($_POST['class']);
@@ -1743,9 +1739,22 @@ function educare_demo() {
 		}
 
 		foreach ($Extra_field as $value) {
+			// get type
+			$type = strtok($value, ' ');
 			// remove field type
 			$value = substr(strstr($value, ' '), 1);
-			$data[$value] = $value;
+
+			if ($type == 'number') {
+				$data[$value] = rand(10000000, 90000000);
+			}
+			elseif ($type == 'date') {
+				$data[$value] = date("Y-m-d");
+			}
+			elseif ($type == 'email') {
+				$data[$value] = 'youremail@gmail.com';
+			} else {
+				$data[$value] = $value;
+			}
 		}
 
 		$data['Result'] = 'Passed';

@@ -1,3 +1,13 @@
+## [1.2.2]
+
+- Now admin can customize results card
+- Admin can customize search Forms
+- Customize optional subject selection
+- Improved import demo
+- Fixed grading system new rules save issues
+- Improve perfomance
+- Fixed some bugs
+
 ## [1.2.1]
 
 - Update issues fixed

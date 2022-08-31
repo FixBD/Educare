@@ -51,12 +51,11 @@ function educare_letter_grade($marks, $points = null) {
 	$grade_system = $grade_system->rules->$current;
 
 	/** 
-	* Check optional marks
-	* Note: educare add 1 befor optional subject number. 
+	* Check optional subject marks
+	* Note: Educare add 1 before optional subject marks.
 	* Exp: 1 85
 	* Her 1 = optional subject and 85 = marks
-	* In this way educare defain or identify optional number
-	*
+	* In this way educare define and identify optional subjects. So, when you add a result to the csv files - you need to add 1 symbol before the optional subject
 	*/
 	$optional_marks = substr(strstr($marks, ' '), 1);
 	if ($optional_marks) {
@@ -141,8 +140,9 @@ function educare_get_marks($Subject) {
 	}
 	
 	$main_subjects = array();
-		foreach($points as $marks) { 
-			preg_match ('/1 /', $marks, $optional); 
+		foreach($points as $marks) {
+			// detect optional subjects with [whtite-space]
+			preg_match ('/ /', $marks, $optional); 
 			if(count($optional) == 0) $main_subjects[] = $marks;
 	}
 	
@@ -184,19 +184,44 @@ function educare_get_marks($Subject) {
 
 
 /** 
+### Create function for display maarks/sanitize optional maarks
+* Usage: echo educare_display_marks(85);
+
+* @sincce 1.2.2
+* @last-update 1.2.2
+
+* @param object $marks 	init
+
+* @return init
+*/
+
+function educare_display_marks($marks) {
+	$optinal = strtok($marks, ' ');
+	
+	if ($optinal == 1) {
+		$marks = substr(strstr($marks, ' '), 1) . ' ' . educare_check_status('optional_sybmbol');
+	}
+
+	return $marks;
+}
+
+
+
+/** 
 ### Create function for students result status
 * Usage: echo educare_results_status($subject, $id);
 
 * @sincce 1.0.0
-* @last-update 1.2.0
+* @last-update 1.2.2
 
 * @param object $print 	Select specific subject
 * @param int $id				Specific subject id
+* @param int $gpa				return GPA if true, otherwise return passed/failed
 
 * @return string|HTML
 */
 
-function educare_results_status($subject, $id) {
+function educare_results_status($subject, $id, $gpa = null) {
 	$passed = "<div class='success results_passed'>Passed</div>";
 	$failed = "<div class='failed results_failed'>Failed</div>";
 	
@@ -209,13 +234,26 @@ function educare_results_status($subject, $id) {
 	
 	// Get auto results, if auto result is checked
 	if (educare_check_status('auto_results') == 'checked') {
-		$status = $status;
-	} else {
-		$status = strtolower(educare_value('Result', $id));
-		if ($status == 'passed') {
-			$status = $passed;
+		if ($gpa) {
+			$status = educare_get_marks($subject);
 		} else {
-			$status = $failed;
+			$status = $status;
+		}
+	} else {
+		if ($gpa) {
+			$getting_value = educare_value('GPA', $id);
+			if (empty($getting_value)) {
+				$status = '0';
+			} else {
+				$status = educare_value('GPA', $id);
+			}
+		} else {
+			$status = strtolower(educare_value('Result', $id));
+			if ($status == 'passed') {
+				$status = $passed;
+			} else {
+				$status = $failed;
+			}
 		}
 	}
 	return $status;
@@ -265,6 +303,7 @@ function educare_get_results() {
 	$chek_name = educare_check_status('name', true);
 	$chek_roll = educare_check_status('roll_no', true);
 	$chek_regi = educare_check_status('regi_no', true);
+	$custom_results = educare_check_status('custom_results');
 
 	echo '<div class="educare_results">';
 
@@ -311,166 +350,159 @@ function educare_get_results() {
 				$id = $print->id;
 				$Subject = json_decode($print->Subject);
 				$Details = json_decode($print->Details);
-				?>
-				
-				<!-- Begin (frond end) Results Body -->
-				<div class="result_body">
-					<?php
-					if (educare_check_status('photos') == 'checked') {
-						echo "<div class='student_photos'>
-						<img src='".esc_url($Details->Photos)."' class='img' alt='".esc_attr($print->Name)."'/></center>
-						</div>";
-					}
 
-					if ($chek_name) {
-						echo "<h2> ".esc_html($print->Name)."</h2>";
-					}
-					
-					echo '<div class="table_body">
-					<table class="result_details">';
-					
-						echo '<tr>';
-						if ($chek_roll and $chek_regi) {
-							echo '<td>'.esc_html( $chek_roll ).'</td>
-								<td>'.esc_html($print->Roll_No).'</td>';
-
-							if ($chek_name) {
-								echo '<td>'.esc_html( $chek_name ).'</td>
-								<td>'.esc_html($print->Name).'</td>';
-							} else {
-								echo '<td></td>
-								<td></td>';
-							}
-
-							echo '</tr>';
-
-							echo '<tr>
-								<td>'.esc_html( $chek_regi ).'</td>
-								<td>'.esc_html($print->Regi_No).'</td>
-								<td>Class</td>
-								<td>'.esc_html($print->Class).'</td>
-							</tr>';
-						} else {
-							echo '</tr>';
-							if ($chek_roll) {
-								echo '<td>'.esc_html( $chek_roll ).'</td>
-									<td>'.esc_html($print->Roll_No).'</td>';
-							}
-
-							if ($chek_regi) {
-								echo '<tr>
-									<td>'.esc_html( $chek_regi ).'</td>
-									<td>'.esc_html($print->Roll_No).'</td>';
-							}
-
-							if ($chek_name) {
-								echo '<td>'.esc_html( $chek_name ).'</td>
-									<td>'.esc_html($print->Name).'</td>';
-							}
-							echo '</tr>';
+				if ($custom_results == 'checked' and function_exists('educare_custom_results')) {
+					wp_kses_post(educare_custom_results($print));
+				} else {
+					?>
+					<!-- Begin (frond end) Results Body -->
+					<div class="result_body">
+						<?php
+						if (educare_check_status('photos') == 'checked') {
+							echo "<div class='student_photos'>
+							<img src='".esc_url($Details->Photos)."' class='img' alt='".esc_attr($print->Name)."'/></center>
+							</div>";
 						}
 
-						/** 
-						// Above cond retun like this =>
-						<tr>
-							<td>Roll No</td>
-							<td><?php echo esc_html($print->Roll_No);?></td>
-							<td>Name</td>
-							<td><?php echo esc_html($print->Name);?></td>
-						</tr>
-							
-						<tr>
-							<td>Reg No</td>
-							<td><?php echo esc_html($print->Regi_No);?></td>
-							<td>Class</td>
-							<td><?php echo esc_html($print->Class);?></td>
-						</tr>
-						*/
-						?>
-					
-						<!-- Extra field -->
-						<?php echo wp_kses_post(educare_get_data_by_student($id, 'Details'));?>
+						if ($chek_name) {
+							echo "<h2> ".esc_html($print->Name)."</h2>";
+						}
 						
-						<tr>
-							<td>Result</td>
-							<td><?php echo wp_kses_post(educare_results_status($Subject, $id));?></td>
-							<td>Year</td>
-							<td><?php echo esc_html($print->Year);?></td>
-						</tr>
+						echo '<div class="table_body">
+						<table class="result_details">';
 						
-						<tr>
-							<td>GPA</td>
-							<td colspan='3'>
-								<?php
-								if (educare_check_status('auto_results') == 'checked') {
-									echo esc_html(educare_get_marks($Subject));
+							echo '<tr>';
+							if ($chek_roll and $chek_regi) {
+								echo '<td>'.esc_html( $chek_roll ).'</td>
+									<td>'.esc_html($print->Roll_No).'</td>';
+
+								if ($chek_name) {
+									echo '<td>'.esc_html( $chek_name ).'</td>
+									<td>'.esc_html($print->Name).'</td>';
 								} else {
-									$getting_value = educare_value('GPA', $id);
-									if (empty($getting_value)) {
-										echo '0';
-									} else {
-										echo esc_html(educare_value('GPA', $id));
-									}
+									echo '<td></td>
+									<td></td>';
 								}
-								?>
-							</td>
-						</tr>
-					</table>
-					</div>
-					
-					<h3>Grade Sheet</h3>
-					
-					<div class="table_body">			
-						<table class="grade_sheet">
-							<thead>
-								<tr>
-									<th>No</th>
-									<th>Subject</th>
-									<th>Marks</th>
-									<th>Grade</th>
-								</tr>
-							</thead>
+
+								echo '</tr>';
+
+								echo '<tr>
+									<td>'.esc_html( $chek_regi ).'</td>
+									<td>'.esc_html($print->Regi_No).'</td>
+									<td>Class</td>
+									<td>'.esc_html($print->Class).'</td>
+								</tr>';
+							} else {
+								echo '</tr>';
+								if ($chek_roll) {
+									echo '<td>'.esc_html( $chek_roll ).'</td>
+										<td>'.esc_html($print->Roll_No).'</td>';
+								}
+
+								if ($chek_regi) {
+									echo '<tr>
+										<td>'.esc_html( $chek_regi ).'</td>
+										<td>'.esc_html($print->Roll_No).'</td>';
+								}
+
+								if ($chek_name) {
+									echo '<td>'.esc_html( $chek_name ).'</td>
+										<td>'.esc_html($print->Name).'</td>';
+								}
+								echo '</tr>';
+							}
+
+							/** 
+							// Above cond retun like this =>
+							<tr>
+								<td>Roll No</td>
+								<td><?php echo esc_html($print->Roll_No);?></td>
+								<td>Name</td>
+								<td><?php echo esc_html($print->Name);?></td>
+							</tr>
+								
+							<tr>
+								<td>Reg No</td>
+								<td><?php echo esc_html($print->Regi_No);?></td>
+								<td>Class</td>
+								<td><?php echo esc_html($print->Class);?></td>
+							</tr>
+							*/
+							?>
+						
+							<!-- Extra field -->
+							<?php echo wp_kses_post(educare_get_data_by_student($id, 'Details'));?>
 							
-							<tbody>
-								<?php
-								echo wp_kses_post(educare_get_data_by_student($id, 'Subject'));
-								
-								/**  ====== Above function return like this ======
-								<tr>
-									<td>1</td>
-									<td>Subject 1</td>
-									<td>{marks}</td>
-									<td>{letter grade}</td>
-								</tr>
-								
-								<tr>
-									<td>2</td>
-									<td>Subject 1</td>
-									<td>{marks}</td>
-									<td>{letter grade}</td>
-								</tr>
-
-								<tr>
-									<td>3</td>
-									<td>Subject 3</td>
-									<td>{marks}</td>
-									<td>{letter grade}</td>
-								</tr>
-
-								........................................................
-								........................................................
-								*/
-								?>
-								
-							</tbody>
+							<tr>
+								<td>Result</td>
+								<td><?php echo wp_kses_post(educare_results_status($Subject, $id));?></td>
+								<td>Year</td>
+								<td><?php echo esc_html($print->Year);?></td>
+							</tr>
+							
+							<tr>
+								<td>GPA</td>
+								<td colspan='3'>
+									<?php echo esc_html(educare_results_status($Subject, $id, true));?>
+								</td>
+							</tr>
 						</table>
-					</div>
-					<div class="no_print">
-						<button onClick="<?php echo esc_js('window.print()');?>" class="print_button"><i class="fa fa-print"></i> Print</button>
-						<button onClick="<?php echo esc_js('history.back()');?>" class="back_button"><i class="fa fa-backward"></i> Back</button>
-					</div>
-				</div> <!-- .result_body -->
-				<?php
+						</div>
+						
+						<h3>Grade Sheet</h3>
+						
+						<div class="table_body">			
+							<table class="grade_sheet">
+								<thead>
+									<tr>
+										<th>No</th>
+										<th>Subject</th>
+										<th>Marks</th>
+										<th>Grade</th>
+									</tr>
+								</thead>
+								
+								<tbody>
+									<?php
+									echo wp_kses_post(educare_get_data_by_student($id, 'Subject'));
+									
+									/**  ====== Above function return like this ======
+									<tr>
+										<td>1</td>
+										<td>Subject 1</td>
+										<td>{marks}</td>
+										<td>{letter grade}</td>
+									</tr>
+									
+									<tr>
+										<td>2</td>
+										<td>Subject 1</td>
+										<td>{marks}</td>
+										<td>{letter grade}</td>
+									</tr>
+
+									<tr>
+										<td>3</td>
+										<td>Subject 3</td>
+										<td>{marks}</td>
+										<td>{letter grade}</td>
+									</tr>
+
+									........................................................
+									........................................................
+									*/
+									?>
+									
+								</tbody>
+							</table>
+						</div>
+						<div class="no_print">
+							<button onClick="<?php echo esc_js('window.print()');?>" class="print_button"><i class="fa fa-print"></i> Print</button>
+							<button onClick="<?php echo esc_js('history.back()');?>" class="back_button"><i class="fa fa-backward"></i> Back</button>
+						</div>
+					</div> <!-- .result_body -->
+					<?php
+				}
 			}
 		} else {
 			if (!$chek_roll) {
@@ -521,8 +553,8 @@ function educare_get_results() {
 	
 	// Show search forms when results not found
 	if (!$educare_results) {
-		if (function_exists('educare_cusrom_search_form')) {
-			wp_kses_post(educare_cusrom_search_form());
+		if ($custom_results == 'checked' and function_exists('educare_custom_search_form')) {
+			wp_kses_post(educare_custom_search_form($not_found, $errmsg));
 		} else {
 			echo '<div class="results_form">';
 			// echo '<h1>Results</h1>';
