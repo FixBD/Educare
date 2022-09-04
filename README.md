@@ -1,124 +1,114 @@
-# Educare
+![Educare](https://github.com/FixBD/Educare/blob/FixBD/assets/img/Educare.svg)
+# Educare - Powerful Results Management System
 
-<b>Educare is a plugin dev by <a href="http://github.com/fixbd" target="_blank"><img src="/assets/img/fixbd.svg" width="50px" alt="FixBD"/></a> that help you to easily control over your institute students at online. It's a School/College students & results management plugin that was created to make WordPress a more powerful CMS.</b>
+> ## Educare is a powerful online School/College students & results management system dev by FixBD. This plugin allows you to manage and publish students results. This is a School/College students & results management plugin that was created to make WordPress a more powerful CMS.
 
 Educare help you to easily control over your institute students at online. You can easily Add/Edit/Delete Students, Results, Class, Exam, Year, Extra field, Custom Result Rules, Auto calculations and much more... Also you can import & export unlimited students and results just one click!
 
-## Current Features
+### Current Features
 
-### Result Rules (Grading Systems):
-<p>In the preview version of Educare, admins can add results with only one (default) grading system. Now by adding (v1.2.0+) this feature admin can add his country result system/rules. So, <strong>Using this feature you (admin) can add, modify, manage or automatically calculate any type of result based your country or demand<strong>. Eg: India, Bangladesh or US result GPA (CGPA) and calculation methods/rules are different. So, maintaining a defined result using one rule is a bit tricky. The result rule feature solves this problem. If you manage results for Indian students, you can add Indian grading system or rules. Also, you can add Bangladesh or US grading system in the same way. We know, it's a bit difficult. Please share your experience while using these features to improve Educare.</p>
+#### Result Rules (Grading Systems):
+<p>In the preview version of Educare, admins can add results with only one (default) grading system. Now by adding (v1.2.0+) this feature admin can add his country result system/rules. So, <strong>Using this feature you (admin) can add, modify, manage or automatically calculate any type of result based on your country or demand</strong>. Eg: India, Bangladesh or US result GPA (CGPA) and calculation methods/rules are different. So, maintaining a defined result using one rule is a bit tricky. The result rule feature solves this problem. If you manage results for Indian students, you can add Indian grading system or rules. Also, you can add Bangladesh or US grading system in the same way. We know, it's a bit difficult. Please share your experience while using these features to improve Educare.</p>
 
-0. Users/Students can find result by Name, Registration number, Roll Number, Exam, Passing Year
-0. Auto/Manual results calculations
-0. Auto GPA (CGPA) - based on your rules
-0. Automatically show letter grade
-0. Results table with students details
-0. Subject marks and grade
-0. Users/Students Photos
-0. Optional subject detection
-0. Field validation
-0. Error notice
-0. Custom Themes
-0. Print results
+1. Users/Students can find result by Name, Registration number, Roll Number, Exam, Passing Year
+1. Auto/Manual results calculations
+1. Auto GPA (CGPA) - based on your (admin) rules
+1. Automatically show letter grade
+1. Results table with students details
+1. Subject marks and grade
+1. Users/Students Photos
+1. Optional subject detection
+1. Field validation
+1. Error notice
+1. Custom Themes
+1. Print results
 
-### Admin Can -
+#### Admin Can -
 
-0. Public Results
-0. Control Settings
-0. Add Custom Result Rules
-0. Modify Grading Systems
-0. Add/Update/Delete Students
-0. Add/Update/Delete Results
-0. Add/Update/Delete Subject
-0. Add/Update/Delete Class
-0. Add/Update/Delete Exam
-0. Add/Update/Delete Year
-0. Add/Update/Delete Extra field
-0. View Results by Class, Exam, Year With Asc/Desc Mode
-0. Change Default Students Photos
-0. Import/Export Results
+1. Public Results
+1. Control Settings
+1. Add Custom Result Rules
+1. Modify Grading Systems
+1. Add/Update/Delete Students
+1. Add/Update/Delete Results
+1. Add/Update/Delete Subject
+1. Add/Update/Delete Class
+1. Add/Update/Delete Exam
+1. Add/Update/Delete Year
+1. Add/Update/Delete Extra field
+1. View Results by Class, Exam, Year With Asc/Desc Mode
+1. Change Default Students Photos
+1. Import/Export Results
 
-## Future Update:
+Just install and manage  your School, College, Coaching Center & personal website with existing Features of Educare. Remember, all Features of Educare is completely free of charge!
 
-### Students/Users Can -
+Finally, we are going to add all the features in this plugin which you will not get in any premium plugins. And we will give you all these premium features for free. Because, we believe in freedom and understand the value of your work or dreams! 
 
-0. Students Registration
-0. Students Profiles
-0. Register Admissions Forms
-0. Change Profiles picture
-0. View/Attend class
-0. Attend Exam
-  ...
-  
-### Admin Can -
+If you have face any problems and need our support (Totally Free!), Please contact us with this email:
 
-<b>Results Rules</b> Now This Features is available (v0.2.0)+ <br>
+[fixbd.org@gmail.com](mailto:fixbd.org@gmail.com)
 
-#### Back end - (Comin Soon)
-0. Add Teachers
-0. Received Payment
-0. Students Profiles Management
-0. Aprove Admissions Forms
-0. Delete Admissions Forms
+Also, You can send your feedback here:
 
-#### Front In -
-0. Custom Stundent/User Login page
-0. Custom Stundent/User Registration page
-0. Custom Stundent/User Profiles Edit page
-0. Custom Stundent/User Forgot Password page
-0. Custom Stundent/User User Profiles page
-0. Redirect Facility - Stundent Can Redirect Custom Profiles
-  And soo on..
+[https://wordpress.org/plugins/educare/#reviews](https://wordpress.org/plugins/educare/#reviews)
 
 ## How to Install
+> ### From the WordPress Plugin Directory
+> #### The Official WordPress Plugin can be found here: https://wordpress.org/plugins/educare/
+> ### From this repository
+> #### Go to the [releases](https://github.com/fixbd/educare/releases).  section of the repository and download the most recent release.
 
-### From the WordPress Plugin Directory
-The Official WordPress Plugin can be found here: https://wordpress.org/plugins/educare/
+1. Then, from your WordPress administration panel, go to Plugins > Add New and click the Upload Plugin button at the top of the page. (For manualy installation, Upload `Educare` to the `/wp-content/plugins/` directory.)
 
-### From this repository
-Go to the [releases](https://github.com/fixbd/educare/releases).  section of the repository and download the most recent release.
+1. Activate the plugin (Educare) through the 'Plugins' menu in WordPress.
 
-0. Then, from your WordPress administration panel, go to Plugins > Add New and click the Upload Plugin button at the top of the page. (For manualy installation, Upload `Educare` to the `/wp-content/plugins/` directory.)
-0. Activate the plugin (Educare) through the 'Plugins' menu in WordPress.
-0. Now, you can see Educare icon appears into menu bar.
-0. Go to "Educare > Settings" for configure the plugin. or 
-0. Go to "Educare > Grading Systems" for configure Result Rules.
+1. Now, you can see Educare icon appears into menu bar.
 
- **Don't forget to activate the plugin.**
+1. Go to "Educare > Settings" for configure the plugin. or 
 
-## Documentation
+1. Go to "Educare > Grading Systems" for configure Result Rules.
+ 
+1. **Add shortcodes for show results in frond-end**
 
-From your WordPress administration panel go to Plugins > Installed Plugins and scroll down until you find Educare. You will need to activate it first (Skip this, if u'r already activated). After activated the plugin, you can see Educare icon appears into menu bar. Go to Educare > Settings to configure it.
+> There are a shortcodes `[educare_results]` that you can use in your post editor or any shortcode-ready area for display front end results system. More info given at shortcode sections.
+
+# Documentation
+
+>###  From your WordPress administration panel go to Plugins > Installed Plugins and scroll down until you find Educare. You will need to activate it first (Skip this, if u'r already activated). After activated the plugin, you can see Educare icon appears into menu bar. Go to Educare > Settings to configure it.
 
 ### How to use the plugin
 
-This plugin is set up everything clearly and simply. So, you can easily manage this plugin features. Currently, there are six (**7**) main Features available for Admin: 
-0. View Results
-0. Add Results
-0. Import Results
-0. Update Results
-0. Grading Systems
-0. Settings Results
+This plugin is set up everything clearly and simply. So, you can easily manage this plugin features. Currently, there are six main Features available for Admin:
 
-One (1) of them for Admin & Users/Students:
-7. Front end results table
+1. View Results
+1. Add Results
+1. Import Results
+1. Update Results
+1. Grading Systems
+1. Settings Results
 
-#### 1. View Results
+Also, there are Two (2) Features available for Users/Students:
 
-*Admin menu > Educare > View Results*
+1. Front end Search forms (user can find her results)
+1. Front end results table (user can view her results)
+
+### Admin features
+
+## 1. View Results
+
+> **Admin menu > Educare > View Results**
 
 There are lots of options to find students results. You can view results by Class, Exam, Year. And short results by Asc or Decs. For this, you need to change that options. Also, You can view all the results at a same times. For view all results, keep entire options by default and click View Results button. That's it!
 
-#### 2. Add Results
+## 2. Add Results
 
-*Admin menu > Educare > Add Results*
+> **Admin menu > Educare > Add Results**
 
 Notes: Please carefully fill out all the details of the form. If you miss one, you may have problems to see the result. So, verify the student's admission form well and then give all details here. All (Class, Exam, Roll No, Regi No, Year) fields are required.
 
-#### 3. Import Results
+## 3. Import Results
 
-*Admin menu > Educare > Import Results*
+> **Admin menu > Educare > Import Results**
 
 Please carefully fill out all the details of your import (.csv) files. If you miss one, you may have problems to import the results. So, verify the student's admission form well and then give all the details in your import files. Required field are: Name, Roll No, Regi No, Exam, Class and Year. So, don't miss all of this required field!
 
@@ -129,82 +119,108 @@ If problem to download the flies, you can manually get this file in plugins dir:
 
 Notes: Files must be an .csv extension for import the results.
 
-#### 4. Update Results
+## 4. Update Results
 
-*Admin menu > Educare > Update Results*
+> **Admin menu > Educare > Update Results**
 
 Here admin can update/edit/delete the students results that was previously added.
 
-#### 5. Grading Systems
+## 5. Grading Systems
 
-*Admin menu > Educare > Grading Systems*
+> **Admin menu > Educare > Grading Systems**
 
 Here you can change your custom results system. Also, you can change or add your country's result rules by code, Educare provides some powerful functions to manage or add custom result rules based on your demand. If you don't khow, How to add custom results rules? Visit the [Educare support](https://wordpress.org/support/plugin/educare)  forum to add your custom rules.
 
 In the preview version of Educare, admins can add results with only one (default) grading system. Now by adding (v1.2.0+) this feature admin can add his country result system/rules. So, <strong>Using this feature you (admin) can add, modify, manage or automatically calculate any type of result based your country or demand<strong>. Eg: India, Bangladesh or US result GPA (CGPA) and calculation methods/rules are different. So, maintaining a defined result using one rule is a bit tricky. The result rule feature solves this problem. If you manage results for Indian students, you can add Indian grading system or rules. Also, you can add Bangladesh or US grading system in the same way. We know, it's a bit difficult. Please share your experience while using these features to improve Educare.
 
-#### 6. Educare Settings
+## 6. Educare Settings
 
-*Admin menu > Educare > Settings*
+> **Admin menu > Educare > Settings**
 
 Here you can see two sections. One is for Add Content and another one is Settings.
 
-* Add Content:
-0. Add/Update/Delete Class
-0. Add/Update/Delete Subject
-0. Add/Update/Delete Exam
-0. Add/Update/Delete Year
-0. Add/Update/Delete Extra field
+**Add Content:**
 
-* Settings
-Here you can change or disable students default photos.
+> 1. Add/Update/Delete Class
+> 1. Add/Update/Delete Subject
+> 1. Add/Update/Delete Exam
+> 1. Add/Update/Delete Year
+> 1. Add/Update/Delete Extra field
 
-#### Page Setup
+**Settings**
+
+> Here you can change or disable Educare default settings.
+
+* **Page Setup:** 
 Inter your front end results page slug (Where you use `[educare_results]` shortcode in your editor, template or any shortcode-ready area for front end results system). Don't need to insert with domain - http://xxxxx.com/results. Only slug will be accepted, for exp: results or index.php/results.
 
-* Switch buttons details:
+* **Customize:** 
+Here you can change or disable Front End Typography of - Name, Roll, Reg Number, Class, Exam and Year
 
-#### Display
-Here you can change or disable Front End Typography of - Name, Roll Number and Reg No
-
-#### Delete confirmation
+* **Delete confirmation:**
 Anable and disable delete/remove confirmation
 
-#### Guidelines
+* **Guidelines:** 
 Anable and disable guide/help messages
+*Recommend: You can keep anabled **Guidelines** to get help pop-up messages. It's help you to know - How to use the the plugins (Educare).*
 
-**Recommend:** You can keep anabled **Guidelines** to get help pop-up messages. It's help you to know - How to use the the plugins (Educare).
-
-#### Students Photos
+* **Students Photos:** 
 Show or Hide students photos
 
-#### Auto Results
+* **Auto Results:** 
 Automatically calculate students results status Passed/Failed and GPA
 
-#### Advance Settings
+* **Advance Settings:** 
 Anable and disable Advance/Developers menu. Note: it's only for developers or advance users
 
-#### Automatically Delete Subject
+* **Automatically Delete Subject:** 
 Automatically Delete Subject from Results Table When You Delete Subject From Subject List?
 
-#### Delete and Clear field data
+* **Delete and Clear field data:** 
 Tips: If you set No that's mean only field will be delete. And, if you set Yes - clear field data when you delete any (current) field. Delete and Clear field data?
 
-#### 7. Front end results table
+## 7. User/Students Features
+1. User can find results 
+1. User can front end results table
+1. User can print results
 
-There are a shortcodes `[educare_results]` that you can use in your post editor or any shortcode-ready area for display front end results system. Mor info given at shortcode sections.
+## Shortcodes
 
-### Shortcodes
+> Currently there are only one shortcodes available. You need to add `[educare_results]` shortcode in editor, template or any shortcode-ready area for front end results system. This shortcode display search form and results table. So, users/students can easily find and view there results.
 
-Currently there are only one shortcodes available that you can use in your (WP) post editor, template or any shortcode-ready area..
+**`[educare_results]`**
 
-#### [educare_results]
+For use this shortcode in your code or any PHP files:
 
-You need to add `[educare_results]` shortcode in editor, template or any shortcode-ready area for front end results system. This shortcode display search form and results table. So, users/students can easily find and view there results.
+**`echo do_shortcode( '[educare_results]' );`**
 
-## Developers only
+# Developers only
 
 If you're a theme author, plugin author, or just a code hobbyist, you can follow this development introductions given below -
+
+## Customize Educare
+
+> ### Educare **v1.2.2+** has two functions to customize the result card and search form
+
+**For customize results card:**
+`educare_custom_results($results)`
+
+**For customize search form:**
+`educare_custom_search_form($not_found, $errmsg)`
+
+1. Copy and paste this function in your themes `functions.php` files
+1. allow/enable ‘Custom Design Permission’ in plugin settings (because we care of your security)
+1. Throw your logic [code] under 'educare_custom_results' function for customize results card and 'educare_custom_search_form' for customize search forms
+
+**Please follow this files for more details:**
+
+For customize results card:
+https://github.com/FixBD/Educare/blob/1.2.2/includes/support/educare_custom_results.php
+
+For customize search form:
+https://github.com/FixBD/Educare/blob/1.2.2/includes/support/educare_custom_search_form.php
+
+If you have face any problems and need our support (Totally Free!), Please contact us by email provided in plugin details.
 
 ### To Change Results Table Style/Colors
 
