@@ -2,7 +2,7 @@
 
 /**
  * @package		Educare
- * @version 	1.2.2
+ * @version 	1.2.3
  * @author	  	FixBD <fixbd.org@gmail.com>
  * @copyright  	GPL-2.0+
  * @link		http://github.com/fixbd/educare
@@ -11,7 +11,7 @@
  * Plugin Name:  Educare
  * Plugin URI:	 http://github.com/fixbd/educare
  * Description:	 Educare is a powerful online School/College students & results management system dev by FixBD. This plugin allows you to manage and publish students results. You can easily Add/Edit/Delete Students, Results, Class, Exam, Year Custom field and much more... Also you can import & export unlimited students and results just a click!
- * Version:      1.2.2
+ * Version:      1.2.3
  * Author:       FixBD
  * Author URI:   http://github.com/fixbd
  * License:		 GPL-2.0+
@@ -19,7 +19,7 @@
  * 
  * Attention please...
  * Educare is a free software; you can redistribute it and/or modify it under the terms of the GNU
- * General Public License as published by the Free Software Foundation; either version 2 of the License,
+ * General Public License as published by the Free Software Foundation. either version 2 of the License,
  * or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
@@ -30,7 +30,7 @@
 
 // Make it simple! (Define paths)
 // You can use ### include "your/url/files.php";
-define('EDUCARE_VERSION', '1.2.2');
+define('EDUCARE_VERSION', '1.2.3');
 define('EDUCARE_SETTINGS_VERSION', '1.0');
 define('EDUCARE_RESULTS_VERSION', '1.0');
 define('EDUCARE_DIR', plugin_dir_path(__FILE__));
@@ -43,10 +43,6 @@ define('EDUCARE_URL', plugin_dir_url(EDUCARE_FOLDER).EDUCARE_FOLDER.'/');
 // Create a database table for plugin settings and student results system
 require_once(EDUCARE_INC.'database/educare-database.php');
 register_activation_hook( __FILE__, 'educare_database_table' );
-
-// Create a database table for plugin settings
-// require_once(EDUCARE_INC.'database/default-settings.php');
-// register_activation_hook( __FILE__, 'educare_default_settings' );
 
 // Include plugin functions
 require_once(EDUCARE_INC.'functions.php');

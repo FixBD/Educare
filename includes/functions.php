@@ -58,7 +58,7 @@ function educare_esc_str($str) {
 		4. educare_check_status('auto_results');
 		5. educare_check_status('delete_subject');
 		6. educare_check_status('clear_field');
-		7. educare_check_status('name', true); // true because, this is an array
+		7. educare_check_status('Name', true); // true because, this is an array
 	
 	# Above callback function return current status => checked or unchecked
 	# Notes: all default status => checked
@@ -660,7 +660,7 @@ function educare_files_selector($type, $print) {
 	$default_photos = wp_get_attachment_url( get_option( 'educare_files_selector' ) );
 	
 	if ($default_photos == null) {
-		$default_img = EDUCARE_URL.'assets/img/default.jpg';
+		$default_img = EDUCARE_URL.'assets/img/default.svg';
     } else {
 		$default_img = wp_get_attachment_url( get_option( 'educare_files_selector' ) );
 	}
@@ -678,7 +678,7 @@ function educare_files_selector($type, $print) {
 		$guide = "Current students photos are default. Please upload or select  a custom photos from gallery that's you want!";
 
     	if ($default_photos == null) {
-			$img = EDUCARE_URL.'assets/img/default.jpg';
+			$img = EDUCARE_URL.'assets/img/default.svg';
 	    } else {
     		$img = wp_get_attachment_url( get_option( 'educare_files_selector' ) );
     	}
@@ -825,7 +825,7 @@ function educare_files_selector($type, $print) {
 	# Actually, this function only for print forms under educare_save_results();
 
 	* @since 1.0.0
-	* @last-update 1.2.0
+	* @last-update 1.2.3
 	
 	* @param object $print		Getting object value
 	* @param string $submit	Forms action type - Add/Update
@@ -845,7 +845,7 @@ function educare_get_results_forms($print, $submit) {
 		$Roll_No = $print->Roll_No;
 		$Regi_No = $print->Regi_No;
 	} else {
-		$selected_class = $selected_exam = $selected_year = $id = $Name = $Roll_No = $Regi_No = '';
+		$id = $Name = $Roll_No = $Regi_No = '';
 		
 		if (isset($_POST['Add'])) {
 			$Name = sanitize_text_field($_POST['Name']);
@@ -859,172 +859,171 @@ function educare_get_results_forms($print, $submit) {
 	?>
 	
 	<form class="add_results" action="<?php echo esc_url($_SERVER['REQUEST_URI']); ?>" method="post">
-	<div class="content">
-		
-		<?php 
-		if (isset($_POST['edit']) or isset($_POST['edit_by_id'])) {
-			$photos = $print->Details;
-			$photos = json_decode($photos);
+		<div class="content">
 			
-			educare_files_selector('update', $photos);
-			echo "<input type='hidden' id='id_no' name='id' value='".esc_attr($id)."'/>";
-		} else {
-			echo "<input type='hidden' id='id_no'>";
-			educare_files_selector('add_results', '');
-		}
-		?> 
-     <h2>Students Details</h2>
-      
-      <div class="select">
-			<label for="Class" class="labels" id="class"></label>
-			<label for="Exam" class="labels" id="exam"></label>
-		</div>
-		
-		<?php 
-			$chek_name = educare_check_status('name', true);
-			$chek_roll = educare_check_status('roll_no', true);
-			$chek_regi = educare_check_status('regi_no', true);
-
-			if ($chek_name) {
-				echo '<p>'.esc_html($chek_name).':</p>
-				<label for="Name" class="labels" id="name"></label>
-				<input type="text" name="Name" value="'.esc_attr($Name).'" placeholder="Inter '.esc_html($chek_name).'">
-				';
-			} else {
-				echo '<input type="hidden" name="Name" value="'.esc_attr($Name).'">';
-			}
-
-			if ($chek_roll) {
-				echo '<p>'.esc_html($chek_roll).':</p>
-				<label for="Roll_No" class="labels" id="roll_no"></label>
-				<input type="number" name="Roll_No" value="'.esc_attr($Roll_No).'" placeholder="Inter '.esc_html($chek_roll).'">
-				';
-			} else {
-				echo '<input type="hidden" name="Roll_No" value="Null">';
-			}
-
-			if ($chek_regi) {
-				echo '<p>'.esc_html($chek_regi).':</p>
-				<label for="Regi_No" class="labels" id="regi_no"></label>
-				<input type="text" name="Regi_No" value="'.esc_attr($Regi_No).'" placeholder="Inter '.esc_html($chek_regi).'">
-				';
-			} else {
-				echo '<input type="hidden" name="Regi_No" value="Null">';
-			}
-		?>
-		
-		<?php echo educare_guide_for('add_class');?>
-
-		<div class="select">
-			<select id="Class" name="Class" class="form-control">
-				<?php educare_get_options('Class', $Class);?>
-			</select>
+			<?php 
+			if (isset($_POST['edit']) or isset($_POST['edit_by_id'])) {
+				$photos = $print->Details;
+				$photos = json_decode($photos);
 				
-			<select id="Exam" name="Exam" class="fields">
-				<?php educare_get_options('Exam', $Exam);?>
+				educare_files_selector('update', $photos);
+				echo "<input type='hidden' id='id_no' name='id' value='".esc_attr($id)."'/>";
+			} else {
+				echo "<input type='hidden' id='id_no'>";
+				educare_files_selector('add_results', '');
+			}
+			?> 
+			<h2>Students Details</h2>
+				
+				<div class="select">
+				<label for="Class" class="labels" id="class"></label>
+				<label for="Exam" class="labels" id="exam"></label>
+			</div>
+			
+			<?php 
+				$chek_name = educare_check_status('Name', true);
+				$chek_roll = educare_check_status('Roll_No', true);
+				$chek_regi = educare_check_status('Regi_No', true);
+
+				if ($chek_name) {
+					echo '<p>'.esc_html($chek_name).':</p>
+					<label for="Name" class="labels" id="name"></label>
+					<input type="text" name="Name" value="'.esc_attr($Name).'" placeholder="Inter '.esc_html($chek_name).'">
+					';
+				} else {
+					echo '<input type="hidden" name="Name" value="'.esc_attr($Name).'">';
+				}
+
+				if ($chek_roll) {
+					echo '<p>'.esc_html($chek_roll).':</p>
+					<label for="Roll_No" class="labels" id="roll_no"></label>
+					<input type="number" name="Roll_No" value="'.esc_attr($Roll_No).'" placeholder="Inter '.esc_html($chek_roll).'">
+					';
+				} else {
+					echo '<input type="hidden" name="Roll_No" value="Null">';
+				}
+
+				if ($chek_regi) {
+					echo '<p>'.esc_html($chek_regi).':</p>
+					<label for="Regi_No" class="labels" id="regi_no"></label>
+					<input type="text" name="Regi_No" value="'.esc_attr($Regi_No).'" placeholder="Inter '.esc_html($chek_regi).'">
+					';
+				} else {
+					echo '<input type="hidden" name="Regi_No" value="Null">';
+				}
+			?>
+			
+			<?php echo educare_guide_for('add_class');?>
+
+			<div class="select">
+				<select id="Class" name="Class" class="form-control">
+					<?php educare_get_options('Class', $Class);?>
+				</select>
+					
+				<select id="Exam" name="Exam" class="fields">
+					<?php educare_get_options('Exam', $Exam);?>
+				</select>
+			</div>
+				
+			<!-- Extra field -->
+			<h2>Others</h2>
+			<?php
+			echo educare_guide_for('add_extra_field');
+			
+			if (isset($_POST['Add'])) {
+				educare_get_options('Extra_field', 'add');
+			} else {
+				educare_get_options('Extra_field', $id);
+			}
+			?>
+				
+			Select Year:<br>
+			<select id="Year" name="Year" class="fields">
+				<?php educare_get_options('Year', $Year);?>
 			</select>
-		</div>
 			
-		<!-- Extra field -->
-		<h2>Others</h2>
-		<?php
-		echo educare_guide_for('add_extra_field');
-		
-		if (isset($_POST['Add'])) {
-			educare_get_options('Extra_field', 'add');
-		} else {
-			educare_get_options('Extra_field', $id);
-		}
-		?>
+			<h2>Students Results</h2>
 			
-		Select Year:<br>
-		<select id="Year" name="Year" class="fields">
-			<?php educare_get_options('Year', $Year);?>
-		</select>
-    	
-    
-    <h2>Students Results</h2>
-    
-		<?php
-		if (educare_check_status('auto_results') == 'checked') {
-			$disabled = 'disabled';
+			<?php
+			if (educare_check_status('auto_results') == 'checked') {
+				$disabled = 'disabled';
+				
+				echo educare_guide_for('You can not modify (Result, GPA and Grade options. If You need to manually set this options, first disable <b>Auto Result</b> system frome educare (plugins) settings. Click here to <a href="/wp-admin/admin.php?page=educare-settings#settings" target="_blank">Disable Auto Results</a>');
 
-			echo educare_guide_for('You can not modify (Result, GPA and Grade options. If You need to manually set this options, first disable <b>Auto Result</b> system frome educare (plugins) settings. Click here to <a href="/wp-admin/admin.php?page=educare-settings#settings" target="_blank">Disable Auto Results</a>');
+				echo '<input type="hidden" name="Result" value="'.esc_attr(educare_value('Result', $id)).'">';
+				echo '<input type="hidden" name="GPA" value="'.esc_attr(educare_value('GPA', $id)).'">';
+			} else {
+				$disabled = '';
+			}
+			?>
 
-			echo '<input type="hidden" name="Result" value="'.esc_attr(educare_value('Result', $id)).'">';
-			echo '<input type="hidden" name="GPA" value="'.esc_attr(educare_value('GPA', $id)).'">';
-		} else {
-			$disabled = '';
-		}
-		?>
-
-		<div class="select">
-			<p>Result:</p>
-			<p>GPA:</p>
-		</div>
-		<div class="select">
-			<select name="Result" class="form-control" <?php echo esc_attr( $disabled );?>>
-			<?php if (isset($_POST['Add'])) { echo '<option>Select Status</option>'; }?>
-				<option value="Passed" <?php if (educare_value('Result', $id) == 'Passed') { echo 'Selected'; }?>>Passed</option>
-				<option value="Failed" <?php if (educare_value('Result', $id) == 'Failed') { echo 'Selected'; }?>>Failed</option>
-			</select>
+			<div class="select">
+				<p>Result:</p>
+				<p>GPA:</p>
+			</div>
+			<div class="select">
+				<select name="Result" class="form-control" <?php echo esc_attr( $disabled );?>>
+				<?php if (isset($_POST['Add'])) { echo '<option>Select Status</option>'; }?>
+					<option value="Passed" <?php if (educare_value('Result', $id) == 'Passed') { echo 'Selected'; }?>>Passed</option>
+					<option value="Failed" <?php if (educare_value('Result', $id) == 'Failed') { echo 'Selected'; }?>>Failed</option>
+				</select>
+				
+				<input type="number" name="GPA" class="fields" value="<?php echo esc_attr(educare_value('GPA', $id));?>" placeholder="0.00" <?php echo esc_attr( $disabled );?>>
+			</div>
 			
-			<input type="number" name="GPA" class="fields" value="<?php echo esc_attr(educare_value('GPA', $id));?>" placeholder="0.00" <?php echo esc_attr( $disabled );?>>
-		</div>
-		
-		<?php echo educare_guide_for('add_subject');?>
-		<div id="result_msg">
-			<?php educare_get_subject($Class, $id) ?>
-		</div>
-		
-		<script>
-		$(document).on("change", "#Class", function() {
-			$(this).attr('disabled', true);
-			var class_name = $('#Class').val();
-			var id_no = $('#id_no').val();
-			$.ajax({
-					url: "<?php echo esc_url(admin_url('admin-ajax.php'))?>",
-					data: {
-					action: 'educare_class',
-					class: class_name,
-					id: id_no,
-				},
-					type: 'POST',
-					success: function(data) {
-						$('#result_msg').html(data);
-						$('#Class').attr('disabled', false);
+			<?php echo educare_guide_for('add_subject');?>
+			<div id="result_msg">
+				<?php educare_get_subject($Class, $id) ?>
+			</div>
+			
+			<script>
+			$(document).on("change", "#Class", function() {
+				$(this).attr('disabled', true);
+				var class_name = $('#Class').val();
+				var id_no = $('#id_no').val();
+				$.ajax({
+						url: "<?php echo esc_url(admin_url('admin-ajax.php'))?>",
+						data: {
+						action: 'educare_class',
+						class: class_name,
+						id: id_no,
 					},
-					error: function(data) {
-						alert(data);
-					},
+						type: 'POST',
+						success: function(data) {
+							$('#result_msg').html(data);
+							$('#Class').attr('disabled', false);
+						},
+						error: function(data) {
+							alert(data);
+						},
+				});
 			});
-		});
-		</script>
+			</script>
 
-		<script>
-		function myFunction() {
-			var x = document.getElementById("optional_subject").value;
-			var y = document.getElementById(x).value;
-		
-			document.getElementById("optional").value = "1 " + y;
-			document.getElementById("optional").setAttribute("name", x);
-		}
-		</script>
-		
-		<br>
-        <button type="submit" name="<?php echo esc_attr($submit);?>" class="educare_button" onClick="<?php echo esc_js('myFunction()');?>"><i class="dashicons dashicons-<?php if ($submit == 'Add') {echo 'plus-alt';}else{echo 'edit';}?>"></i> <?php echo esc_html($submit);?> Results</button>
-        	
-        	<?php
-        	// remove delete button when Add results
+			<script>
+			function myFunction() {
+				var x = document.getElementById("optional_subject").value;
+				var y = document.getElementById(x).value;
+			
+				document.getElementById("optional").value = "1 " + y;
+				document.getElementById("optional").setAttribute("name", x);
+			}
+			</script>
+			
+			<br>
+			<button type="submit" name="<?php echo esc_attr($submit);?>" class="educare_button" onClick="<?php echo esc_js('myFunction()');?>"><i class="dashicons dashicons-<?php if ($submit == 'Add') {echo 'plus-alt';}else{echo 'edit';}?>"></i> <?php echo esc_html($submit);?> Results</button>
+					
+			<?php
+			// remove delete button when Add results
 			if ($submit != 'Add') {
 				?>
 					<button type="submit" name="delete" class="educare_button" <?php educare_confirmation('Result', 'this result');?>><i class="dashicons dashicons-trash"></i>Delete</button>
 				<?php
 			}
 			?>
-        
-    </div>
-    </form>
+			
+		</div>
+  </form>
 
 	<?php
 }
@@ -1043,7 +1042,7 @@ function educare_get_results_forms($print, $submit) {
 	# Users only view the results.
 
 	* @since 1.0.0
-	* @last-update 1.2.0
+	* @last-update 1.2.3
 	
 	* @return null|HTML
 	
@@ -1064,8 +1063,10 @@ function educare_get_search_forms() {
 	<form class="add_results" action="" method="post" id="edit">
 	<div class="content">
 		<?php 
-			$chek_roll = educare_check_status('roll_no', true);
-			$chek_regi = educare_check_status('regi_no', true);
+			$chek_roll = educare_check_status('Roll_No', true);
+			$chek_regi = educare_check_status('Regi_No', true);
+			$chek_class = educare_check_status('Class', true);
+			$chek_exam = educare_check_status('Exam', true);
 
 			if ($chek_roll) {
 				echo '<p>'.esc_html($chek_roll).':</p>
@@ -1084,51 +1085,49 @@ function educare_get_search_forms() {
 			} else {
 				echo '<input type="hidden" name="Regi_No" value="Null">';
 			}
+
+			echo '<div class="select">';
+			if ($chek_class) {
+				?>
+				<div>
+					<p><?php echo esc_html($chek_class);?>:</p>
+					<select id="Class" name="Class" class="form-control">
+						<?php educare_get_options('Class', $Class);?>
+					</select>
+				</div>
+				<?php
+			} else {
+				echo '<input type="hidden" name="Class" value="Null">';
+			}
+
+			if ($chek_exam) {
+				?>
+				<div>
+					<p><?php echo esc_html($chek_exam);?>:</p>
+					<select id="Exam" name="Exam" class="fields">
+						<?php educare_get_options('Exam', $Exam);?>
+					</select>
+				</div>
+				<?php
+			} else {
+				echo '<input type="hidden" name="Exam" value="Null">';
+			}
+			echo '</div>';
 		?>
 		
 		<div class="select">
-			<label for="Class" class="labels" id="class"></label>
-			<label for="Exam" class="labels" id="exam"></label>
+			<div>
+				<p>Select Year:</p>
+				<select id="Year" name="Year" class="fields">
+					<?php educare_get_options('Year', $Year);?>
+				</select>
+			</div>
+
+			<div></div>
 		</div>
-		<div class="select">
 
-			<select id="Class" name="Class" class="form-control">
-				<?php
-				/** 
-				echo '<option value="0">Select Class</option>';
-				
-				$options = array(
-				'Class 6' => 'Class 6',
-				'Class 7' => 'Class 7',
-				'Class 8' => 'Class 8',
-				'Class 9' => 'Class 9',
-				'Class 10' => 'Class 10'
-				// ....
-				);
-				
-				foreach ( $options as $class_list) {
-					echo '<option value="'.esc_attr($class_list).'" >'.esc_html($class_list).'</option>';
-				}
-				*/
-			
-				educare_get_options('Class', $Class);
-				?>
-			</select>
-
-			<select id="Exam" name="Exam" class="fields">
-				<?php educare_get_options('Exam', $Exam);?>
-			</select>
-
-		</div>
-		
-		<p>Select Year:</p>
-		<select id="Year" name="Year" class="fields">
-			<?php educare_get_options('Year', $Year);?>
-		</select>
-
-		<br>
-		
 		<button id="edit_btn" name="edit" type="submit" class="educare_button"><i class="dashicons dashicons-search"></i> Search for edit</button>
+
 	</div>
 	</form>
 	<?php
@@ -1209,9 +1208,9 @@ function educare_save_results() {
 		ob_start();
 		educare_confirmation('Result', 'this result');
 		$confirm = ob_get_clean();
-		$chek_name = educare_check_status('name', true);
-		$chek_roll = educare_check_status('roll_no', true);
-		$chek_regi = educare_check_status('regi_no', true);
+		$chek_name = educare_check_status('Name', true);
+		$chek_roll = educare_check_status('Roll_No', true);
+		$chek_regi = educare_check_status('Regi_No', true);
 		
 		if ($x == 'updated') {
 			$id = sanitize_text_field($_POST['id']);
@@ -1321,8 +1320,10 @@ function educare_save_results() {
 	global $wpdb;
 	$table_name = $wpdb->prefix . 'educare_results';
 	
-	$chek_roll = educare_check_status('roll_no', true);
-	$chek_regi = educare_check_status('regi_no', true);
+	$chek_roll = educare_check_status('Roll_No', true);
+	$chek_regi = educare_check_status('Regi_No', true);
+	$chek_class = educare_check_status('Class', true);
+	$chek_exam = educare_check_status('Exam', true);
 
 	if ( isset($_POST['Add']) or isset($_POST['edit']) or isset($_POST['edit_by_id']) or isset($_POST['update']) ) {
 		
@@ -1351,8 +1352,18 @@ function educare_save_results() {
 			} else {
 				$regi = '';
 			}
+			if ($chek_class) {
+				$class = " AND Class='$Class'";
+			} else {
+				$class = '';
+			}
+			if ($chek_exam) {
+				$exam = " AND Exam='$Exam'";
+			} else {
+				$exam = '';
+			}
 			
-			$select = "SELECT * FROM $table_name WHERE Class='$Class' AND Exam='$Exam' $roll $regi AND Year='$Year'";
+			$select = "SELECT * FROM $table_name WHERE Year='$Year' $class $exam $roll $regi";
 			
 			$results = $wpdb->get_results($select);
 		}
@@ -1677,7 +1688,7 @@ function educare_class() {
 	# Create demo files (import_demo.csv) for specific class
 
 	* @since 1.2.0
-	* @last-update 1.2.0
+	* @last-update 1.2.2
 
 	* @return mised/create a files
 	
@@ -1716,9 +1727,9 @@ function educare_demo() {
 			// 'GPA' => $GPA
 		);
 
-		$chek_roll = educare_check_status('roll_no', true);
-		$chek_regi = educare_check_status('regi_no', true);
-		$chek_name = educare_check_status('name', true);
+		$chek_roll = educare_check_status('Roll_No', true);
+		$chek_regi = educare_check_status('Regi_No', true);
+		$chek_name = educare_check_status('Name', true);
 
 		if ($chek_roll) {
 			$data = educare_replace_key_n_val($data, 'Roll_No', $chek_roll);

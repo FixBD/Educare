@@ -2,11 +2,11 @@
 
 Contributors:        fixbd
 GitHub link:         https://github.com/fixbd/educare
-Tags:                Result management, Results, Students, Education, School, College, Coaching Center, Exam, School management, publish results
+Tags:                Result management, Academic, Results, Students, Education, School, College, Coaching Center, Exam, School management, publish results
 Requires at least:   3.8
 Tested up to:        6.0.2
 Requires PHP:        5.2.4
-Stable tag:          1.2.2
+Stable tag:          1.2.3
 License:             GPLv2 or later
 License URI:         http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -218,7 +218,7 @@ We know, it's a bit difficult. Please share your experience while using these fe
 
 ### How to show result on (Front End) page?
 
-#### [educare_results]
+`[educare_results]`
 
 You need to add `[educare_results]` shortcode into WP post editor, template or any shortcode-ready area for front end results system. This shortcode display search form and results. So, users/students can easily find and view there results.
 
@@ -264,6 +264,19 @@ Attention please: You only need to give us 5 stars!
 12. Add Extra Fields
 
 == Changelog ==
+
+= 1.2.3 =
+
+* Improve perfomance
+* Added Customize options in settings
+* Now admin can enable/disable all default required fields in search forms. (Roll Number, Reg Number, Class, Exam, Year)
+* Added more options to view results (admin can find results of his choice!)
+* Added single results delete button in view results
+* Fixed issue with Delete All Results button not working
+* Fixed all well khown bugs
+* Custom result calculation option will be added after next update. Using these options admin can define, how to calculate results and GPA (CGPA).
+
+* **Please note:** This is an most stable version of Educare. If you face any problem (any bugs issues), please inform us.
 
 = 1.2.2 =
 

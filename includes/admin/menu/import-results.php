@@ -8,7 +8,7 @@
 	### Educare Import Results
 
   * @since 1.0.0
-	* @last-update 1.2.0
+	* @last-update 1.2.3
 
   * @return void
 	
@@ -53,9 +53,9 @@ function educare_import_result() {
 				'Photos'
 			);
 
-			$chek_roll = educare_check_status('roll_no', true);
-			$chek_regi = educare_check_status('regi_no', true);
-			$chek_name = educare_check_status('name', true);
+			$chek_roll = educare_check_status('Roll_No', true);
+			$chek_regi = educare_check_status('Regi_No', true);
+			$chek_name = educare_check_status('Name', true);
 
 			if (!$chek_roll) {
 				$data = educare_remove_value('Roll_No', $data);
@@ -92,12 +92,12 @@ function educare_import_result() {
 				$content_len = $value_len;
 				
 				/* =====( Explain )=====
-				* 19 means $table rows/headers ($table structure).
-				# Currently $table row (default) length is 19.
+				* Example for default Class 6 -> subject = 3, extra field = 7 and default requred field = 9 (Name, Roll No, Regi No, Class, Exam, Year, Passed, GPA, Photos)
+				# So, default $table row length is (3+7+9) = 19.
 				# Notes: 19 only for example. Sometimes, It's may grow (+19) and reduce (-19) based on the users settings
 				
 				* For example:
-					If users add any content, like Subject or Extra field it's (19) grow up and reduce if users delete any contents.
+					If users add any content, like Subject or Extra field it's (19+1) = 20 grow up and reduce if users delete any contents.
 					
 					# Getting csv data value and assign it's a var
 					$Name = trim($csvData[0]);
@@ -127,19 +127,20 @@ function educare_import_result() {
 					
 					# Now, we can insert our data/value into database
 					1. $table		=	table,
-					2. $data	 	=	data (*array)
+					2. $data	 	=	data (all data in one array)
 					
 					// Finally Insert data/value
 					$wpdb->insert(
-									$table,	// 1. table
-						$data, 	// 2. data (array)
+						$table,	// 1. table
+						$data, 	// 2. data
 					);
 					
 					# SQP sample,
 						INSERT INTO '$table' ('Name', 'Roll_No', 'Reg_No', 'Class', 'Exam', 'Year') VALUES ('$Name', '$Roll_No', '$Reg_No', '$Class', '$Exam', '$Year')
 				
-				# Please note, here were assign data {$data} with a function for automatically adjust users settings and csv files {$dataLen == $content_len}. but it's same to work above details.
+				# Please note, here were assign data {$value_len} with a function 'educare_demo_data()' for automatically adjust users settings and csv files {$dataLen == $value_len}. but it's same to work above details.
 				*/
+
 				$error_found = false; 
 
 				if ($chek_name and !in_array($chek_name, $keys) or $chek_roll and !in_array($chek_roll, $keys) or $chek_regi and !in_array($chek_regi, $keys)) $error_found = true;
@@ -253,12 +254,14 @@ echo educare_guide_for('import');
 
 <!-- Import Form -->
 <form  class="add_results" method="post" action="<?php esc_url($_SERVER['REQUEST_URI']); ?>" enctype="multipart/form-data">
+<div class="content">
 	<p>Files must be an <b>.csv</b> extension for import the results.</p>
 	<input type="file" name="import_file">
 	<select name="Class" class="form-control">
 		<?php educare_get_options('Class', '');?>
 	</select><br>
 	<button class="educare_button" type="submit" name="educare_import_results"><i class="dashicons dashicons-database-import"></i> Import</button>
+</div>
 </form>
 <br>
 

@@ -300,9 +300,11 @@ function educare_get_results() {
 	$not_found = $errmsg = ''; // only for results forms
 	$Class = $Exam = $Roll_No = $Regi_No = $Year = '';
 
-	$chek_name = educare_check_status('name', true);
-	$chek_roll = educare_check_status('roll_no', true);
-	$chek_regi = educare_check_status('regi_no', true);
+	$chek_name = educare_check_status('Name', true);
+	$chek_roll = educare_check_status('Roll_No', true);
+	$chek_regi = educare_check_status('Regi_No', true);
+	$chek_class = educare_check_status('Class', true);
+	$chek_exam = educare_check_status('Exam', true);
 	$custom_results = educare_check_status('custom_results');
 
 	echo '<div class="educare_results">';
@@ -316,15 +318,21 @@ function educare_get_results() {
 			$Regi_No = sanitize_text_field($_POST['Regi_No']);
 			$Year = sanitize_text_field($_POST['Year']);
 
-			$search_regi = $search_roll = '';
+			$search_regi = $search_roll = $search_class = $search_exam = '';
 			if ($chek_roll) {
 				$search_roll = " AND Roll_No='$Roll_No'";
 			}
 			if ($chek_regi) {
 				$search_regi = " AND Regi_No='$Regi_No'";
 			}
+			if ($chek_class) {
+				$search_class = " AND Class='$Class'";
+			}
+			if ($chek_exam) {
+				$search_exam = " AND Regi_No='$Exam'";
+			}
 			
-			$educare_results = $wpdb->get_results("SELECT * FROM $table_name WHERE Class='$Class' AND Exam='$Exam' $search_roll $search_regi AND Year='$Year'");
+			$educare_results = $wpdb->get_results("SELECT * FROM $table_name WHERE Year='$Year' $search_class $search_exam $search_roll $search_regi");
 		}
 		
 		/** 
@@ -563,28 +571,34 @@ function educare_get_results() {
 			?>
 			
 			<form class="educare_results_form forms" action="" method="post" id="educare_results">
-				<div class="select">
-					<p>Select Class:
-						<select id="Class" name="Class" class="form-control">
-							<?php 
-							echo '<option value="0">Select Class</option>';
-							wp_kses_post(educare_get_options('Class', $Class));
-							?>
-						</select>
-					</p>
-				
-					<p>Select Exam:
-						<label for="Exam" class="labels" id="exam"></label>
-						<select id="Exam" name="Exam" class="form-control">
-							<?php 
-							echo '<option value="0">Select Exam</option>';
-							wp_kses_post(educare_get_options('Exam', $Exam));
-							?>
-						</select>
-					</p>
-				</div>
-
 				<?php
+				
+				echo '<div class="select">';
+				if ($chek_class) {
+					?>
+					<p>Select Class:
+					<select id="Class" name="Class" class="form-control">
+						<?php educare_get_options('Class', $Class);?>
+					</select>
+					</p>
+					<?php
+				} else {
+					echo '<input type="hidden" name="Class" value="Null">';
+				}
+	
+				if ($chek_exam) {
+					?>
+					<p>Select Exam:
+					<select id="Exam" name="Exam" class="fields">
+						<?php educare_get_options('Exam', $Exam);?>
+					</select>
+					</p>
+					<?php
+				} else {
+					echo '<input type="hidden" name="Exam" value="Null">';
+				}
+				echo '</div>';
+
 				if ($chek_roll) {
 					echo ''.esc_attr($chek_roll).':
 					<label for="Roll_No" class="labels" id="roll_no"></label>

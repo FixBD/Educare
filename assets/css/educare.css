@@ -28,10 +28,7 @@
 /* educare */
 body {
 	font-size: 18px;
-}
-
-table {
-  border-collapse: collapse;
+  font-family: "Inter", sans-serif;
 }
 
 table td {
@@ -136,8 +133,8 @@ form p {
 	margin: 16px auto;
 	padding: 16px;
 	background-color: #fff;
-	border-radius: 4px;
-	box-shadow: 0px 5px 32px rgba(0,0,0,0.2);
+	border-radius: 8px;
+	box-shadow: 0 10px 30px rgba(0, 0, 0, 0.07);
 }
 .add_results .content {
 	max-width: 600px;
@@ -160,24 +157,33 @@ input[type="submit"] {
 	width: auto;
 	font-family: dashicons;
 }
-.select,
-.add_results .forms_field {
+.select {
 	display: flex;
-	width: 100%;
+  gap: 16px;
+  align-items: center;
+  flex-flow: wrap;
 }
-.select input, 
-.select select {
-	padding: 8px 12px;
+.select * {
+  flex: 2 100px;
+}
+.add-subject * {
+  flex: 1;
+  width: 100%;
 }
 
-.select > *  {
-	display: flex;
-	flex: 1;
-	margin-bottom: 4px;
+/* Responsive layout - makes a one column layout instead of a two-column layout */
+@media (max-width: 600px) {
+  .add-subject {
+    flex-direction: column;
+    align-items: initial;
+    gap: 0;
+  }
+  .add-subject * {
+    flex: 1;
+    width: 100%;
+  }
 }
-.select > *:first-child {
-	margin-right: 16px;
-}
+
 
 input[type="radio"],
 input[type="checkbox"] {
@@ -192,18 +198,21 @@ input[type="checkbox"] {
 .educare_button {
 	color: #fff;
 	background: -moz-linear-gradient(45deg, rgb(13,83,86) 0%,rgb(69,203,149) 100%);
-    background: -webkit-linear-gradient(45deg, rgb(13,83,86) 0%,rgb(69,203,149) 100%);
-    background: linear-gradient(45deg, rgb(13,83,86) 0%,rgb(69,203,149) 100%);
-    filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='rgb(13,83,86)', endColorstr='rgb(69,203,149)',GradientType=1 );
+  background: -webkit-linear-gradient(45deg, rgb(13,83,86) 0%,rgb(69,203,149) 100%);
+  background: linear-gradient(45deg, rgb(13,83,86) 0%,rgb(69,203,149) 100%);
+  filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='rgb(13,83,86)', endColorstr='rgb(69,203,149)',GradientType=1 );
 	text-align: center;
 	text-decoration: none;
 	font-weight: bold;
 	padding: 12px;
 	margin-top: 22px;
 	border: 0px;
-	border-radius: 4px;
-	box-shadow: 0px 5px 12px rgba(0,0,0,0.3);
+	border-radius: 8px;
+	box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
 	transition: 0.3s;
+}
+.educare_button.full {
+  width: 100%;
 }
 
 .educare_button.disabled,
@@ -226,7 +235,7 @@ input.educare_button {
   filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='rgb(13,83,86)', endColorstr='#8200f4',GradientType=1 );
 	-webkit-transition: color 0.3s, -webkit-transform 0.3s; 
 	transition: color 0.3s, transform 0.3s;
-	box-shadow: 0px 5px 12px rgba(0,0,0,0.5);
+	box-shadow: 0 5px 12px rgba(0, 0, 0, 0.3);
 	transition: 0.3s;
 }
 
@@ -234,9 +243,6 @@ input.educare_button {
 	display: inline;
 }
 
-.add_results table {
-	width: 100%;
-}
 .add_results th {
 	text-align: left;
 }
@@ -509,8 +515,9 @@ educare settings
 }
 .educare-settings {
 	display: flex;
-	margin: 18px 0;
+	margin: 0;
   padding: 0 18px;
+  padding-top: 9px;
   border-bottom: 1px dotted rgba(13,83,86,0.3);
 }
 .educare-settings .title {
@@ -542,28 +549,14 @@ h2.left {
   border: 1px dotted rgba(13,83,86,0.3);
 }
 
-.educare_settings h1 {
-	color: rgb(13,83,86);
-	text-align: left;
-	font-weight: bold;
-}
-
 .educare_post .cover {
 	text-align: center;
 }
-.educare_post .cover img.cover {
-	box-shadow: 0px 38px 78px 78px rgb(255, 255, 255);
-	border-radius: 50px;
-	max-width: 60%;
-	min-width: 280px;
+.educare_post .cover img {
+	max-width: 40%;
+	min-width: 220px;
 	margin: 0 auto;
 	transition: all 0.4s ease-in-out;
-}
-.educare_post .cover img.logo {
-	width: 160px;
-	margin: 0 auto;
-	margin-top: -20px;
-	display: none;
 }
 
 input.educare_clean {
@@ -586,10 +579,6 @@ input.educare_clean:before {
 
 .educare_files_selector_disabled {
 	color: #939393;
-}
-
-.educare_files_selector img {
-	display: block;
 }
 
 span.type {
@@ -630,9 +619,10 @@ span.file:before {
 .educare_files_selector img {
 	width: 150px;
 	height: 150px;
+  display: block;
 	margin: auto;
 	border-radius: 100%;
-	box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.1);
+	box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
 }
 
 
@@ -646,7 +636,7 @@ span.file:before {
   text-align: center;
   overflow: hidden;
   border-radius: 8px;
-  box-shadow: 0px 5px 20px rgba(0,0,0,0.2);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
   position: -webkit-sticky;
   position: sticky;
   top: 5px;
@@ -688,7 +678,7 @@ span.file:before {
 .tab_content {
   display: none;
   position: relative;
-  padding: 48px 1%;
+  padding: 30px 1%;
 }
 
 /* Go from zero to full opacity */
@@ -782,7 +772,7 @@ span.file:before {
 .collapses {
   border-radius: 8px;
   overflow: hidden;
-  box-shadow: 0px 5px 32px rgba(0,0,0,0.2);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.07);
 }
 
 .collapse {
@@ -812,6 +802,10 @@ span.file:before {
   opacity: 1;
 }
 
+.collapse-label div i {
+  margin-right: 6px;
+}
+
 .collapse-label span input {
   font-size: 1rem;
   padding: 4px 5px;
@@ -839,9 +833,12 @@ span.file:before {
   max-height: 0;
   padding: 0 1em;
   color: #2c3e50;
-  background: white;
+  /* background: white; */
   -webkit-transition: all 0.35s;
   transition: all 0.35s;
+}
+.collapse-content.bg-white {
+  background: white;
 }
 .collapse-close {
   display: -webkit-box;
@@ -882,7 +879,14 @@ V1.2.0
 .tab_head {
   background: #fff;
   margin-top: 18px;
-  margin-bottom: -18px;
+  /* margin-bottom: -18px; */
+  display: inline-block;
+  padding: 0px;
+  margin-bottom: -28px;
+  /* padding-right: 8px; */
+  border-radius: 8px;
+  /* height: 52px; */
+  display: flex;
 }
 
 .tab_head button {
@@ -891,6 +895,7 @@ V1.2.0
   margin: 0px;
   margin-right: 0px;
   margin-left: 0px;
+  border-radius: 8px;
 }
 
 .tablink {
@@ -916,6 +921,13 @@ input.bold {
 
 table {
   width: 100%;
+  border-collapse: collapse;
+  background: white;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.07);
+}
+
+th {
+  border: 1px solid rgba(13,83,86,0.1);
 }
 
 .button-container {
@@ -973,4 +985,123 @@ p #help:hover {
   font-size: medium;
 }
 
+/* 
+html,
+body {
+  padding: 0;
+  margin: 0;
+  font-family: "Inter", sans-serif;
+}
+
+body {
+  background: #ffffff;
+  background-image: linear-gradient(135deg, #f5f7fa 0%, #d0ffda 100%);
+	height: 100%;
+	background-repeat: no-repeat;
+	background-attachment: fixed;
+}
+*/
+
+h1 {
+  color: rgb(13,83,86);
+  font-size: 32px;
+  font-weight: 600;
+  position: relative;
+  padding-bottom: 20px;
+  margin-top: 70px;
+}
+h1,
+.educare_post h1 {
+  margin-top: 70px;
+}
+h1:after {
+  content: "";
+  width: 150px;
+  height: 4px;
+  background-image: linear-gradient(to right, rgba(69,203,149,0.1), rgb(13,83,86), rgba(69,203,149,0.1));
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  margin: 0 auto;
+  border-radius: 6px;
+}
+
+.media-frame-title h1 {
+  text-align: center;
+}
+
+/* tooltip */
+.view_results td:last-child {
+  max-width: 32px;
+  padding: 6px;
+}
+.view_results td:first-child {
+  width: 28px;
+}
+.action_menu {
+  position: relative;
+  display: inline-block;
+}
+
+.action_menu .action_link {
+  visibility: hidden;
+  /* display: none; */
+  width: 150px;
+  max-width: 220px;
+  background-color: #fff;
+  text-align: center;
+  border-radius: 6px;
+  padding: 8px 0;
+  position: absolute;
+  z-index: 1;
+  top: -25px;
+  right: 120%;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+}
+.action_menu .action_link.info {
+  background-color: #fff;
+  font-size: small;
+  font-weight: normal;
+  text-align: justify;
+  padding: 6px 10px;
+  top: -25px;
+  left: 120%;
+}
+.action_menu i {
+  color: rgba(13,83,86,0.2);
+}
+
+.action_menu .action_link::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 100%;
+  margin-top: -5px;
+  border-width: 5px;
+  border-style: solid;
+  border-color: transparent transparent transparent #fff;
+}
+.action_menu .action_link.info::after { 
+  content: none;
+}
+
+.action_menu .action_link.info::before {
+  content: "";
+  position: absolute;
+  top: 22px;
+  right: 100%;
+  margin-top: -5px;
+  border-width: 5px;
+  border-style: solid;
+  border-color: transparent #fff transparent transparent;
+}
+
+.action_menu:hover .action_link {
+  visibility: visible;
+}
+
+.action_link form {
+  display: inline-block;
+}
 

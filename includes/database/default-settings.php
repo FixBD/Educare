@@ -33,9 +33,12 @@ function educare_add_default_settings($list) {
 				'results_page' => 'results',
 				'optional_sybmbol' => '✓',
 				'display' => [
-					'name' => ['Name', 'checked'],
-					'roll_no' => ['Roll No', 'checked'],
-					'regi_no' => ['Regi No', 'checked']
+					'Name' => ['Name', 'checked'],
+					'Roll_No' => ['Roll No', 'checked'],
+					'Regi_No' => ['Regi No', 'checked'],
+					'Class' => ['Class', 'checked'],
+					'Exam' => ['Exam', 'checked'],
+					'Year' => ['Year', 'checked']
 				],
 				'grade_system' => [
 					'current' => 'Default',

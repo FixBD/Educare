@@ -328,20 +328,21 @@ function educare_settings($list) {
 						<input type="hidden" name="old_data" value="<?php echo esc_attr($target);?>"/>
 						Edit - <b><?php echo esc_html($Target);?></b>:
 						
-						<div class="select">
-							<label>Name:</label>
-							<label>Select type:</label>
-						</div>
-						
-						<div class="select">
-							<input type="text" name="field" class="fields" value="<?php echo esc_attr($Target);?>" placeholder="<?php echo esc_attr($Target);?>">
+						<div class="select add-subject">
+							<div>
+								<p>Name:</p>
+								<input type="text" name="field" class="fields" value="<?php echo esc_attr($Target);?>" placeholder="<?php echo esc_attr($Target);?>">
+							</div>
 
-							<select name="type">
-								<option value="text" <?php if ( $data_type == "text") { echo "selected";}?>>Text</option>
-								<option value="number" <?php if ( $data_type == "number") { echo "selected";}?>>Number</option>
-								<option value="date" <?php if ( $data_type == "date") { echo "selected";}?>>Date</option>
-								<option value="email" <?php if ( $data_type == "email") { echo "selected";}?>>Email</option>
-							<select>
+							<div>
+								<p>Select type::</p>
+								<select name="type">
+									<option value="text" <?php if ( $data_type == "text") { echo "selected";}?>>Text</option>
+									<option value="number" <?php if ( $data_type == "number") { echo "selected";}?>>Number</option>
+									<option value="date" <?php if ( $data_type == "date") { echo "selected";}?>>Date</option>
+									<option value="email" <?php if ( $data_type == "email") { echo "selected";}?>>Email</option>
+								<select>
+							</div>
 						</div>
 								
 						<input type="text" name="<?php echo esc_attr($in_list);?>" hidden>
@@ -642,39 +643,27 @@ function educare_settings_status($target, $title, $comments) {
 			}
 
 			if ($target == 'display') {
-				$display_input = array_map( 'sanitize_text_field', $_POST['display_input'] );
-				$name = sanitize_text_field($_POST['name']);
-				$roll_no = sanitize_text_field($_POST['roll_no']);
-				$regi_no = sanitize_text_field($_POST['regi_no']);
-				$display_status = array($name, $roll_no, $regi_no);
+				$no = 0;
 				
-				$display = $status;
-				$no = $count = 0;
-
-				foreach ($display as $key => $value) {
-					$display->$key[0] = $display_input[$no++];
-					$display->$key[1] = $display_status[$count++];
+				foreach ($status as $key => $value) {
+					$status->$key[0] = array_map( 'sanitize_text_field', $_POST['display_input'] )[$no++];
+					$status->$key[1] = sanitize_text_field($_POST[$key]);
 				}
-
-				$update_data = $display;
+				
+				$update_data = $status;
 			}
 
 			$data->$target = $update_data;
-			// $data->clear_field = $clear_field;
-			
 			// now update desired data
 			$wpdb->update(
 	      $table, 				//table
-				array( 					// data
-												// we need to encode our data for store array/object into databases
+				array( 					// data - we need to encode our data for store array/object into database
 					"data" => json_encode($data)
 			  ),
-			
 	      array( 					//where
 					'ID' => $id
 				)
 			);
-
 		}
 	
 		$status = 'unchecked';
@@ -699,10 +688,26 @@ function educare_settings_status($target, $title, $comments) {
 				$target = $key;
 				$field_name = $value[0];
 				$status = $value[1];
+				if ($key == 'Class' or $key == 'Exam' or $key == 'Year') {
+					$info = '<div class="action_menu"><i class="dashicons action_button dashicons-info"></i> <menu class="action_link info">';
+					if ($key == 'Class') {
+						$info .= 'If you want to disable the class from <b>View Results</b> and <b>Front-End</b> search form, you can disable it. But you need to fill in the class while adding or importing results.';
+					}
+					if ($key == 'Exam') {
+						$info .= 'If you want to disable the exam from <b>View Results</b> and <b>Front-End</b> search form, you can disable it. But you need to fill in the exam while adding or importing results.';
+					}
+					if ($key == 'Year') {
+						$info .= "<span class='error'>You can't disable year.</span> But, you can rename it. like - Passing Year, Exam Year...";
+					}
+					$info .= '</menu></div>';
+				} else {
+					$info = '';
+				}
+
 				?>
 				<div class="educare-settings">
 					<div class="title">
-						<h3><?php echo esc_html(ucwords(str_replace('_', ' ', $target)));?><h3>
+						<h3><?php echo esc_html(ucwords(str_replace('_', ' ', $target))) . ' ' . wp_kses_post( $info );?><h3>
 						<p class="comments">
 							<input type='text' id='<?php echo esc_attr($target);?>' name='display_input[]' value='<?php echo esc_attr($field_name);?>' placeholder='Type <?php echo esc_attr($field_name);?>'>
 						</p>
@@ -710,8 +715,12 @@ function educare_settings_status($target, $title, $comments) {
 					
 					<div class="status-button">
 						<div class="switch-radio">
-							<input type="radio" id="<?php echo esc_attr($target);?>_no" name="<?php echo esc_attr($target);?>" value="unchecked" <?php if ($status == 'unchecked') { echo 'checked';};?>/>
-							<label for="<?php echo esc_attr($target);?>_no">No</label>
+							<?php if ($key != 'Year') {
+								?>
+								<input type="radio" id="<?php echo esc_attr($target);?>_no" name="<?php echo esc_attr($target);?>" value="unchecked" <?php if ($status == 'unchecked') { echo 'checked';};?>/>
+								<label for="<?php echo esc_attr($target);?>_no">No</label>
+								<?php
+							}?>
 							
 							<input type="radio" id="<?php echo esc_attr($target);?>_yes" name="<?php echo esc_attr($target);?>" value="checked" <?php if ($status == 'checked') { echo 'checked';};?>/>
 							<label for="<?php echo esc_attr($target);?>_yes">Yes</label>
@@ -721,27 +730,27 @@ function educare_settings_status($target, $title, $comments) {
 
 				<script>
 					$(document).ready(function(){
-						$("input[name='roll_no']").click(function() {
+						$("input[name='Roll_No']").click(function() {
 							// alert($(this).val());
 							if ($(this).val() == 'checked') {
-								$('#regi_no_no').attr("disabled",false);
+								$('#Regi_No_no').attr("disabled",false);
 								// alert('checked!');
 							}
 							else {
-								// $('#regi_no_no').attr("disabled",true);
-								$("input[name='regi_no']").prop("checked", true);
+								// $('#Regi_No_no').attr("disabled",true);
+								$("input[name='Regi_No']").prop("checked", true);
 							}
 						});
 
-						$("input[name='regi_no']").click(function() {
+						$("input[name='Regi_No']").click(function() {
 							// alert($(this).val());
 							if ($(this).val() == 'checked') {
-								$('#roll_no_no').attr("disabled",false);
+								$('#Roll_No_no').attr("disabled",false);
 								// alert('checked!');
 							}
 							else {
-								// $('#roll_no_no').attr("disabled",true);
-								$("input[name='roll_no']").prop("checked", true);
+								// $('#Roll_No_no').attr("disabled",true);
+								$("input[name='Roll_No']").prop("checked", true);
 							}
 						});
 					});
@@ -882,20 +891,22 @@ function educare_content($list) {
 		if ($list == 'Extra_field') {
 			?>
 			<form class="add_results" action="" method="post" id="educare_add_<?php echo esc_attr($list);?>">
-			
-		    <div class="select">
-					<p>Name:</p>
-					<p>Select type:</p>
-				</div>
-				<div class="select">
-					<input type="text" name="field" class="fields" placeholder="<?php echo esc_attr($List);?> name" pattern="[A-Za-z0-9 ]+" title="Only Caretaker, Number and Space allowed. (A-Za-z0-9)">
-
-					<select name="type">
-						<option value="text">Text</option>
-						<option value="number">Number</option>
-						<option value="date">Date</option>
-						<option value="email">Email</option>
-					<select>
+			<div class="content">
+				<div class="select add-subject">
+					<div>
+						<p>Name:</p>
+						<input type="text" name="field" class="fields" placeholder="<?php echo esc_attr($List);?> name" pattern="[A-Za-z0-9 ]+" title="Only Caretaker, Number and Space allowed. (A-Za-z0-9)">
+					</div>
+					
+					<div>
+						<p>Select type:</p>
+						<select name="type">
+							<option value="text">Text</option>
+							<option value="number">Number</option>
+							<option value="date">Date</option>
+							<option value="email">Email</option>
+						<select>
+					</div>
 				</div>
 				
 				<input type="text" name="<?php echo esc_attr($list);?>" hidden>
@@ -911,7 +922,7 @@ function educare_content($list) {
 		    	
 					
 				<button id="educare_results_btn" class="educare_button" name="educare_add_<?php echo esc_attr($list);?>" type="submit" onClick="<?php echo esc_js('add(this.form)');?>"><i class="dashicons dashicons-plus-alt"></i> Add <?php echo esc_html($List);?></button>
-			
+			</div>
 			</form>
 			<br>
 			<?php
@@ -920,14 +931,13 @@ function educare_content($list) {
 			
 			?>
 			<form class="add_results" action="" method="post" id="educare_add_<?php echo esc_attr($list);?>">
-			
+				<div class="content">
 		    	<?php echo esc_html($List);?>:
 		    	<label for="<?php echo esc_attr($list);?>" class="labels" id="<?php echo esc_attr($list);?>"></label>
 		    	<input type="text" name="<?php echo esc_attr($list);?>" class="fields" placeholder="<?php echo esc_attr($List);?> name" pattern="[A-Za-z0-9 ]+" title="Only Caretaker, Number and Space allowed. (A-Za-z0-9)">
-		    	
 					
-				<button id="educare_results_btn" class="educare_button" name="educare_add_<?php echo esc_attr($list);?>" type="submit"><i class="dashicons dashicons-plus-alt"></i> Add <?php echo esc_html($List);?></button>
-			
+					<button id="educare_results_btn" class="educare_button" name="educare_add_<?php echo esc_attr($list);?>" type="submit"><i class="dashicons dashicons-plus-alt"></i> Add <?php echo esc_html($List);?></button>
+				</div>
 			</form>
 			<br>
 			<?php
@@ -1285,7 +1295,7 @@ function educare_setting_subject($list) {
 		<div class="collapse">
 			<input class="head" type="radio" name="subject" id="<?php echo esc_attr( $class );?>" <?php if ($class == $first) {echo 'checked';}?>>
 			<label class="collapse-label" for="<?php echo esc_attr( $class );?>"><?php echo esc_html( $count++ ) . '. ' . esc_html( $class );?><span><form action="<?php echo esc_url($_SERVER['REQUEST_URI']); ?>" method="post"><input type="hidden" name="educare_process_class"><input type="hidden" name="class" value="<?php echo esc_attr( $class );?>"><input type="submit" name="edit_class" value="&#xf464"><input type="submit" name="remove_class" value="&#xf182" <?php educare_confirmation('class', esc_attr( $class ));?>></form></span></label>
-			<div class="collapse-content">
+			<div class="collapse-content bg-white">
 			
 				<table class='educare_add_content'>
 					<thead>
@@ -1352,38 +1362,43 @@ function educare_setting_subject($list) {
   
   <div id="x_subject" class="section_name">
     <form class="add_results" action="" method="post" id="add_<?php echo esc_attr($list);?>">
-	
-			<?php echo esc_html($list);?>:
-			<input type="hidden" name="educare_process_class">
-			<label for="<?php echo esc_attr($list);?>" class="labels" id="<?php echo esc_attr($list);?>"></label>
-			<input type="text" name="<?php echo esc_attr($list);?>" class="fields" placeholder="<?php echo esc_attr($list);?> name" pattern="[A-Za-z0-9 ]+" title="Only Caretaker, Number and Space allowed. (A-Za-z0-9)">
+			<div class="content">
+				<input type="hidden" name="educare_process_class">
 
-			<select name='class'>
-			<?php
-			foreach ($data as $key => $value) {
-				echo "<option value='".esc_attr($key)."'>".esc_html($key)."</option>";
-			}
-			?>
-			</select>
-			<br>
+				<div class="select add-subject">
+					<div>
+					<p>Subject:</p>
+						<input type="text" name="<?php echo esc_attr($list);?>" class="fields" placeholder="<?php echo esc_attr($list);?> name" pattern="[A-Za-z0-9 ]+" title="Only Caretaker, Number and Space allowed. (A-Za-z0-9)">
+					</div>
+				
+					<div>
+						<p>Subject For:</p>
+						<select name='class'>
+							<?php
+							foreach ($data as $key => $value) {
+								echo "<option value='".esc_attr($key)."'>".esc_html($key)."</option>";
+							}
+							?>
+						</select>
+					</div>
+				</div>
 
-			
-			<button id="educare_results_btn" class="educare_button" name="add_<?php echo esc_attr($list);?>" type="submit"><i class="dashicons dashicons-plus-alt"></i> Add <?php echo esc_html($list);?></button>
-		
+				<button id="educare_results_btn" class="educare_button" name="add_<?php echo esc_attr($list);?>" type="submit"><i class="dashicons dashicons-plus-alt"></i> Add Subject</button>
+			</div>
 		</form>
   </div>
 
   <div id="class" class="section_name" style="display:none">
     <form class="add_results" action="" method="post" id="add_<?php echo esc_attr($list);?>">
-	
-			Class:
-			<input type="hidden" name="educare_process_class">
-			<label for="<?php echo esc_attr($list);?>" class="labels" id="<?php echo esc_attr($list);?>"></label>
-			<input type="text" name="class" class="fields" placeholder="Class name" pattern="[A-Za-z0-9 ]+" title="Only Caretaker, Number and Space allowed. (A-Za-z0-9)">
-			<br>
-			
-			<button id="educare_results_btn" class="educare_button" name="add_class" type="submit"><i class="dashicons dashicons-plus-alt"></i> Add Class</button>
-		
+			<div class="content">
+				<p>Class:</p>
+				<input type="hidden" name="educare_process_class">
+				<label for="<?php echo esc_attr($list);?>" class="labels" id="<?php echo esc_attr($list);?>"></label>
+				<input type="text" name="class" class="fields" placeholder="Class name" pattern="[A-Za-z0-9 ]+" title="Only Caretaker, Number and Space allowed. (A-Za-z0-9)">
+				<br>
+				
+				<button id="educare_results_btn" class="educare_button" name="add_class" type="submit"><i class="dashicons dashicons-plus-alt"></i> Add Class</button>
+			</div>
 		</form>
   </div>
 
@@ -1432,11 +1447,10 @@ function educare_setting_subject($list) {
 		<div id="add_content" class="tab_content">
 			
 			<div class="cover">
-				<img src="<?php echo esc_url(EDUCARE_URL.'assets/img/cover.jpg'); ?>" class="cover" alt="educare cover"/>
-				<img src="<?php echo esc_url(EDUCARE_URL.'assets/img/logo.svg'); ?>" class="logo" alt="Educare"/>
+				<img src="<?php echo esc_url(EDUCARE_URL.'assets/img/cover.svg'); ?>" alt="educare cover"/>
 			</div>
 				
-			<h1>Add Content</h1>
+			<!-- <h1>Add Content</h1> -->
 			
 			<?php 
 			echo educare_setting_subject("subject");
@@ -1457,12 +1471,12 @@ function educare_setting_subject($list) {
 			
 				$default_photos = wp_get_attachment_url( get_option( 'educare_files_selector' ) );
 				if ($default_photos == null) {
-					$visibility = 'hidden';
-					$img = EDUCARE_URL.'assets/img/default.jpg';
+					$visibility = 'none';
+					$img = EDUCARE_URL.'assets/img/default.svg';
 					$img_type = "<h3 id='educare_img_type' class='title'>Default Photos</h3>";
 					$guide = "<p id='educare_guide'>Current students photos are default. Please upload or select  a custom photos from gallery that's you want!</p>";
 				} else {
-					$visibility = 'visible';
+					$visibility = 'block';
 					$img = wp_get_attachment_url( get_option( 'educare_files_selector' ) );
 					$img_type = "<h3 id='educare_img_type' class='title'>Custom Photos</h3>";
 					$guide = "<p id='educare_guide'></p>";
@@ -1479,23 +1493,21 @@ function educare_setting_subject($list) {
 						
 						<?php echo wp_kses_post($guide);?>
 						<div id="photos_help"></div>
-							<input type="hidden" name='educare_attachment_id' id='educare_attachment_id' value='<?php echo esc_attr(get_option( 'educare_files_selector' )); ?>'>
+							<div class="select">
+								<input type="hidden" name='educare_attachment_id' id='educare_attachment_id' value='<?php echo esc_attr(get_option( 'educare_files_selector' )); ?>'>
+									
+								<input type='hidden' name='educare_attachment_url' id='educare_attachment_url' value='<?php echo esc_url(get_option( 'educare_files_selector' )); ?>'>
 								
-							<input type='hidden' name='educare_attachment_url' id='educare_attachment_url' value='<?php echo esc_url(get_option( 'educare_files_selector' )); ?>'>
-							
-							<input id="educare_upload_button" type="button" class="button" value="<?php _e( 'Upload Students Photos' ); ?>"/>
-							
-							<input type='button' id='educare_attachment_title' class="button" value='Pleace Select a students photos' disabled>
-							
-							<br>
-					
-						<button id='educare_default_photos' type="submit" name="educare_default_photos" class="educare_button"><i class="dashicons dashicons-yes-alt"></i> Save</button>	
-						<a id='educare_attachment_clean' class='dashicons dashicons-no educare_button educare_clean' style='width: auto; visibility: <?php echo esc_attr($visibility);?>' href='<?php echo esc_js('javascript:;');?>'></a>
+								<input id="educare_upload_button" type="button" class="button" value="<?php _e( 'Upload Students Photos' ); ?>"/>
+								
+								<input type='button' id='educare_attachment_title' class="button" value='Pleace Select a students photos' disabled>
+								
+								<a id='educare_attachment_clean' class='dashicons dashicons-no educare_clean' style='width: auto; display: <?php echo esc_attr($visibility);?>' href='<?php echo esc_js('javascript:;');?>'></a>
+							</div>
+							<button id='educare_default_photos' type="submit" name="educare_default_photos" class="educare_button full"><i class="dashicons dashicons-yes-alt"></i> Save</button>
 					</div>
 				</div>
 			</form>
-			
-			
 			
 			<h1>Settings</h1>
 			
@@ -1504,40 +1516,77 @@ function educare_setting_subject($list) {
 				ob_start();
 				echo esc_url( bloginfo( 'url' ) );
 				$domain = ob_get_clean();
-				echo '<h2 class="left">Page Setup</h2>';
 
-				educare_settings_status('results_page', 'Set Results Page', "Inter your front end results page slug (Where you use `[educare_results]` shortcode in your editor, template or any shortcode-ready area for front end results system). Don't need to insert with domain - ".esc_url($domain)."/results. Only slug will be accepted, for exp: results or index.php/results.");
+				?>
+				<div class="collapses">
+					<div class="collapse">
+						<input class="head" type="radio" name="settings_status_menu" id="Page_Setup_menu" checked>
+						<label class="collapse-label" for="Page_Setup_menu"><div><i class="dashicons dashicons-edit-page"></i> Page Setup</div></label>
+						<div class="collapse-content">
+							<?php
+							educare_settings_status('results_page', 'Set Results Page', "Inter your front end results page slug (Where you use `[educare_results]` shortcode in your editor, template or any shortcode-ready area for front end results system). Don't need to insert with domain - ".esc_url($domain)."/results. Only slug will be accepted, for exp: results or index.php/results.");
+							?>
+						</div>
+					</div>
 
-				echo '<h2 class="left">Display</h2>';
-				echo educare_guide_for('display_msgs');
+					<div class="collapse">
+						<div style="background-color: inicial;">
+						<input class="head" type="radio" name="settings_status_menu" id="Display_menu">
+						<label class="collapse-label" for="Display_menu"><div><i class="dashicons dashicons-admin-appearance"></i> Customize</div></label>
+						<div class="collapse-content">
+							<?php
+							echo "<div style='padding: 1px 0;'>";
+							echo educare_guide_for('display_msgs');
+							echo '</div>';
 				
-				educare_settings_status('display', 'Delete confirmation', "Anable and disable delete/remove confirmation");
+							educare_settings_status('display', 'Delete confirmation', "Anable and disable delete/remove confirmation");
+							?>
+					</div>
+						
+						</div>
+					</div>
 
-				echo '<h2 class="left">Results System</h2>';
-
-				educare_settings_status('optional_sybmbol', 'Optional Subject Selection', "Define optional subject identifier character/symbol. In this way educare define and identify optional subjects when you add or import results.");
+					<div class="collapse">
+						<input class="head" type="radio" name="settings_status_menu" id="Results_System_menu">
+						<label class="collapse-label" for="Results_System_menu"><div><i class="dashicons dashicons-welcome-learn-more"></i> Results System</div></label>
+						<div class="collapse-content">
+							<?php
+							educare_settings_status('optional_sybmbol', 'Optional Subject Selection', "Define optional subject identifier character/symbol. In this way educare define and identify optional subjects when you add or import results.");
 				
-				educare_settings_status('auto_results', 'Auto Results', "Automatically calculate students results status Passed/Failed and GPA");
+							educare_settings_status('auto_results', 'Auto Results', "Automatically calculate students results status Passed/Failed and GPA");
+			
+							educare_settings_status('photos', 'Students Photos', "Show or Hide students photos");
+			
+							educare_settings_status('custom_results', 'Custom Design Permissions', "You need to permit/allow this options when you add custom functionality or customize results card or searching forms");
+							?>
+						</div>
+					</div>
 
-				educare_settings_status('photos', 'Students Photos', "Show or Hide students photos");
+					<div class="collapse">
+						<input class="head" type="radio" name="settings_status_menu" id="Others_menu">
+						<label class="collapse-label" for="Others_menu"><div><i class="dashicons dashicons-admin-tools"></i> Others</div></label>
+						<div class="collapse-content">
+							<?php
+							educare_settings_status('guide', 'Guidelines', "Anable and disable guide/help messages");
 
-				educare_settings_status('custom_results', 'Custom Design Permissions', "You need to permit/allow this options when you add custom functionality or customize results card or searching forms");
+							educare_settings_status('confirmation', 'Delete confirmation', "Anable and disable delete/remove confirmation");
+							
+							educare_settings_status('advance', 'Advance Settings', "Anable and disable Advance/Developers menu. Note: it's only for developers or advance users");
+							
+							echo '<div id="advance_settings">';
+								
+							educare_settings_status('delete_subject', 'Automatically Delete Subject', "Automatically Delete Subject from Results Table When You Delete Subject From Subject List?");
+							
+							educare_settings_status('clear_field', 'Delete and Clear field data', "Tips: If you set <b>No</b> that's mean only field will be delete. And, if you set <b>Yes</b> - clear field data when you delete any (current) field. Delete and Clear field data?");
+							
+							echo '</div>';
+							?>
+						</div>
+					</div>
 
-				echo '<h2 class="left">Others</h2>';
-
-				educare_settings_status('guide', 'Guidelines', "Anable and disable guide/help messages");
-
-				educare_settings_status('confirmation', 'Delete confirmation', "Anable and disable delete/remove confirmation");
+				</div>
+				<?php
 				
-				educare_settings_status('advance', 'Advance Settings', "Anable and disable Advance/Developers menu. Note: it's only for developers or advance users");
-				
-				echo '<div id="advance_settings">';
-					
-				educare_settings_status('delete_subject', 'Automatically Delete Subject', "Automatically Delete Subject from Results Table When You Delete Subject From Subject List?");
-				
-				educare_settings_status('clear_field', 'Delete and Clear field data', "Tips: If you set <b>No</b> that's mean only field will be delete. And, if you set <b>Yes</b> - clear field data when you delete any (current) field. Delete and Clear field data?");
-				
-				echo '</div>';
 				?>
 				<script type='text/javascript'>
 					jQuery( document ).ready( function( $ ) {
@@ -1548,7 +1597,7 @@ function educare_setting_subject($list) {
 					});
 				</script>
 					
-				<button type="submit" name="educare_update_settings_status" class="educare_button"><i class="dashicons dashicons-edit"></i> Update</button>
+				<button type="submit" name="educare_update_settings_status" class="educare_button"><i class="dashicons dashicons-yes-alt"></i> Save</button>
 				<button type="submit" name="educare_reset_default_settings" class="educare_button" onclick='return confirm("Are you sure to reset default settings? This will not effect your content, its only reset your current settings status.")'><i class="dashicons dashicons-update"></i> Reset Settings</button>
 					
 			</form>
@@ -1593,7 +1642,7 @@ function educare_setting_subject($list) {
 						// $( '#educare_attachment_preview' ).attr( 'src', attachment.url ).css( 'width', '100px' );
 						$( '#educare_attachment_preview' ).attr( 'src', attachment.url );
 						$( '#educare_upload_button' ).val( 'Edit Photos' );
-						$( '#educare_attachment_clean' ).css( 'visibility', 'visible' );
+						$( '#educare_attachment_clean' ).css( 'display', 'block' );
 						$("#educare_img_type").html('Custom photos');
 						$( '#educare_attachment_id' ).val( attachment.id );
 						$( '#educare_attachment_url' ).val( attachment.url );
@@ -1612,8 +1661,8 @@ function educare_setting_subject($list) {
 		$("a.educare_clean").on("click", function() { 
 				$("#educare_attachment_url").val("");
 				$("#educare_attachment_id").val("");
-				$( '#educare_attachment_preview' ).attr( 'src', "<?php echo esc_url(EDUCARE_URL.'assets/img/default.jpg');?>" );
-				$("a.educare_clean").css('visibility', 'hidden');
+				$( '#educare_attachment_preview' ).attr( 'src', "<?php echo esc_url(EDUCARE_URL.'assets/img/default.svg');?>" );
+				$("a.educare_clean").css('display', 'none');
 				$( '#educare_attachment_title' ).val('Cleaned! please select onother one');
 				$( '#educare_upload_button' ).val( 'Upload photos again' );
 				$("#educare_img_type").html('Default photos');

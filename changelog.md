@@ -1,3 +1,16 @@
+## [1.2.3]
+
+- Improve perfomance
+- Added Customize options in settings
+- Now admin can enable/disable all default required fields in search forms. (Roll Number, Reg Number, Class, Exam, Year)
+- Added more options to view results (admin can find results of his choice!)
+- Added single results delete button in view results
+- Fixed issue with Delete All Results button not working
+- Fixed all well khown bugs
+- Custom result calculation option will be added after next update. Using these options admin can define, how to calculate results and GPA (CGPA).
+
+- **Please note:** This is an most stable version of Educare. If you face any problem (any bugs issues), please inform us.
+
 ## [1.2.2]
 
 - Now admin can customize results card
