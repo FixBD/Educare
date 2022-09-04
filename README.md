@@ -52,7 +52,7 @@ Also, You can send your feedback here:
 
 [https://wordpress.org/plugins/educare/#reviews](https://wordpress.org/plugins/educare/#reviews)
 
-## How to Install
+# How to Install
 > ### From the WordPress Plugin Directory
 > #### The Official WordPress Plugin can be found here: https://wordpress.org/plugins/educare/
 > ### From this repository
@@ -184,7 +184,7 @@ Tips: If you set No that's mean only field will be delete. And, if you set Yes -
 1. User can front end results table
 1. User can print results
 
-## Shortcodes
+# Shortcodes
 
 > Currently there are only one shortcodes available. You need to add `[educare_results]` shortcode in editor, template or any shortcode-ready area for front end results system. This shortcode display search form and results table. So, users/students can easily find and view there results.
 
@@ -193,6 +193,24 @@ Tips: If you set No that's mean only field will be delete. And, if you set Yes -
 For use this shortcode in your code or any PHP files:
 
 **`echo do_shortcode( '[educare_results]' );`**
+
+### For example in a template files (page-results.php):
+
+	<?php
+		/**
+		* Template Name: Educare Results
+		* Allow users to view their results from Frontend.
+		* After added this code in your themes functions.php files, you can see Educare Results in template setcion in WP post/page editor. Seletct it and save. Or create a page same as your templaete files name (results). Make sure to slug name and (page-results.php) files name are same.
+		*/
+		
+		// Show site header
+		get_header();
+
+		echo do_shortcode( '[educare_results]' );
+		
+		// Show site footers
+		get_footer();
+	?>
 
 # Developers only
 
