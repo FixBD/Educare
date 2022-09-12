@@ -49,6 +49,7 @@ function educare_letter_grade($marks, $points = null) {
 	$grade_system = educare_check_status('grade_system');
 	$current = $grade_system->current;
 	$grade_system = $grade_system->rules->$current;
+	$grade_system = json_decode(json_encode($grade_system), true);
 
 	/** 
 	* Check optional subject marks
@@ -367,8 +368,13 @@ function educare_get_results() {
 					<div class="result_body">
 						<?php
 						if (educare_check_status('photos') == 'checked') {
+							if ($Details->Photos == 'URL') {
+								$Photos = EDUCARE_STUDENTS_PHOTOS;
+							} else {
+								$Photos = $Details->Photos;
+							}
 							echo "<div class='student_photos'>
-							<img src='".esc_url($Details->Photos)."' class='img' alt='".esc_attr($print->Name)."'/></center>
+							<img src='".esc_url($Photos)."' class='img' alt='".esc_attr($print->Name)."'/></center>
 							</div>";
 						}
 
@@ -439,7 +445,7 @@ function educare_get_results() {
 							?>
 						
 							<!-- Extra field -->
-							<?php echo wp_kses_post(educare_get_data_by_student($id, 'Details'));?>
+							<?php echo educare_get_data_by_student($id, 'Details');?>
 							
 							<tr>
 								<td>Result</td>
@@ -472,7 +478,7 @@ function educare_get_results() {
 								
 								<tbody>
 									<?php
-									echo wp_kses_post(educare_get_data_by_student($id, 'Subject'));
+									echo educare_get_data_by_student($id, 'Subject');
 									
 									/**  ====== Above function return like this ======
 									<tr>

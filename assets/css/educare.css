@@ -133,9 +133,13 @@ form p {
 	margin: 16px auto;
 	padding: 16px;
 	background-color: #fff;
-	border-radius: 8px;
 	box-shadow: 0 10px 30px rgba(0, 0, 0, 0.07);
 }
+.add_results,
+.notice.is-dismissible {
+  border-radius: 8px;
+}
+
 .add_results .content {
 	max-width: 600px;
 	margin: 18px auto;
@@ -284,9 +288,6 @@ input.educare_button {
   margin: 2px;
 }
 
-.educare_post th {
-	background: #ccc;
-}
 .educare_post.educare_settings tr td {
 	padding: 0 4px;
 }
@@ -507,6 +508,10 @@ educare settings
 .educare_post th {
 	color: rgb(13,83,86);
 	background: rgba(13,83,86,0.2);
+}
+.view_results th {
+  background: #00ac4e;
+  color: white;
 }
 
 .educare-update-settings,
@@ -796,7 +801,7 @@ span.file:before {
   position: absolute;
   right: 50px;
   opacity: .5;
-  transition: all 0.35s;
+  transition: all 0.45s;
 }
 .collapse-label span:hover {
   opacity: 1;
@@ -825,8 +830,8 @@ span.file:before {
   width: 1em;
   height: 1em;
   text-align: center;
-  -webkit-transition: all 0.35s;
-  transition: all 0.35s;
+  -webkit-transition: all 0.45s;
+  transition: all 0.45s;
   opacity: .6;
 }
 .collapse-content {
@@ -834,8 +839,8 @@ span.file:before {
   padding: 0 1em;
   color: #2c3e50;
   /* background: white; */
-  -webkit-transition: all 0.35s;
-  transition: all 0.35s;
+  -webkit-transition: all 0.45s;
+  transition: all 0.45s;
 }
 .collapse-content.bg-white {
   background: white;
@@ -868,7 +873,7 @@ span.file:before {
 }
 
 .collapses input:checked ~ .collapse-content {
-  max-height: 100vh;
+  max-height: 200vh;
   padding: 1em;
 }
 
@@ -985,23 +990,6 @@ p #help:hover {
   font-size: medium;
 }
 
-/* 
-html,
-body {
-  padding: 0;
-  margin: 0;
-  font-family: "Inter", sans-serif;
-}
-
-body {
-  background: #ffffff;
-  background-image: linear-gradient(135deg, #f5f7fa 0%, #d0ffda 100%);
-	height: 100%;
-	background-repeat: no-repeat;
-	background-attachment: fixed;
-}
-*/
-
 h1 {
   color: rgb(13,83,86);
   font-size: 32px;
@@ -1070,6 +1058,7 @@ h1:after {
 }
 .action_menu i {
   color: rgba(13,83,86,0.2);
+  vertical-align: middle;
 }
 
 .action_menu .action_link::after {
@@ -1105,3 +1094,159 @@ h1:after {
   display: inline-block;
 }
 
+input[type=number].full {
+  width: 100%;
+  padding: 5px;
+  text-align: center;
+}
+
+.educare-page .tab_content {
+  padding: 0 1%;
+}
+.ducare-page .educare_post {
+  margin: 0 auto;
+}
+
+
+
+/* Students ID Card */
+
+.educare-card {
+  max-width: 540px;
+  min-width: 400px;
+  background-color: white;
+  margin: 4% auto;
+  font-size: smaller;
+  box-sizing: border-box;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.07);
+}
+
+.card-head {
+  color: white;
+  background-color: rgb(13,83,86);
+  text-align: center;
+  padding: 18px;
+}
+.card-head h2 {
+  color: white;
+  padding: 0;
+  margin: 0;
+}
+.card-head span {
+  padding: 0;
+  margin: 0;
+}
+
+.card-head h2 img {
+  width: 42px;
+  height: 42px;
+  max-width: 42px;
+  margin-right: 12px;
+  background: #eee;
+  vertical-align: middle;
+  border: 1px solid gray;
+  border-radius: 100%;
+}
+
+.card-body {
+  padding: 12px;
+  position: relative;
+  background-image: url('../img/cardbox.svg');
+  background-position: bottom right;
+  background-repeat: no-repeat;
+}
+
+.card-body .photos {
+  width: 120px;
+  height: 150px;
+  margin: 12px;
+  padding: 2px;
+  background: #eee;
+  vertical-align: top;
+  border: 1px solid gray;
+  border-radius: 4px;
+  overflow: hidden;
+  display: inline-block;
+}
+
+.card-body .photos img {
+  width: 100%;
+  height: 100%;
+  vertical-align: middle;
+}
+
+.card-body .deatails {
+  vertical-align: text-top;
+  display: inline-block;
+}
+
+.card-body .id {
+  vertical-align: text-top;
+  float: right;
+}
+.card-body .sign {
+  position: absolute;
+  bottom: 18px;
+  right: 18px;
+}
+
+.deatails li,
+.id li {
+  display: block;
+  margin: 2px 4px;
+  color: #484848;
+}
+
+.deatails li span {
+  width: 100%;
+}
+
+.analytics h3 {
+  text-align: center;
+}
+
+/* Educare Progress Bar */
+
+progress {
+  width: 100%;
+  height: 20px;
+  background: crimson;
+}
+
+progress {
+  color: lightblue;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: inset 2px 2px 8px rgba(84, 30, 8, 0.2);
+}
+
+progress::-moz-progress-bar {
+  background: lightcolor;
+  box-shadow: inset 2px 2px 8px rgba(84, 30, 8, 0.2);
+}
+
+progress::-webkit-progress-value {
+  background: rgb(13,83,86);
+  box-shadow: inset 2px 2px 8px rgba(84, 30, 8, 0.2);
+}
+
+progress::-webkit-progress-bar {
+  background: rgb(69,203,149);
+  box-shadow: inset 2px 2px 8px rgba(84, 30, 8, 0.2);
+}
+
+progress.position::-webkit-progress-value {
+  float: right;
+}
+
+progress.position::-webkit-progress-value {
+  background: rgb(255, 96, 96);
+  box-shadow: inset 2px 2px 8px rgba(84, 30, 8, 0.2);
+}
+
+progress.position::-webkit-progress-bar {
+  background: rgb(13,83,86);
+  box-shadow: inset 2px 2px 8px rgba(84, 30, 8, 0.2);
+}

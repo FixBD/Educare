@@ -186,7 +186,7 @@ function educare_show_grade_rule() {
   </div>
 
   <div id="show_help" style="display: none;">
-    <div class="notice notice-success"><p>
+    <div class="notice notice-success add_results"><p>
       <h3>How it's work?</h3>
       <p>
       We are mentioning the process how to calculate CGPA (GPA) from Marks in HSC. To do this, add up the grade points for the six major subjects and divide with 6 (total subject). For example, your grade points for <b>six</b> main subjects are listed below:</p><br>
@@ -273,12 +273,12 @@ function educare_show_grade_rule() {
     <p><b>Default Rules</b></p>
     <?php educare_show_grade_rule();?>
 
-    <div class="button-container">
-      <button type="submit" name="save_grade_system" class="educare_button disabled"><i class="dashicons dashicons-update" disabled></i></button>
-      <button id="edit_grade" type="submit" name="edit_grade_system" class="educare_button"><i class="dashicons dashicons-edit"></i></button>
-    </div>
+    
   </div>
-
+  <div id="update_button" class="button-container">
+    <button type="submit" name="save_grade_system" class="educare_button disabled"><i class="dashicons dashicons-update" disabled></i></button>
+    <button id="edit_grade" type="submit" name="edit_grade_system" class="educare_button"><i class="dashicons dashicons-edit"></i></button>
+  </div>
 </div>
 
 <script>
@@ -293,7 +293,9 @@ function educare_show_grade_rule() {
       },
       type: 'POST',
       success: function(data) {
-        $('#result_msg').html(data);
+        $('#result_msg').hide();
+        $('#result_msg').html(data).fadeIn();
+        $('#update_button').fadeOut();
         $('#edit_grade').attr('disabled', false);
       },
       error: function(data) {
@@ -305,6 +307,11 @@ function educare_show_grade_rule() {
   $("#help").click(function() {
     $(this).css('color', 'green');
     $("#show_help").slideToggle();
+  });
+
+  $(document).on("click", ".notice-dismiss", function(event) {
+    $(this).parent('div').fadeOut();
+    $('#update_button').fadeIn();
   });
 
 </script>

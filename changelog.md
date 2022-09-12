@@ -1,3 +1,39 @@
+## [1.2.7]
+
+- Improved Students Profiles
+- Added Students Import System
+- Added Students Import Demo Files
+- Fixed Settings Save Issues
+- Improve Educare Problem Detection
+- Fixed All Well Khown Bugs
+
+## [1.2.6]
+
+- Added Students Profiles
+- PHP Error Fixed From Results Card
+
+## [1.2.5]
+
+- Fixed Error on publishing marks
+- PHP Error Fixed
+
+## [1.2.4]
+
+- Improved perfomance
+- Added Student Management System
+- Added Add Marks (Marksheed) System
+- Now It's Possible To Publish Single Subject Results
+- Teacher Can Publish Subject Wise Multiple Student Results At A Same Time.
+- Improved Educare Smart Guidelines
+
+- Back-End Improved
+- Added Ajax Functionality
+- Now It's 10X Faster Than Older Version
+- Added (AI) Problem Detection And Auto Fix
+- Fixed All Well Khown Bugs
+
+**Features are added based on user (Your) feedback. Because Educare is built for the user. If it doesn't work for the people it's made for, it's useless. So, Educare authorities value of user feedback. Please share your experience (feedback) while using these features to improve Educare.**
+
 ## [1.2.3]
 
 - Improve perfomance
