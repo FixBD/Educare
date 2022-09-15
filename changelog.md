@@ -1,3 +1,12 @@
+## [1.2.8]
+
+- Update issues fixed
+- Educare database update required message issue has been resolved
+- Improved all student menu
+- Fixed some bugs 
+
+**Please note:** If you see database update required message, Just click update button. This is an most stable version of Educare. If you face any problem (any bugs issues), please inform us.
+
 ## [1.2.7]
 
 - Improved Students Profiles

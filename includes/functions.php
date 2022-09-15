@@ -4757,6 +4757,34 @@ function educare_process_content() {
 
 
 
+// Under constructions 
+function educare_settings_page_management() {
+	// get the slug of the page we want to display 
+	// then we include the page
+	if (isset($_GET['add-content'])) {
+		echo 'Settings';
+	} else {
+		echo 'add';
+	}
+}
+
+
+// Under constructions 
+add_action('wp_ajax_educare_process_settings_page', 'educare_process_settings_page');
+
+function educare_process_settings_page() {
+	$action_for = sanitize_text_field($_GET['action_for']);
+	// $currenTab = sanitize_text_field($_POST['currenTab']);
+	wp_parse_str($_GET['form_data'], $_GET);
+	$_GET[$action_for] = $action_for;
+
+	educare_settings_page_management();
+
+	die;
+}
+
+
+
 
 add_action('wp_ajax_educare_process_forms', 'educare_process_forms');
 

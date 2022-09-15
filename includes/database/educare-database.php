@@ -56,7 +56,7 @@ function educare_database_check($db) {
 	# Create educare database for store result and settings data
 
 	* @since 1.0.0
-	* @last-update 1.2.4
+	* @last-update 1.2.8
 
 	* @return void
 	
@@ -77,7 +77,7 @@ function educare_database_table($db = null) {
 		data text NOT NULL,
 		PRIMARY KEY (id),
 		UNIQUE KEY list (list)
-  ) $charset_collate;";
+	) ENGINE=InnoDB DEFAULT CHARSET=latin1";
 
 	// Create table for educare results system
 	$Educare_results = $wpdb->prefix."educare_results";

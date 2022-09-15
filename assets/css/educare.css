@@ -686,6 +686,14 @@ span.file:before {
   padding: 30px 1%;
 }
 
+#tab-loading {
+  position: absolute;
+  top: 100px;
+  left: 50%;
+  transform: translate(-50%, 0);
+  display: none;
+}
+
 /* Go from zero to full opacity */
 /* Go from zero to full opacity */
 @keyframes fadeIn {
@@ -717,11 +725,14 @@ span.file:before {
     width: 64px;
   }
   .tab button {
-  padding: 16px 0;
-}
+    padding: 16px 0;
+  }
   .tab button span {
 		display: none;
 	}
+  #tab-loading {
+    top: 24px;
+  }
 }
 
 

@@ -12,14 +12,14 @@
 <!-- Tab Head -->
 <div class="container">
 	<div class="tab">
-	  <button class="tablinks" onclick="openTabs(event, 'add_content')" id="default"><i class="dashicons dashicons-plus-alt"></i><span>Add Content</span></button>
-	  <button class="tablinks" onclick="openTabs(event, 'settings')"><i class="dashicons dashicons-admin-generic"></i><span>Settings</span></button>
+	  <button class="tablinks" onclick="openTabs(event, 'add-content')" id="default" title="Add Content" data="add-content"><i class="dashicons dashicons-plus-alt"></i><span>Add Content</span></button>
+	  <button class="tablinks" onclick="openTabs(event, 'settings')" title="Settings" data="settings"><i class="dashicons dashicons-admin-generic"></i><span>Settings</span></button>
 	</div>
 		
 	<div class="educare_post educare_settings">
 		
-		<!-- Tab add_content -->
-		<div id="add_content" class="tab_content">
+		<!-- Tab add-content -->
+		<div id="add-content" class="tab_content">
 			
 			<div class="cover">
 				<img src="<?php echo esc_url(EDUCARE_URL.'assets/img/cover.svg'); ?>" alt="educare cover"/>
@@ -83,7 +83,7 @@
 
 			<?php educare_get_content();?>
 					
-		</div> <!-- End Tab add_content -->
+		</div> <!-- End Tab add-content -->
 		
 		<!-- Tab settings -->
 		<div id="settings" class="tab_content">
@@ -253,6 +253,7 @@
 	// Get the element with id="defaultOpen" and click on it
 	document.getElementById("default").click();
 
+	
 
 	jQuery( document ).ready( function( $ ) {
 		var advance = '<?php echo educare_esc_str(educare_check_status('advance'));?>';

@@ -25,6 +25,8 @@ if (educare_database_check('educare_students')) {
 	</div>
 	
 	<div class="educare_post educare_settings">
+
+		<div id="tab-loading"><center>Loading..</center></div>
 		
 		<div id="all-students" class="tab_content" style="display: block;">
 			<?php educare_students_management();?>
@@ -87,9 +89,14 @@ if (educare_database_check('educare_students')) {
 				action_for
 			},
 			type: 'GET',
+			beforeSend:function(event) {
+				// $('#' + form_data).html("<center>Loading</center>");
+				$('#tab-loading').fadeIn();
+			},
 			success: function(data) {
 				// window.history.pushState('', form_data, window.location.href + '&' + form_data);
 				history.pushState('', 'form_data', '<?php echo esc_url($url);?>' + '&' + form_data);
+				$('#tab-loading').fadeOut();
 				$('#' + form_data).html(data);
 			},
 			error: function(data) {
