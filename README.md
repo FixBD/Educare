@@ -1,4 +1,4 @@
-![Educare](https://github.com/FixBD/Educare/blob/FixBD/assets/img/Educare.svg)
+![Educare](https://github.com/FixBD/Educare/blob/FixBD/assets/img/educare.svg)
 # Educare - Powerful Results Management System
 
 > ## Educare is a powerful online School/College students & results management system dev by FixBD. This plugin allows you to manage and publish students results. This is a School/College students & results management plugin that was created to make WordPress a more powerful CMS.
