@@ -330,7 +330,7 @@ function educare_get_results() {
 				$search_class = " AND Class='$Class'";
 			}
 			if ($chek_exam) {
-				$search_exam = " AND Regi_No='$Exam'";
+				$search_exam = " AND Exam='$Exam'";
 			}
 			
 			$educare_results = $wpdb->get_results("SELECT * FROM $table_name WHERE Year='$Year' $search_class $search_exam $search_roll $search_regi");

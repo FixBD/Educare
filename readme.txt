@@ -6,7 +6,7 @@ Tags:                Result management, Academic, Results, Students, Education, 
 Requires at least:   3.8
 Tested up to:        6.0.2
 Requires PHP:        5.2.4
-Stable tag:          1.2.8
+Stable tag:          1.2.9
 License:             GPLv2 or later
 License URI:         http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -37,42 +37,42 @@ Also, If you have face any problems and need our support (Totally Free!), Please
 #### Result Rules (Grading Systems):
 <p>In the preview version of Educare, admins can add results with only one (default) grading system. Now by adding (v1.2.0+) this feature admin can add his country result system/rules. So, <strong>Using this feature you (admin) can add, modify, manage or automatically calculate any type of result based on your country or demand</strong>. Eg: India, Bangladesh or US result GPA (CGPA) and calculation methods/rules are different. So, maintaining a defined result using one rule is a bit tricky. The result rule feature solves this problem. If you manage results for Indian students, you can add Indian grading system or rules. Also, you can add Bangladesh or US grading system in the same way. We know, it's a bit difficult. Please share your experience while using these features to improve Educare.</p>
 
-1. Users/Students can find result by Name, Registration number, Roll Number, Exam, Passing Year
-1. Auto/Manual results calculations
-1. Auto GPA (CGPA) - based on your (admin) rules
-1. Automatically show letter grade
-1. Results table with students details
-1. Single subject result
-1. Subject marks and grade
-1. Users/Students Photos
-1. Optional subject detection
-1. Field validation
-1. Error notice
-1. Custom Themes
-1. Print results
+* Users/Students can find result by Name, Registration number, Roll Number, Exam, Passing Year
+* Auto/Manual results calculations
+* Auto GPA (CGPA) - based on your (admin) rules
+* Automatically show letter grade
+* Results table with students details
+* Single subject result
+* Subject marks and grade
+* Users/Students Photos
+* Optional subject detection
+* Field validation
+* Error notice
+* Custom Themes
+* Print results
 
 #### Admin Can -
 
-1. Admin can add and manage students
-1. Public Student Results
-1. Add Custom Result Rules
-1. Modify Grading Systems Based On Country or Demand
-1. Marksheed systems (Admin or teacher can add subject wise multiple student results at a same time.)
-1. Add/Update/Delete Students, Results, Subject, Class, Exam, Year, Extra (custom) field.
-1. Import/Export Results, Students and Marksheed
-1. View (All) Results by Class, Exam, Year With Asc/Desc Mode
-1. Add Default Students Photos
-1. Control And Manage Educare Settings
-1. Also, You can find lots of feature when you use it.
+* Admin can add and manage students
+* Public Student Results
+* Add Custom Result Rules
+* Modify Grading Systems Based On Country or Demand
+* Marksheed systems (Admin or teacher can add subject wise multiple student results at a same time.)
+* Add/Update/Delete Students, Results, Subject, Class, Exam, Year, Extra (custom) field.
+* Import/Export Results, Students and Marksheed
+* View (All) Results by Class, Exam, Year With Asc/Desc Mode
+* Add Default Students Photos
+* Control And Manage Educare Settings
+* Also, You can find lots of feature when you use it.
 
 ### Future Update:
 
-1. Custom student profiles
-1. Student Registration
-1. Register the admission form
-1. Attend/watch classes and exams
-1. Building connections between teachers and students
-1. Our future plan is to make Educare a fully virtual school
+* Custom student profiles
+* Student Registration
+* Register the admission form
+* Attend/watch classes and exams
+* Building connections between teachers and students
+* Our future plan is to make Educare a fully virtual school
 
 We know, it's a bit difficult. Please share your experience (feedback) while using these features to improve Educare.
 
@@ -82,7 +82,7 @@ For more info, please visit the [Educare on GitHub](https://github.com/fixbd/edu
 
 Currently, there are only one shortcodes available that you can use in your post editor, template or any shortcode-ready area...
 
-#### [educare_results]
+**`[educare_results]`**
 
 You need to add [educare_results] shortcode into WP editor or Template for front end results system. This shortcode display search form and results table. So, users/students can easily find and view there results.
 
@@ -253,6 +253,10 @@ Attention please: You only need to give us 5 stars!
 12. Add Extra Fields
 
 == Changelog ==
+
+= [1.2.9] =
+
+* (Front-End) Results Not Found Issues Fixed
 
 = [1.2.8] =
 
