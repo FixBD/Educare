@@ -1,3 +1,10 @@
+## [1.3.0]
+
+- **Back-End**
+- [Add Results] Fixed showing the nearest value issue in GPA
+- [View Results] You can view (15) results on page load 
+- Increse students/results per page number
+
 ## [1.2.9]
 
 - (Front-End) Results Not Found Issues Fixed

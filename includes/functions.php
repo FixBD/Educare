@@ -1107,7 +1107,7 @@ function educare_get_results_forms($print, $submit, $add_students = null) {
 						<option value="Failed" <?php if (educare_value('Result', $id) == 'Failed') { echo 'Selected'; }?>>Failed</option>
 					</select>
 					
-					<input type="number" name="GPA" class="fields" value="<?php echo esc_attr(educare_value('GPA', $id));?>" placeholder="0.00" <?php echo esc_attr( $disabled );?>>
+					<input type="number" name="GPA" class="fields" value="<?php echo esc_attr(educare_value('GPA', $id));?>" placeholder="0.00" step="any" <?php echo esc_attr( $disabled );?>>
 				</div>
 				
 				<?php echo educare_guide_for('add_subject');?>
@@ -1429,7 +1429,7 @@ function educare_all_view($students = null, $on_load = null) {
 			<div class="select">
 				<select id='results_per_page' name='results_per_page'>
 					<?php
-						for ( $a = 5; $a < 55; $a+=5 ) {
+						for ( $a = 5; $a < 105; $a+=5 ) {
 							ob_start();
 							if ($a == $results_per_page) {
 								echo 'selected';

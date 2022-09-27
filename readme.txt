@@ -6,7 +6,7 @@ Tags:                Result management, Academic, Results, Students, Education, 
 Requires at least:   3.8
 Tested up to:        6.0.2
 Requires PHP:        5.2.4
-Stable tag:          1.2.9
+Stable tag:          1.3.0
 License:             GPLv2 or later
 License URI:         http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -253,6 +253,13 @@ Attention please: You only need to give us 5 stars!
 12. Add Extra Fields
 
 == Changelog ==
+
+= [1.3.0] =
+
+* **Back-End**
+* [Add Results] Fixed showing the nearest value issue in GPA
+* [View Results] You can view (15) results on page load 
+* Increse students/results per page number
 
 = [1.2.9] =
 
