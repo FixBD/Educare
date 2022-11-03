@@ -118,7 +118,7 @@ Also, You can send your feedback here:
  
 1. **Add shortcodes for show results in frond-end**
 
-> There are a shortcodes `[educare_results]` that you can use in your post editor or any shortcode-ready area for display front end results system. More info given at shortcode sections.
+> There are a shortcodes `[educare_results]` that you can use in your post editor or any shortcode-ready area for display front end results system. More info given at [shortcode](/README.md#shortcodes) sections.
 
 <br>
 
@@ -249,13 +249,15 @@ Tips: If you set No that's mean only field will be delete. And, if you set Yes -
 
 > Currently there are only one shortcodes available. You need to add `[educare_results]` shortcode in editor, template or any shortcode-ready area for front end results system. This shortcode display search form and results table. So, users/students can easily find and view there results.
 
-**`[educare_results]`**
+### For use this shortcode in WP editor:
 
-For use this shortcode in your code or any PHP files:
+	[educare_results]
 
-**`echo do_shortcode( '[educare_results]' );`**
+### For use this shortcode in your code or any PHP files:
 
-### For example in a template files (page-results.php):
+	echo do_shortcode( '[educare_results]' );
+
+### For this shortcode in template files (page-results.php):
 
 	<?php
 		/**
@@ -281,29 +283,35 @@ If you're a theme author, plugin author, or just a code hobbyist, you can follow
 
 ## Customize Educare
 
-> ### Educare **v1.2.2+** has two functions to customize the result card and search form
+> Admin can allow to use actions (hook) for cutomize results cart or searching forms. Educare **v1.4.0+** has support hook for customize the result card and search form. So, admin can easily customize educare using hook.
 
-**For customize results card:**
-`educare_custom_results($results)`
+<br>
 
-**For customize search form:**
-`educare_custom_search_form($not_found, $errmsg)`
+### For customize results card (hook):
 
-1. Copy and paste this function in your themes `functions.php` files
-1. allow/enable ‘Custom Design Permission’ in plugin settings (because we care of your security)
-1. Throw your logic [code] under 'educare_custom_results' function for customize results card and 'educare_custom_search_form' for customize search forms
+	add_action( 'educare_custom_results', 'my_custom_results' );
+
+### For customize search form (hook):**
+
+	add_action( 'educare_custom_results_forms', 'my_custom_search_form' );
+
+<br>
+
+1. Copy and paste this function in your active themes `functions.php` files
+2. allow/enable ‘Custom Design Permission’ in plugin settings (because we care of your security)
+3. Throw your logic [code] under 'my_custom_results' function for customize results card and 'my_custom_search_form' for customize search forms
 
 <br>
 
 ### Please follow this files for more details:
 
 For customize results card:
-https://github.com/FixBD/Educare/blob/1.2.2/includes/support/educare_custom_results.php
+https://github.com/FixBD/Educare/blob/educare/includes/support/educare-custom-results-card.php
 
 For customize search form:
-https://github.com/FixBD/Educare/blob/1.2.2/includes/support/educare_custom_search_form.php
+https://github.com/FixBD/Educare/blob/educare/includes/support/educare-custom-results-form.php
 
-If you have face any problems and need our support (Totally Free!), Please contact us by email provided in plugin details.
+If you have face any problems and need our support (totally free!), Please contact us by email provided in plugin details.
 
 <br>
 
