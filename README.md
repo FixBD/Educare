@@ -9,14 +9,14 @@ Educare help you to easily control over your institute students at online. You c
 
 ## Table Of Content
 
-* ### [Current Features](/README.md#current-features)
-* ### [How to Install](/README.md#how-to-install)
-* ### [Documentation](/README.md#documentation)
-* ### [Shortcodes](/README.md#shortcodes)
-* ### [Developers only](/README.md#developers-only)
-* ### [Why User Like Educare?](/README.md#why-user-like-educare)
-* ### [Frequently Asked Questions](/README.md#-frequently-asked-questions-)
-* ### [Support US](/README.md#like-this-plugin)
+* [Current Features](/README.md#current-features)
+* [How to Install](/README.md#how-to-install)
+* [Documentation](/README.md#documentation)
+* [Shortcodes](/README.md#shortcodes)
+* [Developers only](/README.md#developers-only)
+* [Why User Like Educare?](/README.md#why-user-like-educare)
+* [Frequently Asked Questions](/README.md#-frequently-asked-questions-)
+* [Support US](/README.md#like-this-plugin)
 
 <br>
 
