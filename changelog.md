@@ -1,20 +1,30 @@
-## [1.3.0]
+## [1.4.0]
 
-- **Back-End**
-- [Add Results] Fixed showing the nearest value issue in GPA
-- [View Results] You can view (15) results on page load 
-- Increse students/results per page number
+- Added group system
+- Now admin can add group wise subject
+- Added students performance and promote system
+- Added management option in admin dashboard
+- Added auto fill option in add/update results forms
+- Everything is Ajax compatibility (Back-End and Front-End)
+- Fixed GPS issues in front-end
+- Improve students profiles
+- Improve add marks system
+- Improve import demo
+- Improve UI
 
-## [1.2.9]
+# [1.3.0]
 
-- (Front-End) Results Not Found Issues Fixed
+- Added more options in settings
+- Admin can hide student details from result card
+- Admin can hide grade sheet from result card
+- Fixed front-end roll no and regi no short fields
 
 ## [1.2.8]
 
 - Update issues fixed
 - Educare database update required message issue has been resolved
 - Improved all student menu
-- Fixed some bugs
+- Fixed some bugs 
 
 **Please note:** If you see database update required message, Just click update button. This is an most stable version of Educare. If you face any problem (any bugs issues), please inform us.
 

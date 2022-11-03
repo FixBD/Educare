@@ -1,19 +1,15 @@
 <?php
-
 // Educare default settings
 require_once(EDUCARE_INC.'database/default-settings.php');
 
-
-/** =====================( Functions Details )======================
-	
-	### Check educare database version
-
-	* @since 1.2.0
-	* @last-update 1.2.4
-
-	* @return void
-	
-===================( function for check database version )=================== **/
+/**
+ * ### Check educare database version
+ * 
+ * @since 1.2.0
+ * @last-update 1.2.4
+ * 
+ * @return void
+ */
 
 function educare_database_check($db) {
 	global $wpdb;
@@ -51,18 +47,21 @@ function educare_database_check($db) {
 
 
 
-/** =====================( Functions Details )======================
-	
-	# Create educare database for store result and settings data
+/**
+ * ### Create educare database
+ * 
+ * Create educare database for store results, students and settings data
+ * - educare_settings
+ * - educare_results
+ * - educare_students
+ * - educare_marks
+ * 
+ * @since 1.0.0
+ * @last-update 1.2.8
+ * 
+ * @return void
+ */
 
-	* @since 1.0.0
-	* @last-update 1.2.8
-
-	* @return void
-	
-===================( function for educare database )=================== **/
-
-// Create table for results system
 function educare_database_table($db = null) {
 
   global $wpdb;
@@ -72,9 +71,9 @@ function educare_database_table($db = null) {
   $Educare_settings = $wpdb->prefix."educare_settings";
 
   $table1 = "CREATE TABLE $Educare_settings (
-		id int(11) NOT NULL AUTO_INCREMENT,
-		list varchar(255) NOT NULL,
-		data text NOT NULL,
+		`id` int(11) NOT NULL AUTO_INCREMENT,
+		`list` varchar(80) NOT NULL,
+		`data` longtext NOT NULL,
 		PRIMARY KEY (id),
 		UNIQUE KEY list (list)
 	) ENGINE=InnoDB DEFAULT CHARSET=latin1";
@@ -83,17 +82,18 @@ function educare_database_table($db = null) {
 	$Educare_results = $wpdb->prefix."educare_results";
    
 	$table2 = "CREATE TABLE $Educare_results (
-		id mediumint(11) NOT NULL AUTO_INCREMENT,
-		Name varchar(80) NOT NULL,
-		Roll_No varchar(80) NOT NULL,
-		Regi_No varchar(80) NOT NULL,
-		Class varchar(80) NOT NULL,
-		Exam varchar(80) NOT NULL,
-		Year varchar(80) NOT NULL,
-		Details longtext NOT NULL,
-		Subject longtext NOT NULL,
-		Result varchar(80),
-		GPA varchar(80),
+		`id` mediumint(11) NOT NULL AUTO_INCREMENT,
+		`Name` varchar(80) NOT NULL,
+		`Roll_No` varchar(80) NOT NULL,
+		`Regi_No` varchar(80) NOT NULL,
+		`Class` varchar(80) NOT NULL,
+		`Exam` varchar(80) NOT NULL,
+		`Year` varchar(80) NOT NULL,
+		`Group` varchar(80) NOT NULL,
+		`Details` longtext NOT NULL,
+		`Subject` longtext NOT NULL,
+		`Result` varchar(80),
+		`GPA` varchar(80),
 		PRIMARY KEY (id)
   ) $charset_collate;";
 
@@ -101,15 +101,17 @@ function educare_database_table($db = null) {
   $Educare_students = $wpdb->prefix."educare_students";
 
   $table3 = "CREATE TABLE $Educare_students (
-		id mediumint(11) NOT NULL AUTO_INCREMENT,
-		Name varchar(80) NOT NULL,
-		Roll_No varchar(80) NOT NULL,
-		Regi_No varchar(80) NOT NULL,
-		Class varchar(80) NOT NULL,
-		Year varchar(80) NOT NULL,
-		Details longtext NOT NULL,
-		Subject longtext NOT NULL,
-		Others longtext NOT NULL,
+		`id` mediumint(11) NOT NULL AUTO_INCREMENT,
+		`Name` varchar(80) NOT NULL,
+		`Roll_No` varchar(80) NOT NULL,
+		`Regi_No` varchar(80) NOT NULL,
+		`Class` varchar(80) NOT NULL,
+		`Year` varchar(80) NOT NULL,
+		`Group` varchar(80) NOT NULL,
+		`Details` longtext NOT NULL,
+		`Subject` longtext NOT NULL,
+		`Student_ID` mediumint(11) NOT NULL,
+		`Others` longtext NOT NULL,
 		PRIMARY KEY (id)
   ) $charset_collate;";
 
@@ -117,36 +119,33 @@ function educare_database_table($db = null) {
   $Educare_marks = $wpdb->prefix."educare_marks";
 
   $table4 = "CREATE TABLE $Educare_marks (
-		id mediumint(11) NOT NULL AUTO_INCREMENT,
-		Class varchar(80) NOT NULL,
-		Exam varchar(80) NOT NULL,
-		Year varchar(80) NOT NULL,
-		Marks longtext NOT NULL,
-		Details longtext NOT NULL,
+		`id` mediumint(11) NOT NULL AUTO_INCREMENT,
+		`Class` varchar(80) NOT NULL,
+		`Exam` varchar(80) NOT NULL,
+		`Year` varchar(80) NOT NULL,
+		`Marks` longtext NOT NULL,
+		`Details` longtext NOT NULL,
 		Status varchar(80) NOT NULL,
 		PRIMARY KEY (id)
   ) $charset_collate;";
 	
 
 	require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
-	
+
 	if ($db == 'educare_settings') {
-		dbDelta( $table1 );
-	}
-	elseif ($db == 'educare_results') {
-		dbDelta( $table2 );
-	} 
-	elseif ($db == 'educare_students') {
-		dbDelta( $table3 );
-	} 
-	elseif ($db == 'educare_marks') {
-		dbDelta( $table4 );
+		dbDelta($table1);
+	} elseif ($db == 'educare_results') {
+		dbDelta($table2);
+	} elseif ($db == 'educare_students') {
+		dbDelta($table3);
+	} elseif ($db == 'educare_marks') {
+		dbDelta($table4);
 	} else {
 		if (educare_database_check('educare_settings')) {
-			dbDelta( $table1 );
-			dbDelta( $table2 );
-			dbDelta( $table3 );
-			dbDelta( $table4 );
+			dbDelta($table1);
+			dbDelta($table2);
+			dbDelta($table3);
+			dbDelta($table4);
 		}
 	}
 
@@ -155,5 +154,3 @@ function educare_database_table($db = null) {
 
 }
 
-
-?>

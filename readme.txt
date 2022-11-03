@@ -4,7 +4,7 @@ Contributors:        fixbd
 GitHub link:         https://github.com/fixbd/educare
 Tags:                Result management, Academic, Results, Students, Education, School, College, Coaching Center, Exam, School management, publish results
 Requires at least:   3.8
-Tested up to:        6.0.2
+Tested up to:        6.1.0
 Requires PHP:        5.2.4
 Stable tag:          1.3.0
 License:             GPLv2 or later
@@ -16,13 +16,19 @@ Powerful Online School/College Students & Results Management System With Lots Of
 
 <b>Educare is a powerful online School/College students & results management system dev by FixBD. This plugin allows you to manage and publish students results. This is a School/College students & results management plugin that was created to make WordPress a more powerful CMS.</b>
 
-Educare help you to easily control over your institute students at online. You can easily Add/Edit/Delete Students, Results, Class, Exam, Year, Extra field, Custom Result Rules, Auto calculations and much more... Also you can import & export unlimited students and results just one click!
+Educare help you to easily control over your institute students at online. You can easily Add/Edit/Delete Students, Results, Class, Group, Exam, Year, Extra field, Custom Result Rules, Auto calculations and much more... Also you can import & export unlimited students and results just one click!
 
-Just install and manage  your School, College, Coaching Center & personal website with existing Features of Educare. Remember, all Features of Educare is completely free of charge!
+Just install and manage your institute, school, college, coaching center & personal website with existing features of Educare. Remember, all features of Educare is completely free of charge!
 
-Finally, we're going to add features to this plugin that you won't find in any premium plugin. And we will give you all these premium features for free. Because, we believe in freedom and understand the value of your work or dreams! One more thing, Features are added based on user (Your) feedback. Because Educare is built for the user. If it doesn't work for the people it's made for, it's useless. So, Educare authorities value of user feedback.
+### Our Vision
 
-You can send your feedback here:
+We’re continuously additing features to this plugin that you won’t find in any premium plugin. And we will give you all these premium features for free. Because, we believe in freedom and understand the value of your work or dreams!
+
+### Our Mission
+
+Our mission is to build a great software that will reform education. Our future plan is to make Educare a fully virtual school.
+
+One more thing, Features are added based on user (Your) feedback. Because Educare is built for the user. If it doesn't work for the people it's made for, it's useless. So, Educare authorities value of user feedback. You can send your feedback here:
 [https://wordpress.org/plugins/educare/#reviews](https://wordpress.org/plugins/educare/#reviews)
 
 Also, If you have face any problems and need our support (Totally Free!), Please contact us with this email:
@@ -30,40 +36,62 @@ Also, If you have face any problems and need our support (Totally Free!), Please
 
 ### Current Features
 
-#### Educare Marksheed Systems
+#### * Student Management
+
+Admin can add sigle and import unlimited students via .csv (Exel) file. Once, student details are added then no need to fill student details again while adding or publishing any results. Also, Educare provides student profile ID card, analysis, details, subject, old (class) data and much more.
+
+#### * Results Management
+
+Educare provite powerfull results management functionality. Admin can publish sigle and unlimited results via .csv (Exel) files. Student can view results with photos, details, points, grade sheed, save or print results. Also, students can view their profile (under construction).
+
+#### * Educare Marksheed Systems
 
 <p>Using this features admin (teacher) can add subject wise multiple student results at a same time. So, it's most usefull for (single) teacher. There are different teachers for each subject. Teachers can add marks for their specific subject using this feature. And can print all student marks as a marksheet. After, the mark addition is done for all the subjects, students can view and print their results when admin publish it as results. Also, teacher can publish single subject results. (We call it - THE GOLDEN FEATURES FOR TEACHER!).</p>
 
-#### Result Rules (Grading Systems):
+#### * Performance or Promote
+
+Admin can promote or change classes, years, groups of multiple students with just one click! Most useful when students need to be promoted (from one class to another class) or when multiple students need to be updated.
+
+#### * Result Rules (Grading Systems)
+
 <p>In the preview version of Educare, admins can add results with only one (default) grading system. Now by adding (v1.2.0+) this feature admin can add his country result system/rules. So, <strong>Using this feature you (admin) can add, modify, manage or automatically calculate any type of result based on your country or demand</strong>. Eg: India, Bangladesh or US result GPA (CGPA) and calculation methods/rules are different. So, maintaining a defined result using one rule is a bit tricky. The result rule feature solves this problem. If you manage results for Indian students, you can add Indian grading system or rules. Also, you can add Bangladesh or US grading system in the same way. We know, it's a bit difficult. Please share your experience while using these features to improve Educare.</p>
 
-* Users/Students can find result by Name, Registration number, Roll Number, Exam, Passing Year
-* Auto/Manual results calculations
+#### * Content Management
+
+Admin can add class or group wise subject, exam, pass year, extra (custom) fields and more.
+
+Educare is a 100% mobile responsive, So educare will always look great on all devices (mobile, tablet, laptop, and desktop). And everything is Ajax compatibility (Back-End and Front-End).
+
+[Video - About Educare]
+
+#### * Admin Can -
+
+* Admin can add and manage students
+* Admin can publish and manage student results
+* Unlimited/Single subject results adding facility
+* Add/Update/Delete Students, Results, Subject, Class, Group, Exam, Year, Extra (custom) field.
+* Class and group wise subject added facilities
+* Add custom result rules (grading systems)
+* Modify grading systems based on country or demand
+* Marksheed systems (Admin or teacher can add subject wise multiple student results at a same time.)
+* Auto/Manual results calculations facility
+* Unlimited import/export results, students and marksheed 
 * Auto GPA (CGPA) - based on your (admin) rules
-* Automatically show letter grade
+* Students profile with - analytics, details, subject, old (class) data
+* Filter and view all results/students (Like - class, exam, year with Asc/Desc mode and more...)
+* Modify default students photos
+* Control and manage educare settings
+* Also, you can find many features while using it.
+
+#### * Students/Users Can -
+
+* Users/Students can find result by name, registration number, roll number, exam, passing year
 * Results table with students details
-* Single subject result
-* Subject marks and grade
+* Subject marks and gradesheed
 * Users/Students Photos
 * Optional subject detection
 * Field validation
-* Error notice
-* Custom Themes
 * Print results
-
-#### Admin Can -
-
-* Admin can add and manage students
-* Public Student Results
-* Add Custom Result Rules
-* Modify Grading Systems Based On Country or Demand
-* Marksheed systems (Admin or teacher can add subject wise multiple student results at a same time.)
-* Add/Update/Delete Students, Results, Subject, Class, Exam, Year, Extra (custom) field.
-* Import/Export Results, Students and Marksheed
-* View (All) Results by Class, Exam, Year With Asc/Desc Mode
-* Add Default Students Photos
-* Control And Manage Educare Settings
-* Also, You can find lots of feature when you use it.
 
 ### Future Update:
 
@@ -74,8 +102,19 @@ Also, If you have face any problems and need our support (Totally Free!), Please
 * Building connections between teachers and students
 * Our future plan is to make Educare a fully virtual school
 
-We know, it's a bit difficult. Please share your experience (feedback) while using these features to improve Educare.
+### Why You Should Choose Educare?
 
+* Powerful functionality that you need
+* Everything is Ajax compatibility (Back-End and Front-End)
+* Everything is customizable
+* Suit for any themes
+* Import/Export facility
+* Support all type of device (Responsive UI)
+* Strong coumunity support
+* Price - ($) Free
+* Allways up to date
+
+We know, it's a bit difficult. Please share your experience (feedback) while using these features to improve Educare.
 For more info, please visit the [Educare on GitHub](https://github.com/fixbd/educare).
 
 ### Shortcodes
@@ -188,12 +227,13 @@ More detailed instructions are included in the plugin's `README.md` files.
 1. Suit for any themes
 1. Easy to use (Everything is simple)
 1. Everything is customizable
+1. Everything is Ajax compatibility (Back-End and Front-End)
 1. Support all type of results system
 1. Powerful student and results management facilities
 1. The best school management plugin for WordPress users
 1. Features are added based on user feedback
-1. Always updated
 1. All feature like premium but FREE!
+1. Allways up to date
 
 == Frequently Asked Questions ==
 
@@ -204,17 +244,18 @@ I wasn't satisfied with some educational plugins available in WP plugins directo
 
 So, I just built something that I actually enjoyed and used lots of premium features without any charge!.
 
-### Can I use it for school management?
-Yes, you can manage all students and teachers in your institute.
-
-### Can I publish single subject results?
-Yes. Educare has a features called 'Add Marks'. Using these features admin (teacher) can add or publish subject wise multiple student results at a same time. So, it's most usefull for (single) teacher and subject.
-
 ### How to show result on (Front End) page?
 
 `[educare_results]`
 
 You need to add `[educare_results]` shortcode into WP post editor, template or any shortcode-ready area for front end results system. This shortcode display search form and results. So, users/students can easily find and view there results.
+
+### Can I use it for school management?
+
+Yes, Educare has exactly the features you want. So, feel free to use Educare on your website.
+
+### Can I publish single subject results?
+Yes. Educare has a features called 'Add Marks'. Using these features admin (teacher) can add or publish subject wise multiple student results at a same time. So, it's most usefull for (single) teacher and subject.
 
 ### Can the result card be custom designed?
 
@@ -225,6 +266,12 @@ Yes, In Educare v1.2.2+ you (admin) can customize results card, search results f
 Most things of Educare fairly straight-forward, but we've included an in-depth guide in the plugin download.  It's a file called `readme.md` in the plugin folder.
 
 You can also [view the readme](https://github.com/FixBD/Educare/blob/FixBD/README.md) online.
+
+### Is there YouTube video tutorial?
+
+Currently there is no video tutorial of Educare on YouTube. However, video tutorials will be added very soon.
+
+But there is nothing to despair about. Because, Educare has a feature called (Smart Guidelines). In this feature, the necessary details of each topic and what to do, how it works, how to use it all have been discussed. So, through this feature you will learn to use Educare easily.
 
 ### Minimum PHP requirements.
 
@@ -254,108 +301,72 @@ Attention please: You only need to give us 5 stars!
 
 == Changelog ==
 
+= [1.4.0] =
+
+* Added group system
+* Now admin can add group wise subject
+* Added students performance and promote system
+* Added management option in admin dashboard
+* Added auto fill option in add/update results forms
+* Everything is Ajax compatibility (Back-End and Front-End)
+* Fixed GPS issues in front-end
+* Improve students profiles
+* Improve add marks system
+* Improve import demo
+* Improve UI
+
+* Improve front-end search form and result card customization system
+**Notes:** If you use custom functionality for customize educare results card or search forms, Please follow this new method. Or if you find any bugs, please inform us.
+
 = [1.3.0] =
 
-* **Back-End**
-* [Add Results] Fixed showing the nearest value issue in GPA
-* [View Results] You can view (15) results on page load 
-* Increse students/results per page number
+* Added more options in settings
+* Admin can hide student details from result card
+* Admin can hide grade sheet from result card
+* Fixed front-end roll no and regi no short fields
 
-= [1.2.9] =
+= [1.2.*] =
 
-* (Front-End) Results Not Found Issues Fixed
+= **New Features** =
 
-= [1.2.8] =
-
-* Update issues fixed
-* Educare database update required message issue has been resolved
-* Improved all student menu
-* Fixed some bugs
-
-* **Please note:** If you see database update required message, Just click update button. This is an most stable version of Educare. If you face any problem (any bugs issues), please inform us.
-
-= 1.2.7 =
-
-* Improved Students Profiles
-* Added Students Import System
-* Added Students Import Demo Files
-* Fixed Settings Save Issues
-* Improve Educare Problem Detection
-* Fixed All Well Khown Bugs
-
-= 1.2.6 =
-
-* Added Students Profiles
-* PHP Error Fixed From Results Card
-
-= 1.2.5 =
-
-* Fixed Error on publishing marks
-* PHP Error Fixed
-
-= 1.2.4 =
-
-* Improved perfomance
-* Added Student Management System
-* Added Add Marks (Marksheed) System
-* Now It's Possible To Publish Single Subject Results
-* Teacher Can Publish Subject Wise Multiple Student Results At A Same Time.
-* Improved Educare Smart Guidelines
-
-* **Back-End Improved**
 * Added Ajax Functionality
-* Now It's 10X Faster Than Older Version
+* Added result rules feature
+* Added Add Marks (Marksheed) System
+* Added Student Management System
+* Added students Profiles
+* Added students import system
+* Added more options to filter and view results
 * Added (AI) Problem Detection And Auto Fix
-* Fixed All Well Khown Bugs
+* Now admin can add or change his own grading system
+* Now all default fields name are changeable
+* Now it's possible po publish single subject results
+* Teacher can publish subject wise multiple student results at a same time.
 
-**Features are added based on user (Your) feedback. Because Educare is built for the user. If it doesn't work for the people it's made for, it's useless. So, Educare authorities value of user feedback. Please share your experience (feedback) while using these features to improve Educare.**
+= **Improve Core Features** =
 
-= 1.2.3 =
-
-* Improve perfomance
-* Added Customize options in settings
+* Everything is Ajax compatibility (Back-End)
+* Now It's 10X Faster Than Older Version
+* Admin can add subject according to class and group
 * Now admin can enable/disable all default required fields in search forms. (Roll Number, Reg Number, Class, Exam, Year)
-* Added more options to view results (admin can find results of his choice!)
-* Added single results delete button in view results
-* Fixed issue with Delete All Results button not working
+* Customize optional subject selection
+* Removed unwanted code
+* Improve import demo
 * Fixed all well khown bugs
-* Custom result calculation option will be added after next update. Using these options admin can define, how to calculate results and GPA (CGPA).
 
-* **Please note:** This is an most stable version of Educare. If you face any problem (any bugs issues), please inform us.
-
-= 1.2.2 =
+= **Improve Front-End** =
 
 * Now admin can customize results card
 * Admin can customize search Forms
-* Customize optional subject selection
-* Improved import demo
-* Fixed grading system new rules save issues
-* Improve perfomance
-* Fixed some bugs 
-
-= 1.2.1 =
-
-* Update issues fixed
-
-= 1.2.0 =
-
-= Improve Core Features =
-
-* Added result rules feature
-* Now admin can add or change his own grading system
-* Reg no and roll no name are changeable
-* and only one/both can be mandatory
-* Admin can add subject according to class
-* Removed unwanted code
-* Improve import demo
-* Fixed some bugs
-
-= Improve front-end =
-* Admin can add/change default (front-end) result search form
 * Improved (default) search form style
 * Improved color issues when print results
 * More powerful and excited features coming soon!
 
+= [1.0.0] =
+
+* **Happy Release!!!**
+
+* Plugin launch. Everything's new!
+
 * **Please note:** You should backup your (Educare) database before updating to this new version (only for v1.0.2 or earlier users).
 
-The (full) change log is located in the `changelog.md` file in the plugin folder. You may also [view the change log](https://github.com/FixBD/Educare/blob/FixBD/changelog.md) online.
+The (full) change log is located in the `changelog.md` file in the plugin folder. You may also [view the change log for every single update](https://github.com/FixBD/Educare/blob/FixBD/changelog.md) online.

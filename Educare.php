@@ -1,8 +1,7 @@
 <?php
-
 /**
  * @package		Educare
- * @version 	1.3.0
+ * @version 	1.4.0
  * @author	  	FixBD <fixbd.org@gmail.com>
  * @copyright  	GPL-2.0+
  * @link		http://github.com/fixbd/educare
@@ -11,7 +10,7 @@
  * Plugin Name:  Educare
  * Plugin URI:	 http://github.com/fixbd/educare
  * Description:	 Educare is a powerful online School/College students & results management system dev by FixBD. This plugin allows you to manage and publish students results. You can easily Add/Edit/Delete Students, Results, Class, Exam, Year Custom field and much more... Also you can import & export unlimited students and results just a click!
- * Version:      1.3.0
+ * Version:      1.4.0
  * Author:       FixBD
  * Author URI:   http://github.com/fixbd
  * License:		 GPL-2.0+
@@ -30,7 +29,7 @@
 
 // Make it simple! (Define paths)
 // You can use ### include "your/url/files.php";
-define('EDUCARE_VERSION', '1.3.0');
+define('EDUCARE_VERSION', '1.4.0');
 define('EDUCARE_SETTINGS_VERSION', '1.0');
 define('EDUCARE_RESULTS_VERSION', '1.0');
 define('EDUCARE_DIR', plugin_dir_path(__FILE__));
@@ -46,27 +45,22 @@ register_activation_hook( __FILE__, 'educare_database_table' );
 
 // Include plugin functions
 require_once(EDUCARE_INC.'functions.php');
-// add educare admin css and script
+// Add educare admin css and script
 require_once(EDUCARE_INC.'support/educare-themes.php');
-// educare results system (front view)
+// Educare results system (front view)
 require_once(EDUCARE_TEMP.'users/results_systems.php');
 
 
-/** =====================( Functions Details )======================
-	
-	# function for add menu when active educare
-
-	* @since 1.0.0
-	* @last-update 1.2.0
-
-	* @param [type] $links
-	* @param [type] $file
- 	* @return void
-	
-===================( function for add active menu option )=================== **/
-
-// add options after plugin activation
-add_filter( 'plugin_action_links', 'educare_action_links', 10, 2 );
+/**
+ * ### function for add menu when active educare
+ * 
+ * @since 1.0.0
+ * @last-update 1.4.0
+ * 
+ * @param [type] $links
+ * @param [type] $file
+ * @return void
+ */
 
 function educare_action_links( $links, $file ) {
 	static $educare;
@@ -78,9 +72,10 @@ function educare_action_links( $links, $file ) {
     $action_links = array (
         // 'link' => 'titile',
         'settings' => 'Settings',
-        'grading-systems' => 'Grading System',
-        'import-results' => 'Import Results',
-        'add-results' => 'Add Results'
+        'management' => 'Management',
+        'add-marks' => 'Add Marks',
+        'all-results' => 'All Results',
+        'all-students' => 'All Students'
     );
 
     foreach ($action_links as $url => $title) {
@@ -92,6 +87,9 @@ function educare_action_links( $links, $file ) {
     
     return $links;
 }
+
+// add options after plugin activation
+add_filter( 'plugin_action_links', 'educare_action_links', 10, 2 );
 
 
 ?>

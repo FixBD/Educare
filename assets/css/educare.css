@@ -1,6 +1,6 @@
 /*============================================================
 	* Educare dev by FixBD
-	* Source: http://github.com/fixbd/educare/assets/css/educare.css
+	* Source: https://github.com/FixBD/Educare/blob/FixBD/assets/css/educare.css
 	* License: GPL 2.0
 ============================================================*/
 
@@ -74,7 +74,7 @@ ol, ul {
 	height: 35px;
 	margin: 0 2px;
 	text-decoration: none;
-	border-radius: 4px;
+	border-radius: 6px;
 }
 .educare_post .social_link i:hover {
 	color: #fff;
@@ -83,17 +83,9 @@ ol, ul {
 
 .social_link {
 	display: flex;
-    justify-content: center; /* Horizontal align */
+  justify-content: center; /* Horizontal align */
 }
 
-.contact,
-.educare_post h1,
-.educare_post h2,
-.educare_post h4 {
-	text-align: center;
-	font-weight: bold;
-	margin: 48px 0;
-}
 .notice h2 {
 	display: inline;
 }
@@ -135,9 +127,13 @@ form p {
 	background-color: #fff;
 	box-shadow: 0 10px 30px rgba(0, 0, 0, 0.07);
 }
+
+table,
 .add_results,
+.educare-notice,
 .notice.is-dismissible {
-  border-radius: 8px;
+  border-radius: 12px;
+  overflow: hidden;
 }
 
 .add_results .content {
@@ -148,10 +144,14 @@ form p {
 	margin: 8px 0;
 }
 .add_results input,
-.add_results select {
+.add_results select,
+select {
 	width: 100%;
 	margin: 6px 0;
 	padding: 8px 12px;
+}
+#educare_files_uploader .button {
+	margin: 6px 0;
 }
 .add_results select#results_per_page {
 	width: 64px;
@@ -175,6 +175,10 @@ input[type="submit"] {
   width: 100%;
 }
 
+.select.normal {
+  align-items: flex-start;
+}
+
 /* Responsive layout - makes a one column layout instead of a two-column layout */
 @media (max-width: 600px) {
   .add-subject {
@@ -186,6 +190,13 @@ input[type="submit"] {
     flex: 1;
     width: 100%;
   }
+}
+
+#edit_add_subject {
+  display: inline-block;
+  margin-top: 6px;
+  padding: 6px 8px;
+  font-size: small;
 }
 
 
@@ -211,12 +222,16 @@ input[type="checkbox"] {
 	padding: 12px;
 	margin-top: 22px;
 	border: 0px;
-	border-radius: 8px;
+	border-radius: 12px;
 	box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
 	transition: 0.3s;
 }
-.educare_button.full {
+.full {
   width: 100%;
+}
+
+#data_from_students * {
+  margin: 0;
 }
 
 .educare_button.disabled,
@@ -247,34 +262,10 @@ input.educare_button {
 	display: inline;
 }
 
-.add_results th {
-	text-align: left;
-}
-.add_results tr td:nth-child(3) {
-	width: 55px;
-	float: left;
-}
 
-.educare_post.update th {
-	background: #eee;
-	text-align: center;
-}
 
-.educare_post.update td {
-	text-align: center;
-}
-.educare_post.update th:nth-child(2),
-.educare_post.update td:nth-child(2) {
-	text-align: left;
-  padding-left: 12px;
-}
-.educare_post.update td:nth-child(3) {
-	width: 100%;
-}
 .educare_post.update td input {
-	width: 70px;
 	text-align: center;
-	margin: 4 auto;
 }
 
 .grade_sheet td {
@@ -288,27 +279,32 @@ input.educare_button {
   margin: 2px;
 }
 
-.educare_post.educare_settings tr td {
+table td {
+  padding: 6px;
+}
+
+.management td {
 	padding: 0 4px;
 }
-.educare_post.educare_settings tr td.empty {
+
+td.empty {
 	background: #FFD4DB;
 }
 
-.educare_post.educare_settings tr td:first-child {
-	text-align: center;
-	color: rgb(13,83,86);
-}
-.educare_post.educare_settings tr td:nth-child(2) {
-	width: 64px;
-	padding-left: 8px;
-}
-.educare_post.educare_settings tr th:nth-child(2) {
-	text-align: left;
-	padding: 0 8px;
+table.list tr td:first-child,
+table.list tr th:first-child {
+  text-align: center;
+  padding: 8px;
+  width: 32px;
 }
 
-.educare_post.educare_settings  tr td:nth-child(2) img {
+table.list tr td:nth-child(2),
+table.list tr th:nth-child(2) {
+	text-align: left;
+	padding: 8px;
+}
+
+table tr td:nth-child(2) img {
 	width: 100%;
 	height: 64px;
 	display: flex;
@@ -493,21 +489,55 @@ switch-radio button
 educare settings
 */
 
-.educare_settings h1,
- .educare_settings h2,
-.educare_settings h3 {
+h1,
+h2,
+h3 {
 	color: rgb(13,83,86);
 	font-weight: bold;
+  text-align: center;
+	margin: 48px 0;
+}
+
+h1 {
+  color: rgb(13,83,86);
+  font-size: 32px;
+  font-weight: 600;
+  position: relative;
+  padding-bottom: 20px;
+  margin-top: 70px;
+  text-transform: capitalize;
+}
+
+h1:after {
+  content: "";
+  width: 150px;
+  height: 4px;
+  background-image: linear-gradient(to right, rgba(69,203,149,0.1), rgb(13,83,86), rgba(69,203,149,0.1));
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  margin: 0 auto;
+  border-radius: 6px;
+}
+
+.media-frame-title h1 {
+  text-align: center;
+}
+
+h3 {
+	text-align: left;
 }
 
 .title .comments {
 	font-weight: 500;
 }
 
-.educare_post th {
+th {
 	color: rgb(13,83,86);
 	background: rgba(13,83,86,0.2);
 }
+
 .view_results th {
   background: #00ac4e;
   color: white;
@@ -516,16 +546,6 @@ educare settings
 .educare-update-settings,
 .educare_tab_content {
 	margin: 42px 4%;
-}
-.educare-settings {
-	display: flex;
-	margin: 0;
-  padding: 0 18px;
-  padding-top: 9px;
-  border-bottom: 1px dotted rgba(13,83,86,0.3);
-}
-.educare-settings .title {
-	flex: 1;
 }
 
 .all-results tr td:nth-child(2) {
@@ -537,6 +557,17 @@ h2.left {
 	text-align: left;
 	margin: 0;
 	padding: 1rem;
+}
+
+.educare-settings {
+	display: flex;
+	margin: 0;
+  padding: 0 18px;
+  padding-top: 9px;
+  border-bottom: 1px dotted rgba(13,83,86,0.3);
+}
+.educare-settings .title {
+	flex: 1;
 }
 .educare-settings .title h3 {
   font-size: 16px;
@@ -553,10 +584,13 @@ h2.left {
   border: 1px dotted rgba(13,83,86,0.3);
 }
 
-.educare_post .cover {
+
+.cover,
+.center {
 	text-align: center;
 }
-.educare_post .cover img {
+
+.cover img {
 	max-width: 40%;
 	min-width: 220px;
 	margin: 0 auto;
@@ -639,11 +673,17 @@ span.file:before {
   background-color: #fff;
   text-align: center;
   overflow: hidden;
-  border-radius: 8px;
+  border-radius: 12px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
   position: -webkit-sticky;
   position: sticky;
   top: 5px;
+  z-index: 999;
+}
+
+.sticky_msg {
+  position: sticky;
+  top: 110px;
   z-index: 9;
 }
 
@@ -657,10 +697,13 @@ span.file:before {
   border: none;
   outline: none;
   cursor: pointer;
-  padding: 16px;
-  border-radius: 8px;
+  padding: 8px;
+  border-radius: 12px;
   transition: 0.3s;
   line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
 }
 
 /* Create an active/current tablink class */
@@ -673,9 +716,17 @@ span.file:before {
   animation: fadeIn 1s; /* Fading effect takes 1 second */
 }
 
+.tab button span {
+  display: block;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+  font-size: small;
+}
+
 .tablinks i {
 	margin: 0 12px;
-	font-size: 24px;
+	/* font-size: 24px; */
 }
 
 /* Style the tab content */
@@ -708,6 +759,11 @@ span.file:before {
 		display: none;
 	}
 }
+@media (max-width: 601px) {
+	.sticky_msg {
+    top: 62px;
+  }
+}
 @media (min-width: 601px) {
 	.tab {
 		top: 52px;
@@ -715,13 +771,16 @@ span.file:before {
 }
 @media (min-width: 782px) {
 	.educare_post {
-	margin: 42px auto;
-}
+    margin: 42px auto;
+  }
+  .sticky_msg {
+    top: 40px;
+  }
   .tab {
   	position: fixed;
     top: 48px;
     flex-direction:column;
-    width: 64px;
+    width: 58px;
   }
   .tab button {
     padding: 16px 0;
@@ -729,8 +788,8 @@ span.file:before {
   .tab button span {
 		display: none;
 	}
-  #tab-loading {
-    top: 24px;
+  .tablinks i {
+    font-size: 24px;
   }
 }
 
@@ -749,7 +808,7 @@ span.file:before {
   border: none;
   color: #fff;
   background-color: #108957;
-  border-radius: 4px;
+  border-radius: 6px;
   min-width: 1.5rem;
   min-height: 1.5rem;
   outline: none;
@@ -768,7 +827,7 @@ span.file:before {
 .paginate input[type='number']#paginate_page_to_go{
   max-width: 3rem;
   text-align: center;
-  border-radius: 4px;
+  border-radius: 6px;
   border: 1px solid rgba(128, 128, 128, 0.65);
   padding: 3px;
   line-height: initial;
@@ -785,7 +844,7 @@ span.file:before {
 
 /* Accordion styles */
 .collapses {
-  border-radius: 8px;
+  border-radius: 12px;
   overflow: hidden;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.07);
 }
@@ -896,7 +955,7 @@ V1.2.0
   margin-top: 18px;
   padding: 0px;
   margin-bottom: -28px;
-  border-radius: 8px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1000,43 +1059,7 @@ p #help:hover {
   font-size: medium;
 }
 
-h1 {
-  color: rgb(13,83,86);
-  font-size: 32px;
-  font-weight: 600;
-  position: relative;
-  padding-bottom: 20px;
-  margin-top: 70px;
-}
-h1,
-.educare_post h1 {
-  margin-top: 70px;
-}
-h1:after {
-  content: "";
-  width: 150px;
-  height: 4px;
-  background-image: linear-gradient(to right, rgba(69,203,149,0.1), rgb(13,83,86), rgba(69,203,149,0.1));
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  margin: 0 auto;
-  border-radius: 6px;
-}
-
-.media-frame-title h1 {
-  text-align: center;
-}
-
 /* tooltip */
-.view_results td:last-child {
-  max-width: 32px;
-  padding: 6px;
-}
-.view_results td:first-child {
-  width: 28px;
-}
 .action_menu {
   position: relative;
   display: inline-block;
@@ -1120,7 +1143,6 @@ input[type=number].full {
 
 
 /* Students ID Card */
-
 .educare-card {
   max-width: 540px;
   min-width: 400px;
@@ -1128,7 +1150,7 @@ input[type=number].full {
   margin: 4% auto;
   font-size: smaller;
   box-sizing: border-box;
-  border-radius: 8px;
+  border-radius: 12px;
   overflow: hidden;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.07);
 }
@@ -1176,7 +1198,7 @@ input[type=number].full {
   background: #eee;
   vertical-align: top;
   border: 1px solid gray;
-  border-radius: 4px;
+  border-radius: 6px;
   overflow: hidden;
   display: inline-block;
 }
@@ -1213,7 +1235,9 @@ input[type=number].full {
   width: 100%;
 }
 
-.analytics h3 {
+.analytics h3,
+#educare_img_type,
+.center {
   text-align: center;
 }
 
@@ -1260,3 +1284,28 @@ progress.position::-webkit-progress-bar {
   background: rgb(13,83,86);
   box-shadow: inset 2px 2px 8px rgba(84, 30, 8, 0.2);
 }
+
+#educare-loading {
+	display: none;
+  z-index: 999;
+  position: absolute;
+}
+.educare-spinner {
+	position: fixed;
+	height: 70px;
+	width: 70px;
+	top: 50%;
+	left: 50%;
+	margin-left: -50px;
+	margin-top: -50px;
+	background-image: url(../img/loader.svg);
+	background-position: center;
+	background-repeat: no-repeat;
+	background-size: 100%;
+	background-color: #11b571b6;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 12px;
+}
+

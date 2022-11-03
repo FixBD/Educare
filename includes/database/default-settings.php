@@ -1,27 +1,27 @@
 <?php
-
-/** =====================( Functions Details )======================
-	
-	# function for default settings
-
-	* @since 1.0.0
-	* @last-update 1.2.0
-
-	* @param mixed $list			For Settings, Class, Exam, Year, Extra field
-	* @return void
-	
-===================( function for default settings )=================== **/
+/**
+ * ### Educare default settings
+ *
+ * @since 1.0.0
+ * @last-update 1.4.0
+ *
+ * @param mixed $list			For Settings, Class, Group, Exam, Year, Extra_field
+ * @return void
+ */
 
 function educare_add_default_settings($list, $show_data = null, $new_data = null) {
 	global $wpdb;
 	$table = $wpdb->prefix."educare_settings";
 
 	if ($list == 'Settings') {
+		// Default setting for settings
 		$target = array(
 			'confirmation' => 'checked',
 			'guide' => 'checked',
 			'photos' => 'checked',
 			'auto_results' => 'checked',
+			'details' => 'checked',
+			'grade_sheet' => 'checked',
 			'advance' => 'unchecked',
 			'problem_detection' => 'checked',
 			'clear_data' => 'unchecked',
@@ -30,6 +30,7 @@ function educare_add_default_settings($list, $show_data = null, $new_data = null
 			'students_page' => 'students',
 			'institute' => 'Name Of The Institutions (Title) Or Slogan',
 			'optional_sybmbol' => '✓',
+			'group_subject' => 4,
 			'display' => [
 				'Name' => ['Name', 'checked'],
 				'Roll_No' => ['Roll No', 'checked'],
@@ -59,34 +60,38 @@ function educare_add_default_settings($list, $show_data = null, $new_data = null
 				'package' => 'free'
 			]
 		);
-	}
-	
-	if ($list == 'Class') {
+	} elseif ($list == 'Class') {
+		// Default setting for class
 		$subject = array('English', 'Mathematics', 'ICT');
 		$target = array(
 			'Class 6' => $subject,
 			'Class 7' => [],
 			'Class 8' => []
 		);
-	}
-	
-	if ($list == 'Exam') {
+	} elseif ($list == 'Group') {
+		// Default setting for group
+		$subject = array('Physics', 'Chemistry', 'Biology');
+		$target = array(
+			'Science' => $subject,
+			'Commerce' => [],
+			'Arts' => []
+		);
+	} elseif ($list == 'Exam') {
+		// Default setting for exam
 		$target = array(
 			'Exam no 1',
 			'Exam no 2',
 			'Exam no 3'
 		);
-	}
-	
-	if ($list == 'Year') {
+	} elseif ($list == 'Year') {
+		// Default setting for year
 		$target = array(
 			'2022',
 			'2023',
 			'2024'
 		);
-	}
-	
-	if ($list == 'Extra_field') {
+	} elseif ($list == 'Extra_field') {
+		// Default setting for extra fiels
 		$target = array(
 			// type => Name
 			'date Date of Birth',
@@ -97,6 +102,8 @@ function educare_add_default_settings($list, $show_data = null, $new_data = null
 			'email Email',
 			'number Mobile No'
 		);
+	} else {
+		$target = array();
 	}
 
 	if ($show_data) {
@@ -130,6 +137,7 @@ function educare_add_default_settings($list, $show_data = null, $new_data = null
 function educare_default_settings() {
 	educare_add_default_settings('Settings');
 	educare_add_default_settings('Class');
+	educare_add_default_settings('Group');
 	educare_add_default_settings('Exam');
 	educare_add_default_settings('Year');
 	educare_add_default_settings('Extra_field');

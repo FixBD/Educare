@@ -1,6 +1,6 @@
 /** ============================================================
 	* Educare results style dev by FixBD
-	* URL: https://github.com/fixbd/educare/assets/css/results.css
+	* URL: https://github.com/FixBD/Educare/blob/FixBD/assets/css/results.css
 	* @since v1.0.0
 	* @Version: v1.2.0
 	* @last-update v1.2.0
@@ -17,18 +17,14 @@
 .educare_results h1,
 .educare_results h2,
 .educare_results h3,
-.error_results {
+.error_notice {
 	text-align: center;
-}
-.error_results {
-	background-color: #ff000010;
-	padding: 5%;
-	border-radius: 5px;
 }
 .educare_results input,
 .educare_results select,
 .educare_results input[type="number"] {
 	width: 100%;
+	min-width: 100%;
 	margin: 6px 0px;
 	padding: 10px;
 	border: 1px solid rgba(0,0,0,.15);
@@ -40,19 +36,17 @@
 }
 .educare_results .select {
 	display: flex;
-	flex: 1;
-	margin: 12px 0;
+  gap: 16px;
+  align-items: center;
+  flex-flow: wrap;
+}
+.educare_results .select * {
+  flex: 2 100px;
 }
 .educare_results .select p  {
-	width: 100%;
-	margin: 12px 0;
+	margin: 8px 0;
 }
-.educare_results .select p:first-child {
-	margin-right: 12px;
-}
-.educare_results .select p:last-child {
-	margin-left: 12px;
-}
+
 .educare_results button {
   color: rgba(255, 255, 255, 0.8);
   background-color: #11b570;
@@ -80,10 +74,12 @@
 	padding: 6px;
 }
 .educare_results .failed,
-.educare_results .error_notice b {
+.error_notice b {
 	background: none;
 	color: red;
 }
+
+
 .educare_results .success {
 	color: green;
 }
@@ -96,7 +92,7 @@
 /* Results body & search forms Style */
 .educare_results .results_form,
 .educare_results .result_body {
-	padding: 4%;
+	padding: 3% 4%;
 	margin: 0 auto;
 	font-size: 16px;
 	max-width: 1280px;
@@ -105,6 +101,10 @@
 .educare_results .results_form {
 	background: rgb(0 0 0 / 5%);
 	max-width: 580px;
+}
+.results_form.error_notice {
+	background: #ff000010;
+	margin: 12px auto;
 }
 .educare_results .table_body {
 	overflow-x: auto;
@@ -116,6 +116,10 @@
 	background: rgba(0, 156, 0, 0.733);
 	padding: 22px;
 	margin: 0;
+}
+.result_body h2.students_name {
+	color: inherit;
+	background: none;
 }
 .result_body .student_photos {
 	text-align: center;
@@ -159,6 +163,30 @@
 	background: rgba(0,115,0,0.20);
 }
 
+#educare-loading {
+	display: none;
+}
+.educare-spinner {
+	position: fixed;
+	height: 70px;
+	width: 70px;
+	top: 50%;
+	left: 50%;
+	margin-left: -50px;
+	margin-top: -50px;
+	background-image: url(../img/loader.svg);
+	background-position: center;
+	background-repeat: no-repeat;
+	background-size: 100%;
+	background-color: #11b571b6;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 8px;
+}
+
+
+
 /* Print Style */
 @media print {
   body * {
@@ -172,7 +200,6 @@
 		padding: 28px
 	}
 	.educare_results,
-	.educare_results_form,
 	.result_body,
 	.results_form,
 	.result_body .student_photos img {
