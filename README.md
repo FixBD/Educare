@@ -16,7 +16,7 @@ Educare help you to easily control over your institute students at online. You c
 * [Developers only](/README.md#developers-only)
 * [Why User Like Educare?](/README.md#why-user-like-educare)
 * [Frequently Asked Questions](/README.md#-frequently-asked-questions-)
-* [Support US](/README.md#like-this-plugin)
+* [Support](/README.md#like-this-plugin)
 
 <br>
 
