@@ -13,7 +13,9 @@ Educare help you to easily control over your institute students at online. You c
 * [How to Install](/README.md#how-to-install)
 * [Documentation](/README.md#documentation)
 * [Shortcodes](/README.md#shortcodes)
-* [Developers only](/README.md#developers-only)
+* [Developers only](/README.md#customize-educare)
+	* [Customize Educare](/README.md#customize-educare)
+	* [Change Results Table (CSS)](/README.md#for-change-results-table-stylecolors)
 * [Why User Like Educare?](/README.md#why-user-like-educare)
 * [Frequently Asked Questions](/README.md#-frequently-asked-questions-)
 * [Support](/README.md#like-this-plugin)
@@ -328,7 +330,7 @@ If you have face any problems and need our support (totally free!), Please conta
 
 <br>
 
-### To Change Results Table Style/Colors
+### For Change Results Table Style/Colors
 
 #### In function.php files (php)
 	
