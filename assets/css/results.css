@@ -48,14 +48,14 @@
 }
 
 .educare_results button {
-  color: rgba(255, 255, 255, 0.8);
+  /* color: rgba(255, 255, 255, 0.8);
   background-color: #11b570;
   text-align: center;
   padding: 16px 20px;
-  margin: 18px auto;
   font-weight: 700;
   border: none;
-  border-radius: 4px;  
+  border-radius: 4px;   */
+	margin: 18px auto;
   -webkit-transition: all .2s ease-in-out;
   -moz-transition: all .2s ease-in-out;
   -ms-transition: all .2s ease-in-out;
@@ -130,6 +130,7 @@
 	max-width: 200px;
 	max-height: 200px;
 	padding: 8px;
+	margin: auto;
 	border-radius: 100%;
 }
 .result_body table {
@@ -137,6 +138,7 @@
 	width: 100%;
 	text-align: left;
 	border-collapse: collapse;
+	margin: 0 auto;
 }
 .result_body .result_details td,
 .result_body .grade_sheet td,

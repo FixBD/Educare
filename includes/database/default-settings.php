@@ -30,7 +30,7 @@ function educare_add_default_settings($list, $show_data = null, $new_data = null
 			'students_page' => 'students',
 			'institute' => 'Name Of The Institutions (Title) Or Slogan',
 			'optional_sybmbol' => '✓',
-			'group_subject' => 4,
+			'group_subject' => 2,
 			'display' => [
 				'Name' => ['Name', 'checked'],
 				'Roll_No' => ['Roll No', 'checked'],

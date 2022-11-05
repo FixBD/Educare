@@ -12,13 +12,13 @@
  *
  * Notes: When you add or hook custom functionality for customize the results card or search forms, you need to allow/enable the 'Custom Design Permission' options in the (educare) plugin settings. Otherwise, this function will be ignored. One more think, This function allow only one @param {$print}. So, you must pass this arg. But, you can rename this arg as your wise!
  * 
- * Educare Default Results Card: 
- * @link GitHub: https://github.com/FixBD/Educare/blob/1.4.0/includes/support/educare-default-results-card.php
+ * Educare Default Results Card (table): 
+ * @link GitHub: https://github.com/FixBD/Educare/blob/educare/includes/support/educare-default-results-card.php
  * @see Plugin Dir: educare/includes/support/educare-default-results-card.php
  * 
  * How to customize educare results (searching) forms ?
  * Follow this files =>
- * @link GitHub: https://github.com/FixBD/Educare/blob/1.4.0/includes/support/educare-custom-results-form.php
+ * @link GitHub: https://github.com/FixBD/Educare/blob/educare/includes/support/educare-custom-results-form.php
  * @see Plugin Dir: educare/includes/support/educare-custom-results-form.php
  *
  * @since 1.4.0

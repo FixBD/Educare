@@ -41,7 +41,10 @@ define('EDUCARE_URL', plugin_dir_url(EDUCARE_FOLDER).EDUCARE_FOLDER.'/');
 
 // Create a database table for plugin settings and student results system
 require_once(EDUCARE_INC.'database/educare-database.php');
+// Active action
 register_activation_hook( __FILE__, 'educare_database_table' );
+// Uninstall action
+register_uninstall_hook( __FILE__, 'educare_uninstall_action' );
 
 // Include plugin functions
 require_once(EDUCARE_INC.'functions.php');
@@ -73,7 +76,6 @@ function educare_action_links( $links, $file ) {
         // 'link' => 'titile',
         'settings' => 'Settings',
         'management' => 'Management',
-        'add-marks' => 'Add Marks',
         'all-results' => 'All Results',
         'all-students' => 'All Students'
     );

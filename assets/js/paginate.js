@@ -24,7 +24,7 @@
  * paginate.init('.myTable',options,filterOptions);
  **/
 
-(function(window){
+(function(window) {
     'use strict';
 
     // This function will contain all our code

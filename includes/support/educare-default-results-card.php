@@ -34,12 +34,12 @@
  * Notes: When you add or hook custom functionality for customize the results card or search forms, you need to allow/enable the 'Custom Design Permission' options in the (educare) plugin settings. Otherwise, this function will be ignored. One more think, This function allow only one @param {$print}. So, you must pass this arg. But, you can rename this arg as your wise!
  * 
  * For more info (about custom result card): 
- * @link GitHub: https://github.com/FixBD/Educare/blob/1.4.0/includes/support/educare-custom-results-card.php
+ * @link GitHub: https://github.com/FixBD/Educare/blob/educare/includes/support/educare-custom-results-card.php
  * @see Plugin Dir: educare/includes/support/educare-custom-results-card.php
  * 
  * How to customize educare results (searching) forms ?
  * Follow this files =>
- * @link GitHub: https://github.com/FixBD/Educare/blob/1.4.0/includes/support/educare-custom-results-form.php
+ * @link GitHub: https://github.com/FixBD/Educare/blob/educare/includes/support/educare-custom-results-form.php
  * @see Plugin Dir: educare/includes/support/educare-custom-results-form.php
  *
  * @since 1.4.0
@@ -176,7 +176,7 @@ function educare_default_results($print) {
 			</div>
 			<div class="no_print">
 				<button onClick="<?php echo esc_js('window.print()');?>" class="print_button"><i class="fa fa-print"></i> Print</button>
-				<button id="educare-undo" class="undo-button"><i class="fa fa-undo"></i> Undo</button>
+				<button id="educare-undo" class="undo-button" onClick="window.location.href = window.location.href;"><i class="fa fa-undo"></i> Undo</button>
 			</div>
 			<?php
 		}

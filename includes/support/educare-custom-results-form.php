@@ -21,9 +21,9 @@
  * 5. <input name="Regi_No">
  * 6. <button name="educare_results">
  *
- * How to customize educare results card ?
+ * How to customize educare results card (table) ?
  * Follow this files =>
- * @link GitHub: https://github.com/FixBD/Educare/blob/1.4.0/includes/support/educare-custom-results-card.php
+ * @link GitHub: https://github.com/FixBD/Educare/blob/educare/includes/support/educare-custom-results-card.php
  * @see Plugin Dir: educare/includes/support/educare-custom-results-card.php
  * 
  * @since 1.4.0

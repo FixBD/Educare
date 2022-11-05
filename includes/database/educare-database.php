@@ -63,7 +63,6 @@ function educare_database_check($db) {
  */
 
 function educare_database_table($db = null) {
-
   global $wpdb;
   $charset_collate = $wpdb->get_charset_collate();
 
@@ -152,5 +151,36 @@ function educare_database_table($db = null) {
 	// Set educare default settings
 	educare_default_settings();
 
+}
+
+
+/**
+ * ### Clean Educare DB
+ * 
+ * @since 1.4.0
+ * @last-update 1.4.0
+ * 
+ * @return void
+ */
+
+function educare_uninstall_action() {
+	if (educare_check_status('clear_data') == 'checked') {
+		global $wpdb;
+
+		// Educare database
+		$educare_db = array (
+			'educare_settings',
+			'educare_results',
+			'educare_students',
+			'educare_marks',
+		);
+
+		// Drop/remove table from database
+		foreach ($educare_db as $table_name) {
+			$table = $wpdb->prefix.$table_name;
+			$wpdb->query( "DROP TABLE IF EXISTS $table" );
+		}
+
+	}
 }
 

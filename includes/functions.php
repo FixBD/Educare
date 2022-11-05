@@ -212,14 +212,16 @@ function educare_database_error_notice($fix_form = null, $db = null) {
 				educare_database_table($db);
 			}
 			
-			echo "<div class='notice notice-success is-dismissible'><p>Successfully Updated (Educare) Database click here to <a href='".esc_url($_SERVER['REQUEST_URI'])."'>Start</a></p></div>";
+			echo "<div class='notice notice-success is-dismissible'><p>Successfully updated (Educare) database click here to <a href='".esc_url($_SERVER['REQUEST_URI'])."'>Start</a></p></div>";
 		} else {
 			?>
 			<form class="add_results" action="<?php echo esc_url($_SERVER['REQUEST_URI']); ?>" method="post">
-				<b>Database Update Required</b>
-				<p>Your current (Educare) database is old or corrupt, you need to update database to run new version <b><?php echo esc_html( EDUCARE_VERSION );?></b> of educare, it will only update <strong>Educare related database</strong>. Click to update database</p>
-				<p><strong>Please note:</strong> You should backup your (Educare) database before updating to this new version (only for v1.0.2 or earlier users).</p>
-				<button class="button" name="update_educre_database">Update Educare Database</button>
+				<div class="content">
+					<b>Database Update Required</b>
+					<p>Your current (Educare) database is old or corrupt, you need to update database to run new version <b><?php echo esc_html( EDUCARE_VERSION );?></b> of educare, it will only update <strong>Educare related database</strong>. Click to update database</p>
+					<p><strong>Please note:</strong> You should backup your (Educare) database before updating to this new version (only for v1.0.2 or earlier users).</p>
+					<button class="button" name="update_educre_database">Update Educare Database</button>
+				</div>
 			</form>
 			<?php
 		}
@@ -1074,7 +1076,7 @@ function educare_files_selector($type, $print) {
     // disabled photos
 		var photos = '<?php echo educare_esc_str($photos);?>';
 		if (photos == 'disabled') {
-			document.getElementById('educare_default_help').innerHTML = 'Currently students photos are disabled. If you upload or display student photos, first check/anable students photos under the settings sections';
+			document.getElementById('educare_default_help').innerHTML = 'Currently students photos are disabled. If you upload or display student photos, first check/anable students photos from the settings sections';
 			document.getElementById('educare_upload_button').setAttribute('disabled', 'disabled');
 			document.getElementById('educare_attachment_default').setAttribute('disabled', 'disabled');
 			document.getElementById('educare_files_selector_disabled').className = 'educare_files_selector_disabled';
@@ -1387,7 +1389,7 @@ function educare_crud_data($add_students = null, $import_data = null) {
     }
     
     if ($msgs == 'not_found') {
-      echo "<div class='notice notice-error is-dismissible'><p>Sorry, result not found. Please try again</p></div>";
+      echo "<div class='notice notice-error is-dismissible'><p>Result not found. Please try again</p></div>";
     }
   }
 
@@ -1847,7 +1849,7 @@ function educare_get_search_forms($front = null) {
 			<form class="add_results" action="" method="post" id="educare_search_forms">
 				<div class="content">
 					<?php
-					echo '<div class="select">';
+					echo '<div class="select add-subject">';
 						if (key_exists('Class', $requred_fields)) {
 							?>
 							<div>
@@ -1869,10 +1871,8 @@ function educare_get_search_forms($front = null) {
 							</div>
 							<?php
 						}
-						?>
-					</div>
+					echo '</div>';
 
-					<?php 
 					if (key_exists('Roll_No', $requred_fields)) {
 						echo '<p>'.esc_html($roll_no).':</p>
 						<label for="Roll_No" class="labels" id="roll_no"></label>
@@ -1886,7 +1886,6 @@ function educare_get_search_forms($front = null) {
 						<input type="text" name="Regi_No" value="'.esc_attr($Regi_No).'" placeholder="Inter '.esc_attr($regi_no).'">
 						';
 					}
-
 					?>
 					
 					<div>
@@ -3694,6 +3693,16 @@ function educare_ai_fix() {
 	// @since 1.4.0
 	$group = educare_check_settings('Group');
 	// $group_list = educare_check_settings('Group_list');
+	$msgs = $update_settings = $update_current_data = $update_group = false;
+
+	foreach ($settings_data as $key => $data) {
+		// keep user old settings
+		if (!property_exists($current_settings, $key)) {
+			$current_settings->$key = $data;
+			$msgs = true;
+			$update_settings = true;
+		}
+	}
 
 	$error_key = array_diff_key($current_data,$default_data);
 
@@ -3702,14 +3711,13 @@ function educare_ai_fix() {
 		unset($current_data[$key]);
 	}
 
-	$msgs = $update_settings = $update_group = false;
 	// insert educare new data in database settings
 	foreach ($default_data as $key => $data) {
 		// keep user old settings
 		if (!key_exists($key, $current_data)) {
 			$current_data[$key] = $data;
 			$msgs = true;
-			$update_settings = true;
+			$update_current_data = true;
 		}
 	}
 
@@ -3717,11 +3725,16 @@ function educare_ai_fix() {
 	
 	if ($msgs) {
 		if (educare_check_status('problem_detection') == 'checked') {
+
 			if ($update_settings) {
+				educare_add_default_settings('Settings', false, $current_settings);
+			}
+
+			if ($update_current_data) {
 				foreach ($current_data as $key => $value) {
 					$default_data[$key] = $value;
 				}
-	
+
 				$current_settings->display = $default_data;
 				educare_add_default_settings('Settings', false, $current_settings);
 			}
@@ -3742,7 +3755,7 @@ function educare_ai_fix() {
 			
 			$msgs = '<div class="educare_post">'.educare_guide_for("<strong>Educare (AI) Detection:</strong> Successfully complete update process and fixed all bugs and error").'</div>';
 		} else {
-			$msgs = educare_guide_for('There are some issues found and you will get an error while proccessing some options. Because, Your current settings are disabled educare AI Problem Detection options. Please, Go to educare <code>Settings > Others > Advance Settings > <b>(AI) Problem Detection</b></code> anable it to fix (remove) this messege.', '', false);
+			$msgs = educare_guide_for('There are some issues found and you will get an error while proccessing some options. Because, Your current settings are disabled educare AI Problem Detection options. Please, Go to educare <code>Settings > Advance Settings > <b>(AI) Problem Detection</b></code> anable it to fix (remove) this messege. Note: To show advanced settings you must enable advanced settings in Settings > Other > Advanced settings.', '', false);
 		}
 	}
 	
@@ -3840,7 +3853,7 @@ function educare_process_settings($list) {
 				$unique_data = $y;
 				
 				if (in_array($unique_target, $unique_data)) {
-					echo '<div class="notice notice-error is-dismissible"><p>'.esc_html($list).' <b>'.esc_html($target).'</b> is allready exist!</p><button class="notice-dismiss"></button></div>';
+					echo '<div class="sticky_msg"><div class="notice notice-error is-dismissible"><p>'.esc_html($list).' <b>'.esc_html($target).'</b> is allready exist!</p><button class="notice-dismiss"></button></div></div>';
 				} else {
 					
 					$data = array_unique($data);
@@ -4417,7 +4430,7 @@ function educare_settings_form() {
 						
 						educare_settings_status('optional_sybmbol', 'Optional Subject Selection', "Define optional subject identifier character/symbol. In this way educare define and identify optional subjects when you add or import results.");
 		
-						educare_settings_status('group_subject', 'Group Subject', "Define how many subject in each group. In this way educare define last 4 (your defined) subject as a group wise subject when you add or import any results and students");
+						educare_settings_status('group_subject', 'Group Subject', "Define how many subject in each group. In this way educare define last (your defined) subject as a group wise subject when you add or import any results and students. For disable or unlimited set <code>0</code>");
 
 						educare_settings_status('auto_results', 'Auto Results', "Automatically calculate students results status Passed/Failed and GPA");
 		
@@ -4444,20 +4457,31 @@ function educare_settings_form() {
 						educare_settings_status('copy_demo', 'Copy Demo Data', "<strong>Recommendation:</strong> Allow this option when your systems don't allow to download demo file. If you enable this options all demo data will be show in text box. You can copy and past this data into csv files.");
 						
 						educare_settings_status('advance', 'Advance Settings', "Anable and disable Advance/Developers menu. Note: it's only for developers or advance users");
-						
-						echo '<div id="advance_settings">';
-							
-						educare_settings_status('problem_detection', '(AI) Problem Detection', "Automatically detect and fix educare relatet problems");
-						
-						educare_settings_status('clear_data', 'Clear Data', "Clear all (Educare) data from database when you uninstall or delete educare from plugin list?");
-						
-						echo '</div>';
 						?>
 					</div>
 				</div>
 
 			</div>
 			
+			<div id="advance_settings">
+				<br>
+				<div class="collapses">
+					<div class="collapse">
+						<input class="head" type="radio" name="advance_settings_status" id="Advance_Settings_menu" checked>
+						<label class="collapse-label" for="Advance_Settings_menux"><div><i class="dashicons dashicons-performance"></i> Advance Settings</div></label>
+						<div class="collapse-content">
+							<?php
+							echo "<div style='padding: 1px 0;'>";
+							educare_settings_status('problem_detection', '(AI) Problem Detection', "Automatically detect and fix educare relatet problems. Please, anable this options when update educare");
+							echo '</div>';
+
+							educare_settings_status('clear_data', 'Clear Data', "Clear all (educare) data from database when you uninstall or delete educare from plugin list?");
+							?>
+						</div>
+					</div>
+				</div>
+			</div>
+
 			<?php
 			
 			?>
@@ -5504,7 +5528,7 @@ function educare_data_management($students = null) {
 		// include (EDUCARE_ADMIN."menu/view-results.php");
 		echo '<h1>Add '.esc_html($students).'</h1>';
 
-		echo educare_guide_for("Here you can add data and their details. Once, if you add and fill student details then you don't need to fill student details again while adding or publishing any result. If you miss something and need to update/edit, you can update a student's details from the <a href='admin.php?page=educare-all-".esc_html($students)."&update-data'>Update Menu</a>.");
+		echo educare_guide_for("Here you can add data and their details. Once, if you add and fill student details then you don't need to fill student details again while adding or publishing any result. If you miss something and need to update/edit, you can update a student's details from the <a href='admin.php?page=educare-all-".esc_html($students)."&update-data'>Update Menu</a>. Aslo, you can import unlimited students from <a href='admin.php?page=educare-all-".esc_html($students)."&import-data'>Import</a> tab.");
 		
 		// save forms data
 		echo '<div id="msgs">';
@@ -5547,7 +5571,7 @@ function educare_data_management($students = null) {
 			<p>In this way educare define and identify optional subjects. So, when you add a result to the csv files - you need to add <code>1</code> symbol before the optional subject marks.</p>
 
 			
-			<div class="select">
+			<div class="select add-subject">
 				
 				<div>
 					<p>Total <?php echo esc_html($students)?>:</p>
@@ -5811,7 +5835,7 @@ function educare_get_students_list($Class = null, $Year = null) {
 				</script>
 				<?php
 			} else {
-				echo '<div class="notice notice-error is-dismissible"><p> No student found in this class <b>('.esc_html($Class).')</b>. <a href="/wp-admin/admin.php?page=educare-all-students&add-students" target="_blank">click add students</a></p><button class="notice-dismiss"></button></div>';
+				echo '<div class="notice notice-error is-dismissible"><p> No student found in this class <b>('.esc_html($Class).')</b>. <a href="/wp-admin/admin.php?page=educare-all-students&add-data" target="_blank">click add students</a></p><button class="notice-dismiss"></button></div>';
 			}
 		}
 	}
@@ -6531,7 +6555,7 @@ function educare_options_by_ajax($target, $add_students = null) {
 			var numberOfChecked = $("[name|='select_subject[]']:checked").length;
 			var group_subject = '<?php echo educare_check_status('group_subject')?>';
 
-			var changeLink = 'You can change this group wise requred subject from educare settings. <a href="/wp-admin/admin.php?page=educare-settings" target="_blank">Click here</a> to change';
+			var changeLink = 'You can change this group wise requred subject from <code>Educare Settings > Results System > Group Subject</code>. <a href="/wp-admin/admin.php?page=educare-settings" target="_blank">Click here</a> to change';
 			
 			if (group_subject == 0 || !group_subject) {
 				return true;
@@ -6714,6 +6738,7 @@ function educare_view_results() {
 		
 	} else {
 		$sql = educare_get_sql($requred_fields);
+		$id = '';
 	}
 
 	if (isset($_POST['educare_results']) or isset($_POST['id'])) {
@@ -6733,7 +6758,7 @@ function educare_view_results() {
 				}
 			} else {
 				echo '<div class="results_form error_notice error">';
-					echo "<div class='notice notice-error is-dismissible'><p>Sorry, result not found. Please try again</p></div>";
+				echo "<div class='notice notice-error is-dismissible'><p>Result not found. Please try again</p></div>";
 				echo '</div>';
 
 				educare_get_search_forms(true);
