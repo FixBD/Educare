@@ -436,7 +436,7 @@ I wasn't satisfied with some educational plugins available in WP plugins directo
 
 ### Can the result card be custom designed?
 
-> Yes, In Educare v1.2.2+ you (admin) can customize results card, search results forms. Everything on the front end is customizable. Please [Follow this topics](https://wordpress.org/support/topic/can-the-result-card-be-custom-designed).
+> Yes, In Educare v1.2.2+ you (admin) can customize results card, search results forms. Everything on the front end is customizable. Please [Follow this topics](https://github.com/FixBD/Educare/wiki/Customize-Educare).
 
 ### How do I use it?
 
