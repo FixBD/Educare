@@ -988,7 +988,7 @@ function educare_files_selector($type, $print) {
 		</div>
 	</div>
 
-	<script >
+	<script>
 		// educare_file_selecteor
 		jQuery( document ).ready( function( $ ) {
 			// Uploading files
@@ -2008,8 +2008,6 @@ function educare_get_data_management($students) {
 			
 		});
 		
-
-		
 	</script>
 
 	<?php
@@ -2084,7 +2082,7 @@ function educare_tab_management($action_for = 'management', array $tab = null) {
 					?>
 					<script type="text/javascript">
 						$(".active").removeClass('active');
-						$("#<?php echo esc_js( $name );?>").addClass('active');
+						$("#<?php echo esc_attr( $name );?>").addClass('active');
 					</script>
 					<?php
 				}
@@ -4495,7 +4493,7 @@ function educare_settings_form() {
 					<?php 
 					if (isset($_POST['active_menu'])) {
 						$active_menu = sanitize_text_field( $_POST['active_menu'] );
-						echo "$('#".esc_js($active_menu)."').attr('checked', true)";
+						echo "$('#".esc_attr($active_menu)."').attr('checked', true)";
 					}
 					?>
 
@@ -5049,9 +5047,9 @@ function educare_setting_subject($list, $form = null) {
 
 			});
 
-			$(document).on("click", "[name=<?php echo esc_js($list)?>]", function() {
+			$(document).on("click", "[name=<?php echo esc_attr($list)?>]", function() {
 				// alert($(this).attr('data'));
-				$('#add_<?php echo esc_js($list)?>').val($(this).attr('data'));
+				$('#add_<?php echo esc_attr($list)?>').val($(this).attr('data'));
 			});
 		</script>
 

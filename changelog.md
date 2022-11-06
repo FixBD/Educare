@@ -10,6 +10,7 @@
 - Improve students profiles
 - Improve add marks system
 - Improve import demo
+- Performance improved
 - Improve UI
 
 # [1.3.0]
@@ -18,6 +19,10 @@
 - Admin can hide student details from result card
 - Admin can hide grade sheet from result card
 - Fixed front-end roll no and regi no short fields
+
+## [1.2.9] =
+
+- (Front-End) Results Not Found Issues Fixed
 
 ## [1.2.8]
 

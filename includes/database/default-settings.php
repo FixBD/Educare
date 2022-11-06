@@ -24,7 +24,7 @@ function educare_add_default_settings($list, $show_data = null, $new_data = null
 			'grade_sheet' => 'checked',
 			'advance' => 'unchecked',
 			'problem_detection' => 'checked',
-			'clear_data' => 'unchecked',
+			'clear_data' => 'checked',
 			'custom_results' => 'unchecked',
 			'results_page' => 'results',
 			'students_page' => 'students',

@@ -62,7 +62,7 @@ Admin can add class or group wise subject, exam, pass year, extra (custom) field
 
 Educare is a 100% mobile responsive, So educare will always look great on all devices (mobile, tablet, laptop, and desktop). And everything is Ajax compatibility (Back-End and Front-End).
 
-[Video - About Educare]
+[youtube https://youtu.be/eJu0f5O9kpY]
 
 #### * Admin Can -
 
@@ -286,18 +286,21 @@ Attention please: You only need to give us 5 stars!
 
 == Screenshots ==
 
-1. Front end search results
-2. Results table (Details)
-3. Results table (Grade sheet)
-4. Print or save results
-5. View Results
-6. Add Results
-7. Import Results
-8. Update Results
-9. Grading Systems
-10. Educare Settings
-11. Add Contents
-12. Add Extra Fields
+1. Front-End Search Form
+2. Results Table (Details)
+3. Results Table (Grade sheet)
+4. Print Or Save Results
+5. Students Management (All)
+6. Results Management (Add)
+7. Results Management (Import)
+8. Marks System
+9. Class List
+10. Group List
+11. Extra Fields List
+12. Educare Settings
+13. Default Photos
+14. Grading System
+15. Student profile
 
 == Changelog ==
 
@@ -313,6 +316,7 @@ Attention please: You only need to give us 5 stars!
 * Improve students profiles
 * Improve add marks system
 * Improve import demo
+* Performance improved
 * Improve UI
 
 * Improve front-end search form and result card customization system
@@ -329,14 +333,14 @@ Attention please: You only need to give us 5 stars!
 
 = **New Features** =
 
-* Added Ajax Functionality
+* Added Ajax Functionality (Back-End)
 * Added result rules feature
-* Added Add Marks (Marksheed) System
-* Added Student Management System
+* Added student management system
 * Added students Profiles
 * Added students import system
 * Added more options to filter and view results
-* Added (AI) Problem Detection And Auto Fix
+* Added (AI) problem detection and auto fix 
+* Added add marks (marksheed) system
 * Now admin can add or change his own grading system
 * Now all default fields name are changeable
 * Now it's possible po publish single subject results
@@ -345,7 +349,7 @@ Attention please: You only need to give us 5 stars!
 = **Improve Core Features** =
 
 * Everything is Ajax compatibility (Back-End)
-* Now It's 10X Faster Than Older Version
+* Nowit's 10X faster than older version
 * Admin can add subject according to class and group
 * Now admin can enable/disable all default required fields in search forms. (Roll Number, Reg Number, Class, Exam, Year)
 * Customize optional subject selection
@@ -356,17 +360,17 @@ Attention please: You only need to give us 5 stars!
 = **Improve Front-End** =
 
 * Now admin can customize results card
-* Admin can customize search Forms
+* Admin can customize search forms
 * Improved (default) search form style
 * Improved color issues when print results
 * More powerful and excited features coming soon!
+
+* **Please note:** You should backup your (Educare) database before updating to this new version (only for v1.0.2 or earlier users).
 
 = [1.0.0] =
 
 * **Happy Release!!!**
 
 * Plugin launch. Everything's new!
-
-* **Please note:** You should backup your (Educare) database before updating to this new version (only for v1.0.2 or earlier users).
 
 The (full) change log is located in the `changelog.md` file in the plugin folder. You may also [view the change log for every single update](https://github.com/FixBD/Educare/blob/FixBD/changelog.md) online.
