@@ -16,6 +16,7 @@ Educare help you to easily control over your institute students at online. You c
 * [Developers only](/README.md#customize-educare)
 	* [Customize Educare](/README.md#customize-educare)
 	* [Change Results Table (CSS)](/README.md#for-change-results-table-stylecolors)
+* [How to import results?](https://github.com/FixBD/Educare/wiki/How-To-Import-Results)
 * [Why User Like Educare?](/README.md#why-user-like-educare)
 * [Frequently Asked Questions](/README.md#-frequently-asked-questions-)
 * [Support](/README.md#like-this-plugin)
@@ -203,6 +204,8 @@ This is an auto generate  .csv file for import demo, based on users current sett
 If problem to download the flies, you can manually get this file in plugins dir: Educare/assets/files/import_demo.csv
 
 Notes: Files must be an .csv extension for import the results.
+
+Please follow [this wiki](https://github.com/FixBD/Educare/wiki/How-To-Import-Results) for more details
 
 ## 7. Grading Systems
 
