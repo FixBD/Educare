@@ -198,7 +198,7 @@ Here admin can update/edit/delete the students results that was previously added
 
 Please carefully fill out all the details of your import (.csv) files. If you miss one, you may have problems to import the results. So, verify the student's admission form well and then give all the details in your import files. Required field are: Name, Roll No, Regi No, Exam, Class and Year. So, don't miss all of this required field!
 
-If you don't know, how to create import files. Please [download](https://github.com/fixbd/Educare/assets/files/import_demo.csv) demo files for better understanding.
+If you don't know, how to create import files. Please [download](https://github.com/FixBD/Educare/wiki/How-To-Import-Results) demo files for better understanding.
 
 This is an auto generate  .csv file for import demo, based on users current settings (Subject, Exam, Extra field...).
 If problem to download the flies, you can manually get this file in plugins dir: Educare/assets/files/import_demo.csv
