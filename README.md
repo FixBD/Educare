@@ -53,7 +53,7 @@ Educare is a 100% mobile responsive, So educare will always look great on all de
 
 ### Strong Security
 
-Educare come with powerful and strong security system. In front-end educare prevent all type of hacker attacks. Apart from that, Educare support Google Re-Captcha security system. By using these features you can keep your system safe and secure
+Educare come with powerful and strong security system. In front-end educare prevent all type of hacker attacks. Apart from that, Educare support Google Re-Captcha security system. By using these features you can keep your system safe and secure.
 
 ### Admin Can -
 
