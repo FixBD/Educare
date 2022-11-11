@@ -28,7 +28,7 @@
  * ==================================================================
  * 
  * @since 1.0.0
- * @last-update 1.0.0
+ * @last-update 1.4.1
  * 
  * @return void
  */
@@ -39,9 +39,24 @@ function educare_results_style() {
 	// JavaScript link
 	wp_enqueue_script('jquery'); // That's men script now place at the bottom
 	wp_enqueue_script('jquery-min', EDUCARE_URL.'assets/js/jquery-2.1.3.min.js');
+	wp_enqueue_script('recaptcha-v2', 'https://www.google.com/recaptcha/api.js', [], null, true);
 }
 
 add_action('wp_enqueue_scripts', 'educare_results_style');
 
+// Add async and defer to 'recaptcha-v2' script loading tag.
+add_filter(
+  'script_loader_tag',
+  function ($tag, $handle) {
+    // Check for the handle we used when enqueuing the script.
+    if ('recaptcha-v2' !== $handle) {
+      return $tag;
+    }
+    // Add async and defer at the end of the opening script tag.
+    return str_replace('></', ' async defer></', $tag);
+  },
+  20,
+  2
+);
 
 ?>

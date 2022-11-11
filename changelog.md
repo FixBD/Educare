@@ -1,3 +1,21 @@
+## [1.4.1]
+
+**Stable - Security Release**
+- Update your Educare to v1.4.1 as soon as possible.
+- I am happy to announce that Educare v1.4.1 has been released. This update brings a lot of security and bug fixes to the front-end.
+- Now It is possible to block Brute Force attacks
+- More Improvement to prevent SQL injection
+- Fixed all well khown bugs
+- Fixed front-end result table text overflow issues
+
+**= Apart from that we've brought a new features too: =**
+- **Added Google Re-Captcha**
+- By default it is (disabled).
+- You can find these options in WP Dashboard > Educare > Settings > Security
+- You need to enter/paste your google Recaptcha V2 site or secret key.
+
+**Notes:** Please update your Educare to v1.4.1 as soon as possible to prevent hacker attacks! And don't forget to enable Google Re-Captcha options from educare settings.
+
 ## [1.4.0]
 
 - Added group system

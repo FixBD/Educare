@@ -31,6 +31,9 @@ function educare_add_default_settings($list, $show_data = null, $new_data = null
 			'institute' => 'Name Of The Institutions (Title) Or Slogan',
 			'optional_sybmbol' => '✓',
 			'group_subject' => 2,
+			're_captcha' => 'unchecked',
+			'site_key' => '',
+			'secret_key' => '',
 			'display' => [
 				'Name' => ['Name', 'checked'],
 				'Roll_No' => ['Roll No', 'checked'],

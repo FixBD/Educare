@@ -157,6 +157,8 @@ function educare_database_table($db = null) {
 /**
  * ### Clean Educare DB
  * 
+ * Clean all (educare) data from database, when user remove/delete/uninstall educare from plugin list. If user uncheck Clear Data at educare settings, this action will be ignored.
+ * 
  * @since 1.4.0
  * @last-update 1.4.0
  * 
@@ -180,6 +182,11 @@ function educare_uninstall_action() {
 			$table = $wpdb->prefix.$table_name;
 			$wpdb->query( "DROP TABLE IF EXISTS $table" );
 		}
+
+		// remove educare default students photos
+		delete_option('educare_files_selector');
+
+		// All clean!!!
 
 	}
 }

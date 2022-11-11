@@ -27,7 +27,7 @@
  * @see Plugin Dir: educare/includes/support/educare-custom-results-card.php
  * 
  * @since 1.4.0
- * @last-update 1.4.0
+ * @last-update 1.4.1
  * 
  * @return mixed
  */
@@ -67,6 +67,11 @@ function educare_my_custom_results_forms() {
 			<?php educare_get_options('Year', $Year);?>
 		</select>
 		
+		<?php
+		$site_key = educare_check_status('site_key');
+		echo '<div class="g-recaptcha" data-sitekey="'.esc_attr($site_key).'"></div>';
+		?>
+
 		<button id="results_btn" type="submit">View Results </button>
 	</form>
 	<?php

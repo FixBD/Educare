@@ -23,6 +23,7 @@
 .educare_results input,
 .educare_results select,
 .educare_results input[type="number"] {
+	background-color: rgba(255, 255, 255, 0.5);
 	width: 100%;
 	min-width: 100%;
 	margin: 6px 0px;
@@ -84,27 +85,35 @@
 	color: green;
 }
 /* Results not found */
-.educare_results .error {
+.educare_results .error,
+.notice-error {
 	color: rgba(255, 0, 0, 1.0);
 	margin: 4%;
 }
 
 /* Results body & search forms Style */
 .educare_results .results_form,
-.educare_results .result_body {
+.educare_results .result_body,
+.notice-error {
 	padding: 3% 4%;
 	margin: 0 auto;
 	font-size: 16px;
 	max-width: 1280px;
-	border-radius: 8px;
+	border-radius: 12px;
 }
 .educare_results .results_form {
-	background: rgb(0 0 0 / 5%);
+	background: rgba(255, 255, 255, 0.200);
 	max-width: 580px;
+	box-shadow: 0px 5px 30px rgba(0, 0, 0, 0.200);
 }
-.results_form.error_notice {
+.results_form.error_notice,
+.notice-error {
 	background: #ff000010;
-	margin: 12px auto;
+	margin: 18px auto;
+	box-shadow: none;
+}
+.results_form.error_notice.success {
+	background: #15ff0010;
 }
 .educare_results .table_body {
 	overflow-x: auto;
@@ -149,7 +158,6 @@
 }
 .result_body .result_details td {
 	text-align: left;
-	padding: 8px 3%;
 }
 .result_body .grade_sheet th:first-child {
 	padding: 0px;
@@ -159,7 +167,7 @@
 .result_body .grade_sheet td:nth-child(2),
 .result_body .grade_sheet th:nth-child(2) {
 	text-align: left;
-	padding: 0 3%;
+	padding-left: 3%;
 }
 .result_body .grade_sheet th {
 	background: rgba(0,115,0,0.20);
@@ -237,4 +245,7 @@
 	}
 }
 
+.left-text {
+	text-align: left;
+}
 

@@ -51,6 +51,10 @@ Admin can add class or group wise subject, exam, pass year, extra (custom) field
 
 Educare is a 100% mobile responsive, So educare will always look great on all devices (mobile, tablet, laptop, and desktop). And everything is Ajax compatibility (Back-End and Front-End).
 
+### Strong Security
+
+Educare come with powerful and strong security system. In front-end educare prevent all type of hacker attacks. Apart from that, Educare support Google Re-Captcha security system. By using these features you can keep your system safe and secure
+
 ### Admin Can -
 
 1. Admin can add and manage students
@@ -132,7 +136,7 @@ Also, You can send your feedback here:
 
 1. Go to "Educare > Grading Systems" for configure Result Rules.
  
-1. **Add shortcodes for show results in frond-end**
+1. **Add shortcodes for show results in front-end**
 
 > There are a shortcodes `[educare_results]` that you can use in your post editor or any shortcode-ready area for display front end results system. More info given at [shortcode](/README.md#shortcodes) sections.
 
@@ -301,7 +305,7 @@ If you're a theme author, plugin author, or just a code hobbyist, you can follow
 
 ## Customize Educare
 
-> Admin can allow to use actions (hook) for cutomize results cart or searching forms. Educare **v1.4.0+** has support hook for customize the result card and search form. So, admin can easily customize educare using hook.
+> Admin can allow to use actions (hook) for cutomize results card or searching forms. Educare **v1.4.0+** has support hook for customize the result card and search form. So, admin can easily customize educare using hook.
 
 <br>
 

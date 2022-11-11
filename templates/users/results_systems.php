@@ -298,7 +298,7 @@ function educare_results_status($subject, $id, $gpa = null, $skip_html = null) {
  * etc...
  * 
  * @since 1.0.0
- * @last-update 1.2.0
+ * @last-update 1.4.1
  * 
  * @return mixed
  */
@@ -312,13 +312,14 @@ add_shortcode('educare_results', 'educare_results_shortcode' );
 function educare_results_shortcode() {
 	echo '<div id="educare-loading"><div class="educare-spinner"></div></div>';
 	echo '<div id="educare-results-body" class="educare_results">';
+	echo '<div id="msgs"></div>';
 	educare_view_results();
 	// #educare-results-body
 	echo "</div>";
 	?>
 
 	<script>
-		$(document).on("click", "#results_btn, #educare-undo", function(event) {
+		$(document).on("click", "#results_btn", function(event) {
 			event.preventDefault();
 			$(this).attr('disabled', true);
 			var current = $(this);
@@ -335,7 +336,20 @@ function educare_results_shortcode() {
 					$('#educare-loading').fadeIn();
 				},
 				success: function(data) {
-					$('#educare-results-body').html(data);
+					if (data.message) {
+						var arr;
+
+						if (data.message == 'Result not found. Please try again') {
+							arr = 'success'
+						} else {
+							arr = 'error';
+						}
+
+						$('#msgs').html('<div class="results_form error_notice ' + arr + '">' + data.message) + '</div>';
+					} else {
+						$('#educare-results-body').html(data);
+					}
+					
 				},
 				error: function(data) {
 					$('#educare-results-body').html(data + '<div class="notice notice-error is-dismissible"><p>Sorry, database connection error!</p></div>');
@@ -343,6 +357,7 @@ function educare_results_shortcode() {
 				complete: function() {
 					current.prop('disabled', false);
 					$('#educare-loading').fadeOut();
+					grecaptcha.reset();
 				}
 			});
 		});

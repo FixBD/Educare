@@ -6,7 +6,7 @@ Tags:                Result management, Academic, Results, Students, Education, 
 Requires at least:   3.8
 Tested up to:        6.1.0
 Requires PHP:        5.2.4
-Stable tag:          1.4.0
+Stable tag:          1.4.1
 License:             GPLv2 or later
 License URI:         http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -63,6 +63,10 @@ Admin can promote or change classes, years, groups of multiple students with jus
 Admin can add class or group wise subject, exam, pass year, extra (custom) fields and more.
 
 Educare is a 100% mobile responsive, So educare will always look great on all devices (mobile, tablet, laptop, and desktop). And everything is Ajax compatibility (Back-End and Front-End).
+
+#### **Strong Security**
+
+Educare come with powerful and strong security system. In front-end educare prevent all type of hacker attacks. Apart from that, Educare support Google Re-Captcha security system. By using these features you can keep your system safe and secure
 
 #### **Admin Can -**
 
@@ -303,6 +307,24 @@ Attention please: You only need to give us 5 stars!
 15. Student profile
 
 == Changelog ==
+
+= [1.4.1] =
+
+= Stable - Security Release =
+* Update your Educare to v1.4.1 as soon as possible.
+* I am happy to announce that Educare v1.4.1 has been released. This update brings a lot of security and bug fixes to the front-end.
+* Now It is possible to block Brute Force attacks
+* More Improvement to prevent SQL injection
+* Fixed all well khown bugs
+* Fixed front-end result table text overflow issues
+
+= Apart from that we've brought a new features too: =
+* **Added Google Re-Captcha**
+* By default it is (disabled).
+* You can find these options in WP Dashboard > Educare > Settings > Security
+* You need to enter/paste your google Recaptcha V2 site or secret key.
+
+**Notes:** Please update your Educare to v1.4.1 as soon as possible to prevent hacker attacks! And don't forget to enable Google Re-Captcha options from educare settings.
 
 = [1.4.0] =
 
