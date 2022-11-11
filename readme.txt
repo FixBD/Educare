@@ -66,7 +66,7 @@ Educare is a 100% mobile responsive, So educare will always look great on all de
 
 #### **Strong Security**
 
-Educare come with powerful and strong security system. In front-end educare prevent all type of hacker attacks. Apart from that, Educare support Google Re-Captcha security system. By using these features you can keep your system safe and secure
+Educare come with powerful and strong security system. In front-end educare prevent all type of hacker attacks. Apart from that, Educare support Google Re-Captcha security system. By using these features you can keep your system safe and secure.
 
 #### **Admin Can -**
 
@@ -311,8 +311,8 @@ Attention please: You only need to give us 5 stars!
 = [1.4.1] =
 
 = Stable - Security Release =
-* Update your Educare to v1.4.1 as soon as possible.
 * I am happy to announce that Educare v1.4.1 has been released. This update brings a lot of security and bug fixes to the front-end.
+* Update your Educare to v1.4.1 as soon as possible.
 * Now It is possible to block Brute Force attacks
 * More Improvement to prevent SQL injection
 * Fixed all well khown bugs
