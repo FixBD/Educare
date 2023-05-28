@@ -4,6 +4,7 @@
  *
  * Allow users to view theire results on Frontend.
  * Powered By Educare
+ * Usage: Just upload this file in your active theme root directory. Then select 'Educare Result Page' from template list
  * 
  */
 
