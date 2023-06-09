@@ -27,7 +27,7 @@
  * @see Plugin Dir: educare/includes/support/educare-custom-results-card.php
  * 
  * @since 1.4.0
- * @last-update 1.4.1
+ * @last-update 1.4.2
  * 
  * @return mixed
  */
@@ -47,10 +47,10 @@ function educare_my_custom_results_forms() {
 	<form class="add_results" action="" method="post" id="edit">
 
 		<p>Roll No:</p>
-		<input type="number" name="Roll_No" value="<?php echo esc_attr( $Roll_No )?>" placeholder="Inter Roll No">
+		<input type="number" name="Roll_No" value="<?php echo esc_attr( $Roll_No )?>" placeholder="Enter Roll No">
 
 		<p>Regi No:</p>
-		<input type="number" name="Regi_No" value="<?php echo esc_attr( $Regi_No )?>" placeholder="Inter Regi No">
+		<input type="number" name="Regi_No" value="<?php echo esc_attr( $Regi_No )?>" placeholder="Enter Regi No">
 		
 		<p>Class:</p>
 		<select name="Class">

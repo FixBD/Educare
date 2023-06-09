@@ -1,3 +1,13 @@
+## [1.4.2]
+
+- **We Have Launched Educare Premium Edition**
+- Fixed the Invalid JSON Error, while you’re working on educare result shortcode in the WordPress Block Editor.
+- Corrected misspelling of 'Inter' to 'Enter'.
+- Fixed student not found issue while add marks
+- Fixed marks publishing issues
+- Fixed print issues
+- Also fixed well-khown bugs and error
+
 ## [1.4.1]
 
 ### Stable - Security Release

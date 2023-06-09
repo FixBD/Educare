@@ -3,16 +3,15 @@
 	* URL: https://github.com/FixBD/Educare/blob/FixBD/assets/css/results.css
 	* @since v1.0.0
 	* @Version: v1.2.0
-	* @last-update v1.2.0
+	* @last-update v1.4.2
 	* License - GPL 2.0
 	# Unlimited modify allowed!!!
 ============================================================ **/
 
 /* Global style */
 .educare_results {
-	max-width: 960px;
 	margin: 28px auto;
-	font-family: Verdana,Arial,sans-serif;
+	font-family: "Roboto", Arial, sans-serif;
 }
 .educare_results h1,
 .educare_results h2,
@@ -98,12 +97,11 @@
 	padding: 3% 4%;
 	margin: 0 auto;
 	font-size: 16px;
-	max-width: 1280px;
 	border-radius: 12px;
 }
 .educare_results .results_form {
 	background: rgba(255, 255, 255, 0.200);
-	max-width: 580px;
+	max-width: 720px;
 	box-shadow: 0px 5px 30px rgba(0, 0, 0, 0.200);
 }
 .results_form.error_notice,
@@ -199,15 +197,23 @@
 
 /* Print Style */
 @media print {
+  * {
+    visibility: hidden;
+		/* padding: 0px !important;
+		margin: 0px !important; */
+  }
   body * {
     visibility: hidden;
   }
 	.no_print {
 	  display: none;
 	}
-	body {
-		width: 960px;
-		padding: 28px
+	body,
+	html {
+		width: 1280px;
+		min-width: 100%;
+		padding: 0px !important;
+		margin: 0px !important;
 	}
 	.educare_results,
 	.result_body,
@@ -230,6 +236,7 @@
   }
   .result_body {
 		width: 100%;
+		min-width: 100%;
     position: absolute;
     top: 0;
 		left: 0;

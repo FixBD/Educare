@@ -15,7 +15,7 @@ require_once(EDUCARE_INC.'support/grading-systems.php');
 // function for default/custom results card
 require_once(EDUCARE_INC.'support/educare-default-results-card.php');
 // Default students photos
-define('EDUCARE_STUDENTS_PHOTOS', EDUCARE_URL.'assets/img/default.svg');
+define('EDUCARE_STUDENTS_PHOTOS', EDUCARE_URL.'assets/img/default.jpg');
 
 
 
@@ -397,7 +397,7 @@ function educare_value($list, $id, $arr = null, $add_students = null) {
 		echo '</select>';
  * 
  * @since 1.0.0
- * @last-update 1.2.0
+ * @last-update 1.4.2
  * 
  * @param string $list			Specific string
  * @param int|string $id		Specific var
@@ -452,7 +452,6 @@ function educare_get_options($list, $id, $selected_class = null, $add_students =
 					$results = array_merge($results, $_POST['select_subject']);
 				} else {
 					$all_subject = educare_value('Subject', $id, '', $add_students);
-					$all_subject =  json_decode($all_subject, true);
 
 					if (isset($_POST['Group'])) {
 						$Group = sanitize_text_field($_POST['Group']);
@@ -467,6 +466,8 @@ function educare_get_options($list, $id, $selected_class = null, $add_students =
 							$Group = $all_group->$Group;
 							
 							if ($all_subject) {
+								$all_subject =  json_decode($all_subject, true);
+								
 								foreach ($Group as $sub) {
 									if (key_exists($sub, $all_subject)) {
 										array_push($results, $sub);
@@ -523,7 +524,7 @@ function educare_get_options($list, $id, $selected_class = null, $add_students =
 				$type = strtok($print, '_');
 				
 				if (empty($value)) {
-					$placeholder = "Inter Students ".str_replace('_', ' ', $display)."";
+					$placeholder = "Enter Students ".str_replace('_', ' ', $display)."";
 				}
 				if (!empty($value)) {
 					$placeholder = '';
@@ -919,7 +920,7 @@ function educare_files_selector($type, $print) {
 	$educare_attachment_id = get_option( 'educare_files_selector' );
 	
 	if ($default_photos == null) {
-		$default_img = EDUCARE_URL.'assets/img/default.svg';
+		$default_img = EDUCARE_URL.'assets/img/default.jpg';
     } else {
 		$default_img = $default_photos;
 	}
@@ -945,7 +946,7 @@ function educare_files_selector($type, $print) {
 	}
 
 	if ($type != 'update') {
-		$default_img = EDUCARE_URL.'assets/img/default.svg';
+		$default_img = EDUCARE_URL.'assets/img/default.jpg';
 	}
 	
 	?>
@@ -1575,7 +1576,7 @@ function educare_crud_data($add_students = null, $import_data = null) {
  * Actually, this function only for print forms under educare_crud_data();
  * 
  * @since 1.0.0
- * @last-update 1.4.0
+ * @last-update 1.4.2
  * 
  * @param object $print				Getting object value
  * @param bool $add_students		if forms for add students (since 1.2.4)
@@ -1642,21 +1643,21 @@ function educare_get_results_forms($print, $add_students = null) {
 					if ($check_name) {
 						echo '<p>'.esc_html($check_name).':</p>
 						<label for="Name" class="labels" id="name"></label>
-						<input type="text" name="Name" value="'.esc_attr($Name).'" placeholder="Inter '.esc_html($check_name).'">
+						<input type="text" name="Name" value="'.esc_attr($Name).'" placeholder="Enter '.esc_html($check_name).'">
 						';
 					}
 
 					if (key_exists('Roll_No', $requred_fields)) {
 						echo '<p>'.esc_html($requred_title['Roll_No']).':</p>
 						<label for="Roll_No" class="labels" id="roll_no"></label>
-						<input type="number" name="Roll_No" value="'.esc_attr($Roll_No).'" placeholder="Inter '.esc_html($requred_title['Roll_No']).'">
+						<input type="number" name="Roll_No" value="'.esc_attr($Roll_No).'" placeholder="Enter '.esc_html($requred_title['Roll_No']).'">
 						';
 					}
 
 					if (key_exists('Regi_No', $requred_fields)) {
 						echo '<p>'.esc_html($requred_title['Regi_No']).':</p>
 						<label for="Regi_No" class="labels" id="regi_no"></label>
-						<input type="text" name="Regi_No" value="'.esc_attr($Regi_No).'" placeholder="Inter '.esc_html($requred_title['Regi_No']).'">
+						<input type="text" name="Regi_No" value="'.esc_attr($Regi_No).'" placeholder="Enter '.esc_html($requred_title['Regi_No']).'">
 						';
 					}
 				?>
@@ -1750,7 +1751,13 @@ function educare_get_results_forms($print, $add_students = null) {
 				}
 				?>
 
-				<?php echo educare_guide_for('add_subject');?>
+				<?php 
+				echo educare_guide_for('add_subject');
+
+				if (!$add_students) {
+					echo educare_guide_for('With the premium version of Educare, you can add additional mark terms and fields. Exp: Practical Marks, Exam Marks, CA1, CA2... and more. Also, you can secure the result with password or PIN.');
+				}
+				?>
 				<div id="result_msg">
 					<?php educare_get_subject($Class, $Group, $id, $add_students) ?>
 				</div>
@@ -1883,14 +1890,14 @@ function educare_get_search_forms($front = null) {
 					if (key_exists('Roll_No', $requred_fields)) {
 						echo '<p>'.esc_html($roll_no).':</p>
 						<label for="Roll_No" class="labels" id="roll_no"></label>
-						<input type="number" name="Roll_No" value="'.esc_attr($Roll_No).'" placeholder="Inter '.esc_attr($roll_no).'">
+						<input type="number" name="Roll_No" value="'.esc_attr($Roll_No).'" placeholder="Enter '.esc_attr($roll_no).'">
 						';
 					}
 
 					if (key_exists('Regi_No', $requred_fields)) {
 						echo '<p>'.esc_html($regi_no).':</p>
 						<label for="Regi_No" class="labels" id="regi_no"></label>
-						<input type="text" name="Regi_No" value="'.esc_attr($Regi_No).'" placeholder="Inter '.esc_attr($regi_no).'">
+						<input type="text" name="Regi_No" value="'.esc_attr($Regi_No).'" placeholder="Enter '.esc_attr($regi_no).'">
 						';
 					}
 					?>
@@ -2277,7 +2284,7 @@ add_action('wp_ajax_educare_process_tab', 'educare_process_tab');
  * ### Proccess ajax request from tab button and display data
  * 
  * @since 1.4.0
- * @last-update 1.4.0
+ * @last-update 1.4.2
  * 
  * @param string $action_for		$_GET request for ajax response
  * 
@@ -2308,6 +2315,7 @@ function educare_get_tab_management($action_for) {
 			educare_get_all_content('Extra_field');
 		} else {
 			echo '<div class="cover"><img src="'.esc_url(EDUCARE_URL.'assets/img/cover.svg').'" alt="educare cover"/></div>';
+			echo educare_guide_for('With the premium version of Educare, you can add rating scale and remark terms.');
 			// Class list
 			echo '<div id="msg_for_Class">';
 				educare_setting_subject("Class");
@@ -2331,6 +2339,8 @@ function educare_get_tab_management($action_for) {
 			echo "<h1>Add Marks</h1>";
 
 			echo educare_guide_for("Using this features admin (teacher) can add subject wise multiple students results at a same time. So, it's most usefull for (single) teacher. There are different teachers for each subject. Teachers can add marks for their specific subject using this feature. And can print all student marks as a marksheet. After, the mark addition is done for all the subjects, students can view and print their results when admin publish it as results. Also, teacher can publish single subject results. (We call it - <b>THE GOLDEN FEATURES FOR TEACHER!</b>)");
+
+			echo educare_guide_for("With the premium version of Educare, it is possible to add single or multiple student marks at the same time. So, you don't have to compose the result using Excel and import it. You can do this process directly using Educare. Besides, It's allows to individually marks added facilities. So, only authorized teachers can add marks based on subject, class and role. Also, you can view your saved mark lists here.");
 			
 			if (isset($_POST['students_list'])) {
 				$Class = sanitize_text_field($_POST['Class']);
@@ -2530,7 +2540,7 @@ function educare_get_tab_management($action_for) {
 		} elseif (isset($_GET['grading_system'])) {
 			echo "<h1>Grading System</h1>";
 			?>
-			<?php echo educare_guide_for('If you need to change default grading value, simply click edit button and inter your custom (Country) starndard rules. Allso, you can add your custom rules using code. For this please visit Educare support forum or carfully read plugin readme files');?>
+			<?php echo educare_guide_for('If you need to change default grading value, simply click edit button and enter your custom (Country) starndard rules. Allso, you can add your custom rules using code. For this please visit Educare support forum or carfully read plugin readme files');?>
 			
 			<p>Grading systems: <i id="help" title="How does it work? Click to view" class="dashicons dashicons-editor-help"></i></p>
 			<div class="select">
@@ -2637,6 +2647,7 @@ function educare_get_tab_management($action_for) {
 			<?php
 		} else {
 			echo "<h1>Settings</h1>";
+			echo educare_guide_for('Currently you are using the free version of Educare, but it has a premium version which is even more functional and powerful.');
 
 			echo '<div id="msg_for_settings">'.educare_settings_form().'</div>';
 		}
@@ -4399,7 +4410,7 @@ function educare_settings_status($target, $title, $comments, $input = null) {
  * ### Educare settings forms
  * 
  * @since 1.4.0
- * @last-update 1.4.1
+ * @last-update 1.4.2
  * 
  * @return mixed
  */
@@ -4409,7 +4420,7 @@ function educare_settings_form() {
 		<form action="<?php echo esc_url($_SERVER['REQUEST_URI']); ?>" method="post">
 			<?php
 			ob_start();
-			echo esc_url( bloginfo( 'url' ) );
+			echo bloginfo( 'url' );
 			$domain = ob_get_clean();
 
 			?>
@@ -4420,7 +4431,7 @@ function educare_settings_form() {
 					<div class="collapse-content">
 						<?php
 						echo "<div style='padding: 1px 0;'>";
-						echo educare_guide_for("Inter your Front-End page slug (where you use educare shortcode in WP editor, template or any shortcode-ready area for front end results system). Don't need to insert with domain - ".esc_url($domain)."/results. Only slug will be accepted, for exp: results or index.php/results.");
+						echo educare_guide_for("Enter your Front-End page slug (where you use educare shortcode in WP editor, template or any shortcode-ready area for front end results system). Don't need to insert with domain - ".esc_url($domain)."/results. Only slug will be accepted, for exp: results or index.php/results.");
 						echo '</div>';
 
 						echo '<div class="educare-settings"><div class="title"><h3>Shortcode</h3><h3>
@@ -4428,11 +4439,11 @@ function educare_settings_form() {
 						<input type="text" id="Shortcode" value="[educare_results]" placeholder="[educare_results]" disabled>
 						</h3></div></div>';
 						
-						educare_settings_status('results_page', 'Results Page', "Inter your front end results page slug (where you use <strong>`[educare_results]`</strong> shortcode in your editor, template or any shortcode-ready area for front end results system).", true);
+						educare_settings_status('results_page', 'Results Page', "Enter your front end results page slug (where you use <strong>`[educare_results]`</strong> shortcode in your editor, template or any shortcode-ready area for front end results system).", true);
 						?>
 
 						<?php
-						educare_settings_status('students_page', 'Students Page', "Inter your front end students page slug (where you use <strong>`[educare_students]`</strong> shortcode in your editor, template or any shortcode-ready area for front end students profiles system).<br> <b>Note:</b> This feature has not been launched yet. It can be used in the next update", true);
+						educare_settings_status('students_page', 'Students Page', "Enter your front end students page slug (where you use <strong>`[educare_students]`</strong> shortcode in your editor, template or any shortcode-ready area for front end students profiles system).<br> <b>Note:</b> This feature has not been launched yet. It can be used in the next update", true);
 						?>
 					</div>
 				</div>
@@ -5565,7 +5576,7 @@ add_action('wp_ajax_educare_process_forms', 'educare_process_forms');
  * Show element for add, update, import - results or students
  * 
  * @since 1.4.0
- * @last-update 1.4.0
+ * @last-update 1.4.2
  * 
  * @param string $students		for specific data - Students or Results
  * @return mixed
@@ -5586,6 +5597,10 @@ function educare_data_management($students = null) {
 		echo '<h1>Add '.esc_html($students).'</h1>';
 
 		echo educare_guide_for("Here you can add data and their details. Once, if you add and fill student details then you don't need to fill student details again while adding or publishing any result. If you miss something and need to update/edit, you can update a student's details from the <a href='admin.php?page=educare-all-".esc_html($students)."&update-data'>Update Menu</a>. Aslo, you can import unlimited students from <a href='admin.php?page=educare-all-".esc_html($students)."&import-data'>Import</a> tab.");
+
+		if ($students == 'students') {
+			echo educare_guide_for('Premium version of Educare, supports user login and profile system.');
+		}
 		
 		// save forms data
 		echo '<div id="msgs">';
@@ -5702,6 +5717,8 @@ function educare_data_management($students = null) {
 		echo '<h1>All '.esc_html($students).'</h1>';
 		echo educare_guide_for("Here you can add, edit, update data and ".esc_html($students)." details. For this you have to select the options that you see here. Options details: firt to last (All, Add, Update, Import ".esc_html(ucfirst($students)).")");
 
+		echo educare_guide_for('With the premium version of Educare, have more control over '.esc_html($students).' filtering and pagination.');
+
 		educare_all_view($students, 15);
 	}
 }
@@ -5736,7 +5753,7 @@ add_action('wp_ajax_educare_process_data', 'educare_process_data');
  * Get student by specific class, year, subject
  * 
  * @since 1.4.0
- * @last-update 1.4.0
+ * @last-update 1.4.2
  * 
  * @param string $Class 		for spicific class students
  * @param string|int $Year	for specific year students
@@ -5813,6 +5830,7 @@ function educare_get_students_list($Class = null, $Year = null) {
 							<?php
 							$count = 1;
 							$sub_in = 0;
+							$find_sub = str_replace(' ', '_', $Subject);
 
 							foreach($search as $print) {
 								$id = $print->id;
@@ -5824,7 +5842,7 @@ function educare_get_students_list($Class = null, $Year = null) {
 
 								if ($sub) {
 
-									if (property_exists($sub, $Subject)) {
+									if (property_exists($sub, $find_sub)) {
 										$sub_in++;
 										echo '
 										<input type="hidden" name="id[]" value="'.esc_attr( $id ).'">
@@ -6234,12 +6252,13 @@ function educare_show_student_profiles() {
  * ### Save marks from marks forms
  * 
  * @since 1.4.0
- * @last-update 1.4.0
+ * @last-update 1.4.2
  * 
+ * @param mixed $name to publish the results
  * @return mixed|void
  */
 
-function educare_save_marks($publish = null) {
+ function educare_save_marks($publish = null) {
 	global $wpdb;
 	// Table name
 	$educare_marks = $wpdb->prefix."educare_marks";
@@ -6270,7 +6289,7 @@ function educare_save_marks($publish = null) {
 		foreach ($_POST['id'] as $value) {
 			// $marks[$value]['Englis'] = $_POST['marks'][$count++];
 			$details[$value][$Subject] = sanitize_text_field($_POST['marks'][$count++]);
-			$students[$count_students++] = educare_get_students($value);
+			$students[$value] = educare_get_students($value);
 		}
 
 		$data = array (
@@ -6284,44 +6303,47 @@ function educare_save_marks($publish = null) {
 		if ($publish) { 
 			$count = 1;
 			$updated = $new = 0;
+
+			// echo '<pre>';	
+			// print_r($students);	
+			// echo '</pre>';
 			
 			foreach ($details as $key => $value) {
-				foreach ($students as $print) {
-					if ($print->id == $key ) {
-						// $results_id = $print->id;
-						$Roll_No = $print->Roll_No;
-						$Regi_No = $print->Regi_No;
+				if (key_exists($key, $students)) {
+					$print = $students[$key][0];
 
-						// remove id
-						unset($print->id);
-						unset($print->Others);
-						$print->Class = $Class;
-						$print->Exam = $Exam;
-						$print->Year = $Year;
-						$print->Subject = json_encode($value);
-						$print->Result = '';
-						$print->GPA = '';
+					// $results_id = $print->id;
+					$Roll_No = $print->Roll_No;
+					$Regi_No = $print->Regi_No;
 
-						$print = json_encode($print);
-						$print = json_decode( $print, TRUE );
+					// remove id
+					unset($print->id);
+					unset($print->Others);
+					unset($print->Student_ID);
+					$print->Class = $Class;
+					$print->Exam = $Exam;
+					$print->Year = $Year;
+					$print->Subject = json_encode($value);
+					$print->Result = '';
+					$print->GPA = '';
 
-						$search_results = $wpdb->get_results("SELECT * FROM ".$educare_results." WHERE Roll_NO='$Roll_No' AND Regi_No='$Regi_No' AND Class='$Class' AND Exam='$Exam' AND Year='$Year'");
+					$print = json_encode($print);
+					$print = json_decode( $print, TRUE );
 
-						$coun++;
+					$search_results = $wpdb->get_results("SELECT * FROM ".$educare_results." WHERE Regi_No='$Regi_No' AND Class='$Class' AND Exam='$Exam' AND Year='$Year'");
 
-						if ($search_results) {
-							
-							foreach ($search_results as $results) {
-								$results_id = $results->id;
-								$wpdb->update($educare_results, $print, array('ID' => $results_id));
-								$updated++;
-							}
-							
-						} else {
-							$wpdb->insert($educare_results, $print);
-							$new++;
+					$coun++;
+
+					if ($search_results) {
+						foreach ($search_results as $results) {
+							$results_id = $results->id;
+							$wpdb->update($educare_results, $print, array('ID' => $results_id));
+							$updated++;
 						}
-
+						
+					} else {
+						$wpdb->insert($educare_results, $print);
+						$new++;
 					}
 				}
 			}
@@ -6340,7 +6362,6 @@ function educare_save_marks($publish = null) {
 			<b>Updated Students:</b> ".esc_html( $updated )." <br>
 			<b>New Students:</b> ".esc_html( $new )." <br>
 			</p><button class='notice-dismiss'></button></div>";
-
 		}
 		
 		if ($search) {

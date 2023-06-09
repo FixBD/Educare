@@ -1,7 +1,7 @@
 <?php
 /**
  * @package		Educare
- * @version 	1.4.1
+ * @version 	1.4.2
  * @author	  	FixBD <fixbd.org@gmail.com>
  * @copyright  	GPL-2.0+
  * @link		http://github.com/fixbd/educare
@@ -10,7 +10,7 @@
  * Plugin Name:  Educare
  * Plugin URI:	 http://github.com/fixbd/educare
  * Description:	 Educare is a powerful online School/College students & results management system dev by FixBD. This plugin allows you to manage and publish students results. You can easily Add/Edit/Delete Students, Results, Class, Exam, Year Custom field and much more... Also you can import & export unlimited students and results just a click!
- * Version:      1.4.1
+ * Version:      1.4.2
  * Author:       FixBD
  * Author URI:   http://github.com/fixbd
  * License:		 GPL-2.0+
@@ -29,7 +29,7 @@
 
 // Make it simple! (Define paths)
 // You can use ### include "your/url/files.php";
-define('EDUCARE_VERSION', '1.4.1');
+define('EDUCARE_VERSION', '1.4.2');
 define('EDUCARE_SETTINGS_VERSION', '1.0');
 define('EDUCARE_RESULTS_VERSION', '1.0');
 define('EDUCARE_DIR', plugin_dir_path(__FILE__));
@@ -58,40 +58,42 @@ require_once(EDUCARE_TEMP.'users/results_systems.php');
  * ### function for add menu when active educare
  * 
  * @since 1.0.0
- * @last-update 1.4.0
+ * @last-update 1.4.2
  * 
  * @param [type] $links
  * @param [type] $file
  * @return void
  */
 
-function educare_action_links( $links, $file ) {
-	static $educare;
-	
-    if (!$educare) {
-        $educare = plugin_basename(__FILE__);
-    }
-
-    $action_links = array (
-        // 'link' => 'titile',
-        'settings' => 'Settings',
-        'management' => 'Management',
-        'all-results' => 'All Results',
-        'all-students' => 'All Students'
-    );
-
-    foreach ($action_links as $url => $title) {
-        if ($file == $educare) {
-            $in = '<a href="admin.php?page=educare-'.esc_attr($url).'">' . __(esc_html($title),'educare') . '</a>';
-            array_unshift($links, $in);
+if (!function_exists('educare_action_links')) {
+    function educare_action_links( $links, $file ) {
+        static $educare;
+        
+        if (!$educare) {
+            $educare = plugin_basename(__FILE__);
         }
-    }
-    
-    return $links;
-}
 
-// add options after plugin activation
-add_filter( 'plugin_action_links', 'educare_action_links', 10, 2 );
+        $action_links = array (
+            // 'link' => 'titile',
+            'settings' => 'Settings',
+            'management' => 'Management',
+            'all-results' => 'All Results',
+            'all-students' => 'All Students'
+        );
+
+        foreach ($action_links as $url => $title) {
+            if ($file == $educare) {
+                $in = '<a href="admin.php?page=educare-'.esc_attr($url).'">' . __(esc_html($title),'educare') . '</a>';
+                array_unshift($links, $in);
+            }
+        }
+        
+        return $links;
+    }
+
+    // add options after plugin activation
+    add_filter( 'plugin_action_links', 'educare_action_links', 10, 2 );
+}
 
 
 ?>

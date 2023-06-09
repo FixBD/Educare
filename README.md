@@ -1,9 +1,9 @@
 ![Educare](https://github.com/FixBD/Educare/blob/educare/assets/img/educare.svg)
 # Educare - Powerful Results Management System
 
-> ## Educare is a powerful online School/College students & results management system dev by FixBD. This plugin allows you to manage and publish students results. This is a School/College students & results management plugin that was created to make WordPress a more powerful CMS.
+> ## Educare is a powerful online School, College, students & results management system dev by FixBD. This plugin allows you to manage and publish students results. This is a school, college, students & results management plugin that was created to easily manage institute, academy or student results at online.
 
-Educare help you to easily control over your institute students at online. You can easily Add/Edit/Delete Students, Results, Class, Exam, Year, Extra field, Custom Result Rules, Auto calculations and much more... Also you can import & export unlimited students and results just one click!
+Educare help you to easily control over your institute students at online. You can easily Add/Edit/Delete Teachers, Students, Results, Class, Group, Exam, Rating Scale, Year, Extra Field, Custom Result Rules, Auto result calculations and much more... Also you can add marks, promote or import & export unlimited students and results just one click!
 
 <br>
 
@@ -23,92 +23,212 @@ Educare help you to easily control over your institute students at online. You c
 
 <br>
 
-## Current Features
+## Features Overview
 
 ### Student Management
 
-Admin can add sigle and import unlimited students via .csv (Exel) file. Once, student details are added then no need to fill student details again while adding or publishing any results. Also, Educare provides student profile ID card, analysis, details, subject, old (class) data and much more.
+Admin can add sigle and import unlimited students via .csv (Exel) file. Once, student details are added then no need to fill student details again while adding or publishing any results. Also, Student can login and access their data. Exp: view attendence, results, analysis, account ballance, notice, old (class) data and much more.
 
 ### Results Management
 
-Educare provite powerfull results management functionality. Admin can publish sigle and unlimited results via .csv (Exel) files. Student can view results with photos, details, points, grade sheed, save or print results. Also, students can view their profile (under construction).
+Educare provite powerfull results management functionality. Admin can publish sigle and import unlimited results via .csv (Exel) files. Educare help to proccess and automatically calculate result. Student can view results with photos, details, points, ratings scale, letter grade. Aslo, student can save or print results.
 
 ### Educare Marksheed Systems
 
-Using this features admin (teacher) can add subject wise multiple student results at a same time. So, it's most usefull for (single) teacher. There are different teachers for each subject. Teachers can add marks for their specific subject using this feature. And can print all student marks as a marksheet. After, the mark addition is done for all the subjects, students can view and print their results when admin publish it as results. Also, teacher can publish single subject results. (We call it - THE GOLDEN FEATURES FOR TEACHER!).
+Using this features admin (teacher) can add subject or class wise multiple student results at a same time. So, it's most usefull for (single) teacher. There are different teachers for each subject. Teachers can add marks for their specific subject using this feature. After, the mark addition is done for all the subjects, students can view and print their results when admin publish it as results. Also, teacher can print all student marks as a marksheet. (We call it - THE GOLDEN FEATURES FOR TEACHER!).
 
 ### Performance or Promote
 
-Admin can promote or change classes, years, groups of multiple students with just one click! Most useful when students need to be promoted (from one class to another class) or when multiple students need to be updated.
+Admin can promote or change class, year, group of multiple students with just one click! Most useful when students need to be promoted (from one class to another class) or when multiple students need to be updated. Also, educare help you to apply conditions when promote students.
 
 ### Result Rules (Grading Systems)
 
-In the preview version of Educare, admins can add results with only one (default) grading system. Now by adding (v1.2.0+) this feature admin can add his country result system/rules. So, <strong>Using this feature you (admin) can add, modify, manage or automatically calculate any type of result based on your country or demand</strong>. Eg: India, Bangladesh or US result GPA (CGPA) and calculation methods/rules are different. So, maintaining a defined result using one rule is a bit tricky. The result rule feature solves this problem. If you manage results for Indian students, you can add Indian grading system or rules. Also, you can add Bangladesh or US grading system in the same way. We know, it's a bit difficult. Please share your experience while using these features to improve Educare.
+<strong>Using this feature you (admin) can add, modify, manage or automatically calculate any type of result based on your requrements</strong>. Eg: India, Bangladesh, Nigeria or US result GPA (CGPA) and calculation methods/rules are different. So, maintaining a defined result using one rule is a bit tricky. The result rule feature solves this problem. If you manage results for Indian students, you can add Indian grading system or rules. Also, you can add Bangladesh, Nigeria or US grading system in the same way. We know, it's a bit difficult. Please share your experience while using these features to improve Educare.
 
 ### Content Management
 
-Admin can add class or group wise subject, exam, pass year, extra (custom) fields and more.
+Admin can add class or group wise subject, exam, session/year, ratings scale, extra (custom) fields and more.
 
 Educare is a 100% mobile responsive, So educare will always look great on all devices (mobile, tablet, laptop, and desktop). And everything is Ajax compatibility (Back-End and Front-End).
+
+### Mayment Method
+
+Currently Educare support Monnify. Also, we can help you to add new payment gateway based on your requirements (condition required). So, you can easily collect payment with Educare.
 
 ### Strong Security
 
 Educare come with powerful and strong security system. In front-end educare prevent all type of hacker attacks. Apart from that, Educare support Google Re-Captcha security system. By using these features you can keep your system safe and secure.
 
+Educare is a 100% mobile responsive, So educare will always look great on all devices (mobile, tablet, laptop, and desktop). And everything is Ajax compatibility (Back-End and Front-End).
+
+## Features
+
+* Unlimited results added facilities
+* Class or Group wise subject added facilities
+* Individually marks added facilities (*)
+* Single or Multiple students with single and multiple subject marks added facilities (*)
+* Auto or Manual results calculations
+* Students profile and dashboard with - analytics, details, subject, old (class) data (*)
+* Teachers profile and dashboard (*)
+* It's as simple as it looks, just as powerful!
+
 ### Admin Can -
 
-1. Admin can add and manage students
-1. Admin can publish and manage student results
-1. Unlimited/Single subject results adding facility
-1. Add/Update/Delete Students, Results, Subject, Class, Group, Exam, Year, Extra (custom) field.
-1. Class and group wise subject added facilities
-1. Add custom result rules (grading systems)
-1. Modify grading systems based on country or demand
-1. Marksheed systems (Admin or teacher can add subject wise multiple student results at a same time.)
-1. Auto/Manual results calculations facility
-1. Unlimited import/export results, students and marksheed 
-1. Auto GPA (CGPA) - based on your (admin) rules
-1. Students profile with - analytics, details, subject, old (class) data
-1. Filter and view all results/students (Like - class, exam, year with Asc/Desc mode and more...)
+1. Admin can access educare settings
+1. Add and manage students
+1. Add and manage teachers (*)
+1. Publish and manage results
+1. Add/Update/Delete Class, Subject, Group, Exam, Ratting Scale, Year, Extra (Custom) Field.
+1. Customize result rules (grading systems) based on country or demand
+1. Admin can add class or subject wise multiple student results at a same time.
+1. Import/export teachers, students, results, and marks
+1. Filter and view all teachers, students, results (Like - class, exam, year, group, subject with Asc/Desc mode and more...)
 1. Modify default students photos
-1. Control and manage educare settings
 1. Also, you can find many features while using it.
 
-### tudents/Users Can -
+### Teachers -
 
-1. Users/Students can find result by name, registration number, roll number, exam, passing year
-1. Results table with students details
-1. Subject marks and gradesheed
-1. Users/Students Photos
-1. Optional subject detection
-1. Field validation
+1. Teachers can add marks (bassed on subject or roles) (*)
+1. Fill attendence (*)
+1. Promote students (*)
+
+### Student or Parrents -
+
+1. Students/Parrents can find result by name, registration number, roll number, exam, passing year (bassed on educare settings)
+1. Students can login their profiles (*)
+1. View attendence (*)
+1. View performance analysis (*)
+1. View routine/upcoming class (*)
+1. See upcoming events (*)
+1. Make payment (*)
+1. View notice (*)
+1. View results
 1. Print results
+
+## Educare Premium Features:
+
+The premium version of Educare comes with more powerful, user-friendly and useful functionality. Most Important thing is that, now it's possible to manage any type of result system in the world with Educare!
+
+### Users Roles and Permission -
+
+Educare User Roles and Permissions allows the administrator to grant users appropriate access to various functionalities, based on their roles and capabilities.
+
+### User's Profile and Dashboard -
+
+Educare provides custom user dashboards for students, parents and teachers. Also, there is a dashboard for admin! Students and teachers can access data by login their profiles. Here students can view attendance, results, performance, account balance, routine, notices, upcoming events and more... Also, teachers can add marks or attendance.
+
+### Attendance System -
+
+The teacher or authorized person can fill in attendance based on class or subject. Once the attendance is completed, Parents can view this attendance status from specific student profile dashboard.
+
+### Single And Multiple Students Marks Added Facilities -
+
+With educare premium version, it's possible to add single or multiple students marks at a same time. So, you don't need to compose results using exel and import it. you can do this process directly using Educare.
+
+### Individually marks added facilities -
+
+only authorized teacher can add marks based on subject, class and roles.
+
+### Protected Result -
+
+When it comes to password or PIN-based authentication systems, the primary goal is to ensure that only specific users with the correct PIN or password can see specific results. By implementing this process, Educare helps to protect the result information and prevent unauthorized access to the result.
+
+### Payment Method -
+
+Now educare support many payment method. Also, we can help you to add new payment gateway based on your requirements (condition required). So, you can easily collect payment with Educare.
+
+### Template Management -
+
+You can customize result card or search form, easily switch one template to others. Also, you can add or install your custom template.
+
+### Everything Is Auto Calculated -
+
+Powerful results management system with auto calculation facilities, ratings system and more. For example, Educare help to auto calculate class average, position in class, highest and lowest in class, GPA, letter grade. We have explained this bellow and in a video. The link is given in the description box, you can watch this video for more details about this.
+
+## Premium Results Management System:
+
+### Card or template -
+
+* Institute logo, title, subtitles.
+* You can control template (results or search form) from educare settings.
+* Twitch one template (results or search form) to others just a click.
+* You can customize template from educare settings.
+
+### Results system -
+
+* You can add additional marks terms (Exp: Practical Marks, Exam Marks, CA1, CA2... and more).
+* auto position in class (avery single student)
+* Auto position in class (avery single subject)
+* Auto class average (every single subject)
+* Auto highest and lowest in class (based on previous exam/results marks or data)
+* Auto Grading system (Latter grade or number points)
+* Auto combine marks (bassed on requrements)
+* Auto passed/faield status
+
+**Note:** Also, you can control this additional marks fields manually.
+
+### Ratting system -
+
+* You can add additional ratings terms or group. exp:
+	- Effective Development (Group title 1)
+		1. Activeness
+		2. Attendance
+		3. Punctuality
+
+	- Psychomotor Skills (Group title 2)
+		1. Handwriting
+		2. Fluency
+
+### Quick overview -
+
+* Auto number of subject
+* Auto calculate and show total marks obtainable
+* Auto calculate and show marks obtainable
+* Auto calculate marks average
+* Auto position in class (exp: 1 out of 50).
+* Auto passed/failed status
+
+### Remarks -
+
+* Teachers, principal remarks
+* Date or signature
+* You can control this to show only when print or live result from educare settings.
+
+### Premium print -
+
+* Print with institute logo, title, subtitles, EST.
+* Ratings scale, remarks section, signature, date
+* More informative, clean and useful
+* Support all paper size (A4, A3, Letter, Legal...)
+
+**Also,** We are regularly updating it and added new features
+
+Overall educare premium version is a completely full featured result management system. Another thing, we are working on making educare fully usable as an institute management system (a part of that, we are already added some extra features like: attendance, users roles and profile, custom dashboard, teachers, payment gateway).
 
 ### Future Update:
 
-1. Custom student profiles
-1. Student Registration
-1. Register the admission form
-1. Attend/watch classes and exams
-1. Building connections between teachers and students
+1. Custom student profiles (Now it's available for premium users)
+1. Student Registration (Now it's available for premium users)
+1. Register the admission form (Coming soon)
+1. Attendence System (Now it's available for premium users)
 1. Our future plan is to make Educare a fully virtual school
 
 ### Why You Should Choose Educare?
 
-* Powerful functionality that you need
+* Powerful functionality that we need to manage student or results
 * Everything is Ajax compatibility (Back-End and Front-End)
 * Everything is customizable
 * Suit for any themes
-* Import/Export facility
+* Import or Export facilities
 * Support all type of device (Responsive UI)
 * Strong coumunity support
 * Price - ($) Free
+* Premium version - Available
 * Allways up to date
 
-We know, it's a bit difficult. Please share your experience (feedback) while using these features to improve Educare.
-Just install and manage  your School, College, Coaching Center & personal website with existing Features of Educare. Remember, all Features of Educare is completely free of charge!
+Please share your experience (feedback) while using Educare.
 
-Finally, we are going to add all the features in this plugin which you will not get in any premium plugins. And we will give you all these premium features for free. Because, we believe in freedom and understand the value of your work or dreams! 
+We’re continuously additing features to this plugin that you won’t find in any premium plugin. And we will give you lot's of these premium features for free. Because, we believe in freedom and understand the value of your work or dreams! 
 
 If you have face any problems and need our support (Totally Free!), Please contact us with this email:
 
@@ -146,7 +266,7 @@ Also, You can send your feedback here:
 
 >###  From your WordPress administration panel go to Plugins > Installed Plugins and scroll down until you find Educare. You will need to activate it first (Skip this, if u'r already activated). After activated the plugin, you can see Educare icon appears into menu bar. Go to Educare > Settings to configure it.
 
-### How to use the plugin
+### How to use Educare
 
 This plugin is set up everything clearly and simply. So, you can easily manage this plugin features. Currently, there are eight main Features available for Admin:
 
@@ -238,7 +358,7 @@ Here you can see two sections. One is for Add Content and another one is Setting
 > Here you can change or disable Educare default settings.
 
 * **Page Setup:** 
-Inter your front end results page slug (Where you use `[educare_results]` shortcode in your editor, template or any shortcode-ready area for front end results system). Don't need to insert with domain - http://xxxxx.com/results. Only slug will be accepted, for exp: results or index.php/results.
+Enter your front end results page slug (Where you use `[educare_results]` shortcode in your editor, template or any shortcode-ready area for front end results system). Don't need to insert with domain - http://xxxxx.com/results. Only slug will be accepted, for exp: results or index.php/results.
 
 * **Customize:** 
 Here you can change or disable Front End Typography of - Name, Roll, Reg Number, Class, Exam and Year
@@ -456,19 +576,21 @@ I wasn't satisfied with some educational plugins available in WP plugins directo
 
 ### Why is Educare free?
 
-> We will give you all these premium features for free. Because, we believe in freedom and understand the value of your work and dreams!
+> We will give lot's of these features for free. Because, we believe in freedom and understand the value of your work and dreams! But it has a premium version that is even more functional and powerful.
 
-> *Attention please: You only need to give us 5 stars!*
+> *Please: You only need to give us 5 stars!*
 
 <br>
 
 ## Like this plugin?
 
-### Need Your Helps!
-The Educare plugin is a massive project with lot's of code to maintain. A major update can take weeks or months of work. We don't make any money from this plugin users, We glad to say that, All (PREMIUM) Features of Educare is completely free of charge!. So, no money will be required to install or update this plugin. Please consider helping just -
+### We Need Your Helps!
+Educare is a massive project, a major update can take weeks or months of work. Which requires some time and money to maintain. Please consider helping us -
 
 * [Rating the plugin](https://wordpress.org/support/plugin/educare/reviews/?filter=5#new-post).
 Yours Ratings Inspired us to discover more and more features!
+* Send Coffee or purchase Educare Premium version.
+* Become a sponsor.
 
 ## Professional Support
 

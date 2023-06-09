@@ -37,7 +37,7 @@
 
       <div>
         <h4>Our Vision</h4>
-        <p>We’re continuously additing features to this plugin that you won’t find in any premium plugin. And we will give you all these premium features for free. Because, we believe in freedom and understand the value of your work or dreams!</p>
+        <p>We’re continuously additing features to this plugin that you won’t find in any premium plugin. And we will give you lot's of these premium features for free. Because, we believe in freedom and understand the value of your work or dreams!</p>
       </div>
     </div>
 
@@ -58,7 +58,7 @@
 
     <p>
       <b>Name:</b> Educare <br>
-      <b>Version:</b> <?php echo esc_html(EDUCARE_VERSION); ?> <br>
+      <b>Version:</b> <?php echo esc_html(EDUCARE_VERSION); ?> (Free) <br>
       <b>Settings Version:</b> <?php echo esc_html(EDUCARE_SETTINGS_VERSION); ?> <br>
       <b>Results Version:</b> <?php echo esc_html(EDUCARE_RESULTS_VERSION); ?> <br>
       <b>Changelog:</b> The change log is located in the <strong>`changelog.md`</strong> file in the plugin folder. You may also <a href="https://github.com/FixBD/Educare/blob/FixBD/changelog.md" target="_blank">View The Change Logs</a> at online.

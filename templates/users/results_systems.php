@@ -298,7 +298,7 @@ function educare_results_status($subject, $id, $gpa = null, $skip_html = null) {
  * etc...
  * 
  * @since 1.0.0
- * @last-update 1.4.1
+ * @last-update 1.4.2
  * 
  * @return mixed
  */
@@ -310,6 +310,7 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 add_shortcode('educare_results', 'educare_results_shortcode' );
 
 function educare_results_shortcode() {
+	ob_start();
 	echo '<div id="educare-loading"><div class="educare-spinner"></div></div>';
 	echo '<div id="educare-results-body" class="educare_results">';
 	echo '<div id="msgs"></div>';
@@ -363,6 +364,8 @@ function educare_results_shortcode() {
 		});
 	</script>
 	<?php
+
+	return ob_get_clean();
 	
 }
 
