@@ -6,7 +6,7 @@ Tags:                Result management, Academic, Results, Students, Education, 
 Requires at least:   3.8
 Tested up to:        6.1.1
 Requires PHP:        5.2.4
-Stable tag:          1.4.2
+Stable tag:          1.4.3
 License:             GPLv2 or later
 License URI:         http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -402,6 +402,15 @@ Please: You only need to give us 5 stars!
 17. Customize Grading System
 
 == Changelog ==
+
+= [1.4.3] =
+
+* Fixed marks publish issues (publish but not showing on front-end and all resuls list)
+* Also, Fixed mark sheed seems it is not working. Moreover, the work independently
+* Fixed Changed default field not appearing in Head of table when add marks
+* Improve mark sheed save or publishing system
+* Improve action link button selecting uses
+* fixed well-khown bugs
 
 = [1.4.2] =
 

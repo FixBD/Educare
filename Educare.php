@@ -1,7 +1,7 @@
 <?php
 /**
  * @package		Educare
- * @version 	1.4.2
+ * @version 	1.4.3
  * @author	  	FixBD <fixbd.org@gmail.com>
  * @copyright  	GPL-2.0+
  * @link		http://github.com/fixbd/educare
@@ -10,7 +10,7 @@
  * Plugin Name:  Educare
  * Plugin URI:	 http://github.com/fixbd/educare
  * Description:	 Educare is a powerful online School/College students & results management system dev by FixBD. This plugin allows you to manage and publish students results. You can easily Add/Edit/Delete Students, Results, Class, Exam, Year Custom field and much more... Also you can import & export unlimited students and results just a click!
- * Version:      1.4.2
+ * Version:      1.4.3
  * Author:       FixBD
  * Author URI:   http://github.com/fixbd
  * License:		 GPL-2.0+
@@ -29,7 +29,7 @@
 
 // Make it simple! (Define paths)
 // You can use ### include "your/url/files.php";
-define('EDUCARE_VERSION', '1.4.2');
+define('EDUCARE_VERSION', '1.4.3');
 define('EDUCARE_SETTINGS_VERSION', '1.0');
 define('EDUCARE_RESULTS_VERSION', '1.0');
 define('EDUCARE_DIR', plugin_dir_path(__FILE__));

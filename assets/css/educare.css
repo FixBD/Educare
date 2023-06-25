@@ -1080,7 +1080,7 @@ p #help:hover {
   position: absolute;
   z-index: 1;
   top: -25px;
-  right: 120%;
+  right: 100%;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
 }
 .action_menu .action_link.info {
@@ -1090,7 +1090,7 @@ p #help:hover {
   text-align: justify;
   padding: 6px 10px;
   top: -25px;
-  left: 120%;
+  left: 100%;
 }
 .action_menu i {
   color: rgba(13,83,86,0.2);

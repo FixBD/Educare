@@ -1,3 +1,12 @@
+## [1.4.3]
+
+- Fixed marks publish issues (publish but not showing on front-end and all resuls list)
+- Also, Fixed mark sheed seems it is not working. Moreover, the work independently
+- Fixed Changed default field not appearing in Head of table when add marks
+- Improve mark sheed save or publishing system
+- Improve action link button selecting uses
+- fixed well-khown bugs
+
 ## [1.4.2]
 
 - **We Have Launched Educare Premium Edition**
