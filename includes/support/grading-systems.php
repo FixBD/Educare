@@ -1,7 +1,6 @@
 <?php
-
 /** 
- * ### Educare Grading Systems
+ * Educare Grading Systems
  * 
  * usage => echo educare_grade_system("85");
  * Default grading system is
@@ -27,6 +26,11 @@
  * @param $marks int/str  for grading system
  * @return str
  */
+
+// Prevent direct access to the file
+if (!defined('ABSPATH')) {
+  exit; // Exit if accessed directly
+}
 
 function educare_grade_system($marks) {
   $grade_system = educare_check_status('grade_system');
@@ -57,7 +61,7 @@ function educare_grade_system($marks) {
 
 
 /**
- * ### Save Grading System
+ * Save Grading System
  * 
  * usage => echo educare_save_results_system();
  * 
@@ -121,7 +125,7 @@ function educare_save_results_system() {
 
 
 /**
- * ### Showing Grading System
+ * Showing Grading System
  * 
  * usage => echo educare_show_grade_rule();
  * 
@@ -159,17 +163,20 @@ function educare_show_grade_rule() {
 
 
 /**
- * ### Modify or update grading systems
+ * Modify or update grading systems
  * 
  * @since 1.2.0
  * @last-update 1.2.0
  * 
  * @return proceess data
  */
-
-add_action('wp_ajax_educare_proccess_grade_system', 'educare_proccess_grade_system');
-
 function educare_proccess_grade_system() {
+  if (!current_user_can('manage_options')) {
+    exit;
+  }
+
+  educare_verify_nonce();
+
 	$rules = sanitize_text_field($_POST['class']);
 
 	function educare_add_grade_system($rules = null, $point = null, $grade = null) {
@@ -252,10 +259,12 @@ function educare_proccess_grade_system() {
 }
 
 
+add_action('wp_ajax_educare_proccess_grade_system', 'educare_proccess_grade_system');
+
+
 
 /**
- * ### Save grading fields data
- * 
+ * Save grading fields data
  * 
  * @since 1.2.0
  * @last-update 1.2.0
@@ -263,9 +272,13 @@ function educare_proccess_grade_system() {
  * @return void
  */
 
-add_action('wp_ajax_educare_save_grade_system', 'educare_save_grade_system');
-
 function educare_save_grade_system() {
+  if (!current_user_can('manage_options')) {
+    exit;
+  }
+  
+  educare_verify_nonce();
+  
   // Parse/get forms data
   wp_parse_str($_POST['form_data'], $_POST);
 
@@ -277,6 +290,8 @@ function educare_save_grade_system() {
   // Ignire (0) and stop ajax
   die;
 }
+
+add_action('wp_ajax_educare_save_grade_system', 'educare_save_grade_system');
 
 
 // Dont't close

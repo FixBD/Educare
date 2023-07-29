@@ -1,5 +1,4 @@
 <?php
-
 /**
  * ### educare_my_custom_results_forms();
  * 
@@ -31,6 +30,11 @@
  * 
  * @return mixed
  */
+
+// Prevent direct access to the file
+if (!defined('ABSPATH')) {
+  exit; // Exit if accessed directly
+}
 
 function educare_my_custom_results_forms() {
 	// Kep form data
@@ -72,7 +76,7 @@ function educare_my_custom_results_forms() {
 		echo '<div class="g-recaptcha" data-sitekey="'.esc_attr($site_key).'"></div>';
 		?>
 
-		<button id="results_btn" type="submit">View Results </button>
+		<button id="results_btn" type="submit">View Results</button>
 	</form>
 	<?php
 }

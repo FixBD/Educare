@@ -1,4 +1,9 @@
 <?php
+// Prevent direct access to the file
+if (!defined('ABSPATH')) {
+	exit; // Exit if accessed directly
+}
+
 /**
  * ### Add menu in admin dashboard
  * 
@@ -125,12 +130,22 @@ function educare_enqueue_styles( $hook) {
 	// Educare stylesheet
 	wp_enqueue_style('educare', EDUCARE_URL.'assets/css/educare.css');
 	wp_enqueue_style('clone-field', EDUCARE_URL.'assets/css/clone-field.css');
+	// for educare file selector
+	wp_enqueue_media();
 	
 	// JavaScript link
 	wp_enqueue_script('jquery'); // That's men script now place at the bottom
-	wp_enqueue_script('jquery-min', EDUCARE_URL.'assets/js/jquery-2.1.3.min.js');
+	wp_enqueue_script('educare-admin', EDUCARE_URL.'assets/js/educare.js', array('jquery'), '1.0', true);
 	wp_enqueue_script('e-pagination', EDUCARE_URL.'assets/js/paginate.js');
 	wp_enqueue_script('cloneField', EDUCARE_URL.'assets/js/clone-field-1.0.js');
+
+	wp_localize_script( 'educare-admin', 'educareSettings', array(
+		'advance'   => educare_esc_str(educare_check_status('advance')),
+		'confirmation' => educare_check_status('confirmation'),
+		'db_error' => educare_guide_for('db_error', '', false),
+		'photos' => educare_check_status('photos'),
+		'group_subject' => educare_check_status('group_subject'),
+	) );
 	
 }
 

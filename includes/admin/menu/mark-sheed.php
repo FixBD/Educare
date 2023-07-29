@@ -8,6 +8,11 @@
  * @last-update 1.4.0
  */
 
+// Prevent direct access to the file
+if (!defined('ABSPATH')) {
+  exit; // Exit if accessed directly
+}
+
 if (educare_database_check('educare_marks')) {
 	educare_database_table('educare_marks');
 }
@@ -17,7 +22,7 @@ $action = 'mark-sheed';
 $tab = array (
 	// Tab name => Icon
   'add_marks' => 'text-page',
-  'import_marks' => 'database-import'
+  // 'import_marks' => 'database-import'
 );
 
 educare_tab_management($action, $tab);

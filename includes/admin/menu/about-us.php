@@ -11,8 +11,12 @@
 
 // Test Area
 
-?>
+// Prevent direct access to the file
+if (!defined('ABSPATH')) {
+  exit; // Exit if accessed directly
+}
 
+?>
 
 <div class="educare_post">
   <div class="educare_post_content about">
@@ -37,7 +41,7 @@
 
       <div>
         <h4>Our Vision</h4>
-        <p>We’re continuously additing features to this plugin that you won’t find in any premium plugin. And we will give you lot's of these premium features for free. Because, we believe in freedom and understand the value of your work or dreams!</p>
+        <p>We are committed to adjust your results system with Educare. Our world-class support team is always happy to help. Because, we believe in freedom and understand the value of your project. So, get in touch and help us deliver your project!</p>
       </div>
     </div>
 
@@ -71,7 +75,7 @@
       <a href="mailto:fixbd.org@gmail.com">fixbd.org@gmail.com</a>
     </p>
 
-    <p>The educare plugin is a massive project with lot’s of code to maintain. A major update can take weeks or months of work. We don’t make any money from this plugin users, We glad to say that, all (PREMIUM) features of educare is completely free of charge!. So, no money will be required to install or update this plugin. We know, it’s a bit difficult. Please share your experience (feedback) while using educare to improve Educare.</p>
+    <p>The educare plugin is a massive project with lot’s of code to maintain. A major update can take weeks or months of work. We don’t make any money from this plugin users, We glad to say that, lot's of educare (PREMIUM) features is completely free of charge!. So, no money will be required to install or update this plugin. We know, it’s a bit difficult. Please share your experience (feedback) while using educare to improve Educare.</p>
 
     <p>Educare support forum: <br>
       <a href="https://wordpress.org/support/plugin/educare" target="_blank">https://wordpress.org/support/plugin/educare</a> <br>

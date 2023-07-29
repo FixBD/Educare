@@ -33,12 +33,16 @@
  * @return void
  */
 
+// Prevent direct access to the file
+if (!defined('ABSPATH')) {
+  exit; // Exit if accessed directly
+}
+
 function educare_results_style() {
   wp_enqueue_style('educare_results', EDUCARE_URL.'assets/css/results.css', array(), '1.0', 'all');
 
 	// JavaScript link
 	wp_enqueue_script('jquery'); // That's men script now place at the bottom
-	wp_enqueue_script('jquery-min', EDUCARE_URL.'assets/js/jquery-2.1.3.min.js');
 	wp_enqueue_script('recaptcha-v2', 'https://www.google.com/recaptcha/api.js', [], null, true);
 }
 

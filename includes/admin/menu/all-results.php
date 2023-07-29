@@ -8,6 +8,11 @@
  * @last-update 1.4.0
  */
 
+// Prevent direct access to the file
+if (!defined('ABSPATH')) {
+  exit; // Exit if accessed directly
+}
+
 // educare_get_data_management('students');
 educare_get_data_management('results');
 

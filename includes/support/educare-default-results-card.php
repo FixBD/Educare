@@ -1,5 +1,4 @@
 <?php
-
 /**
  * ### educare_custom_results($print);
  * function for default results card
@@ -48,6 +47,11 @@
  * @param object|array $print 	Students data
  * @return mixed
  */
+
+// Prevent direct access to the file
+if (!defined('ABSPATH')) {
+  exit; // Exit if accessed directly
+}
 
 function educare_default_results($print) {
 	global $requred_data, $requred_title;

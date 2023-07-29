@@ -9,6 +9,11 @@
  * @return void
  */
 
+// Prevent direct access to the file
+if (!defined('ABSPATH')) {
+  exit; // Exit if accessed directly
+}
+
 function educare_add_default_settings($list, $show_data = null, $new_data = null) {
 	global $wpdb;
 	$table = $wpdb->prefix."educare_settings";

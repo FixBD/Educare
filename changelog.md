@@ -1,3 +1,15 @@
+## [1.4.4]
+
+### Stable - Security Release
+- Update Educare to v1.4.4 (and above): Please make sure to update your Educare plugin to version 1.4.4 or higher as soon as possible.
+- Added nonce to improve form security.
+- Fixed Cross Site Request Forgery (CSRF) issues.
+- Removed unnecessary code to enhance performance and security.
+- Eliminated inline JavaScript to improve security measures.
+- Addressed well-known bugs to ensure smoother functionality.
+
+**Notes:** Update includes security improvements and bug fixes: The latest version of Educare comes with important security enhancements and fixes for any known issues. Please update to this version to ensure a safer and smoother experience with the plugin. Sometimes users may need to clear browsing data to load the updated script correctly.
+
 ## [1.4.3]
 
 - Fixed marks publish issues (publish but not showing on front-end and all resuls list)

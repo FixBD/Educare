@@ -4,9 +4,9 @@ Contributors:        fixbd
 GitHub link:         https://github.com/fixbd/educare
 Tags:                Result management, Academic, Results, Students, Education, School, College, Coaching Center, Exam, School management, publish results
 Requires at least:   3.8
-Tested up to:        6.1.1
+Tested up to:        6.2.2
 Requires PHP:        5.2.4
-Stable tag:          1.4.3
+Stable tag:          1.4.4
 License:             GPLv2 or later
 License URI:         http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -30,7 +30,7 @@ Educare is free and always will be, but it has a premium version that is even mo
 
 ### Our Vision
 
-We’re continuously additing features to this plugin that you won’t find in any premium plugin. And we will give you lot's of these premium features for free. Because, we believe in freedom and understand the value of your work or dreams!
+We’re continuously additing features to this plugin. And we will give you lot's of usefull features for free. Because, we believe in freedom and understand the value of your work or dreams!
 
 ### Our Mission
 
@@ -71,7 +71,7 @@ Admin can add class or group wise subject, exam, session/year, ratings scale, ex
 
 #### **Payment Method**
 
-Currently Educare support Monnify. Also, we can help you to add new payment gateway based on your requirements (condition required). So, you can easily collect payment with Educare.
+Currently Educare support Monnify. Also, we can help you to add new payment gateway based on your requirements. So, you can easily collect payment with Educare.
 
 #### **Strong Security**
 
@@ -257,23 +257,17 @@ Currently, there are many shortcodes available that you can use in your post edi
 
 You need to add [educare_results] shortcode into WP editor or Template for front end results system. This shortcode display search form and results table. So, users/students can easily find and view there results.
 
-#### **Show Student/Teacher Details (Premium) -**
+#### **Student and Teacher Profiles (*) -**
 
-**`[educare_user_info]`**
+**`[educare_user_profiles]`**
 
-This shortcode show current user info card with photos and others details.
+This shortcode show users (students and teachers) profiles and dashboard.
 
-#### **Show Attendance (Premium) -**
+#### **Show Attendance (*) -**
 
 **`[educare_attendance]`**
 
 This shortcode automatically show current student attendance status.
-
-#### **Show Payment System (Premium) -**
-
-**`[educare_payment]`**
-
-This shortcode show current users account balance, history and procces to make payment.
 
 ## Plugin Development
 
@@ -402,6 +396,18 @@ Please: You only need to give us 5 stars!
 17. Customize Grading System
 
 == Changelog ==
+
+= [1.4.4] =
+
+= Stable - Security Release =
+* Update Educare to v1.4.4 (and above): Please make sure to update your Educare plugin to version 1.4.4 or higher as soon as possible.
+* Added nonce to improve form security.
+* Fixed Cross Site Request Forgery (CSRF) issues.
+* Removed unnecessary code to enhance performance and security.
+* Eliminated inline JavaScript to improve security measures.
+* Addressed well-known bugs to ensure smoother functionality.
+
+**Notes:** Update includes security improvements and bug fixes: The latest version of Educare comes with important security enhancements and fixes for any known issues. Please update to this version to ensure a safer and smoother experience with the plugin. Sometimes users may need to clear browsing data to load the updated script correctly.
 
 = [1.4.3] =
 

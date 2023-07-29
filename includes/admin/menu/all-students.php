@@ -8,6 +8,11 @@
  *  @last-update 1.4.0
  */
 
+// Prevent direct access to the file
+if (!defined('ABSPATH')) {
+	exit; // Exit if accessed directly
+}
+
 if (educare_database_check('educare_students')) {
 	educare_database_table('educare_students');
 }

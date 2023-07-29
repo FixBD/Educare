@@ -8,8 +8,14 @@ require_once(EDUCARE_INC.'database/default-settings.php');
  * @since 1.2.0
  * @last-update 1.2.4
  * 
+ * @param string $$db for specific db table
  * @return void
  */
+
+// Prevent direct access to the file
+if (!defined('ABSPATH')) {
+  exit; // Exit if accessed directly
+}
 
 function educare_database_check($db) {
 	global $wpdb;
@@ -148,14 +154,16 @@ function educare_database_table($db = null) {
 		}
 	}
 
-	// Set educare default settings
-	educare_default_settings();
+	if (educare_database_check('educare_settings')) {
+		// Set educare default settings
+		educare_default_settings();
+	}
 
 }
 
 
 /**
- * ### Clean Educare DB
+ * ### Clean Educare Data
  * 
  * Clean all (educare) data from database, when user remove/delete/uninstall educare from plugin list. If user uncheck Clear Data at educare settings, this action will be ignored.
  * 

@@ -1,6 +1,6 @@
 <?php
 /** 
- * ### Function For Letter Grade
+ * Function For Letter Grade
  * 
  * Create function {educare_letter_grade} for letter grade = A+, A, B, C, D, F (failed)
  * or points grade = 5, 4, 3.5, 3, 2, 1, 0 (based on default settings).
@@ -9,10 +9,14 @@
  * @last-update 1.2.0
  * 
  * @param int $marks				Specific martks convert to grade or point
- * @param bull true/false 	For return grade points
- * 
- * @return string/int
+ * @param bool $points 			For return grade points
+ * @return string||int
  */
+
+// Prevent direct access to the file
+if (!defined('ABSPATH')) {
+  exit; // Exit if accessed directly
+}
 
 function educare_letter_grade($marks, $points = null) {
 	/** 
@@ -110,13 +114,12 @@ function educare_letter_grade($marks, $points = null) {
 
 
 /**  
- * ### usage: educare_get_marks($print);
+ * usage: educare_get_marks($print);
  * 
  * @since 1.0.0
  * @last-update 1.2.0
  * 
  * @param object $print	Print specific subject value
- * 
  * @return int
  */
 
@@ -205,13 +208,11 @@ function educare_get_marks($Subject) {
  * @sincce 1.2.2
  * @last-update 1.2.2
  * 
- * @param object $marks 	init
- * 
- * @return init
+ * @param object $marks 	show marks
+ * @return int
  */
 
 function educare_display_marks($marks) {
-
 	if (strpos($marks, ' ')) {
 		$marks = substr(strstr($marks, ' '), 1) . ' ' . educare_check_status('optional_sybmbol');
 	}
@@ -232,6 +233,7 @@ function educare_display_marks($marks) {
  * @param object $print 	Select specific subject
  * @param int $id					Specific subject id
  * @param int $gpa				return GPA if true, otherwise return passed/failed
+ * @param bool $skip_html only status without html
  * 
  * @return string|HTML
  */
@@ -303,70 +305,19 @@ function educare_results_status($subject, $id, $gpa = null, $skip_html = null) {
  * @return mixed
  */
 
-// Exit if accessed directly
-if ( ! defined( 'ABSPATH' ) ) exit;
-
 // Create shortcode fo Educare results
 add_shortcode('educare_results', 'educare_results_shortcode' );
 
 function educare_results_shortcode() {
 	ob_start();
-	echo '<div id="educare-loading"><div class="educare-spinner"></div></div>';
-	echo '<div id="educare-results-body" class="educare_results">';
-	echo '<div id="msgs"></div>';
-	educare_view_results();
-	// #educare-results-body
+		echo '<div id="educare-loading"><div class="educare-spinner"></div></div>';
+		echo '<div id="educare-results-body" class="educare_results">';
+		echo '<div id="msgs"></div>';
+		educare_view_results();
+		// #educare-results-body
 	echo "</div>";
-	?>
-
-	<script>
-		$(document).on("click", "#results_btn", function(event) {
-			event.preventDefault();
-			$(this).attr('disabled', true);
-			var current = $(this);
-			var form_data = $(this).parents('form').serialize();
-
-			$.ajax({
-				url: "<?php echo esc_url(admin_url('admin-ajax.php'))?>",
-				data: {
-					action: 'educare_proccess_view_results',
-					form_data: form_data
-				},
-				type: 'POST',
-				beforeSend: function(event) {
-					$('#educare-loading').fadeIn();
-				},
-				success: function(data) {
-					if (data.message) {
-						var arr;
-
-						if (data.message == 'Result not found. Please try again') {
-							arr = 'success'
-						} else {
-							arr = 'error';
-						}
-
-						$('#msgs').html('<div class="results_form error_notice ' + arr + '">' + data.message) + '</div>';
-					} else {
-						$('#educare-results-body').html(data);
-					}
-					
-				},
-				error: function(data) {
-					$('#educare-results-body').html(data + '<div class="notice notice-error is-dismissible"><p>Sorry, database connection error!</p></div>');
-				},
-				complete: function() {
-					current.prop('disabled', false);
-					$('#educare-loading').fadeOut();
-					grecaptcha.reset();
-				}
-			});
-		});
-	</script>
-	<?php
 
 	return ob_get_clean();
-	
 }
 
 

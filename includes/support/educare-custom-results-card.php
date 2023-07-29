@@ -28,6 +28,11 @@
  * @return mixed
  */
 
+// Prevent direct access to the file
+if (!defined('ABSPATH')) {
+  exit; // Exit if accessed directly
+}
+
 function educare_custom_results_card($print) {
 	$id = $print->id;
 	// Students details

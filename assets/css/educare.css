@@ -561,6 +561,10 @@ h2.left {
 	padding: 1rem;
 }
 
+.educare_data_field {
+  display: none !important;
+}
+
 .educare-settings {
 	display: flex;
 	margin: 0;
@@ -1095,6 +1099,10 @@ p #help:hover {
 .action_menu i {
   color: rgba(13,83,86,0.2);
   vertical-align: middle;
+}
+
+.action_menu .button {
+  display: inline-block !important;
 }
 
 .action_menu .action_link::after {
