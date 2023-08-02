@@ -1,3 +1,12 @@
+## [1.4.5]
+
+### Stable - Security Release
+- Enhanced security measures.
+- It is crucial to update Educare to version 1.4.5 immediately.
+- Please see the changelog v1.4.4 for list of previous updates.
+
+**Note:** Sometimes users may need to clear browsing data to load the updated script (After update).
+
 ## [1.4.4]
 
 ### Stable - Security Release

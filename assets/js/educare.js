@@ -22,7 +22,6 @@ jQuery(document).ready(function($) {
                 type: 'POST',
                 data: {
                 action: 'educare_process_content',
-                nonce: educareAjax.nonce,
                 form_data: form_data,
                 active_menu: active_menu,
                 action_for
@@ -65,7 +64,7 @@ jQuery(document).ready(function($) {
                 type: 'POST',
                 data: {
                 action: 'educare_proccess_grade_system',
-                nonce: educareAjax.nonce,
+                nonce: educareNonce.edit_grade_system,
                 class: class_name
                 },
                 beforeSend:function(event) {
@@ -96,7 +95,6 @@ jQuery(document).ready(function($) {
                 type: 'POST',
                 data: {
                 action: 'educare_save_grade_system',
-                nonce: educareAjax.nonce,
                 form_data: form_data,
                 update_grade_rules: true
                 },
@@ -165,7 +163,6 @@ jQuery(document).ready(function($) {
                 type: 'POST',
                 data: {
                 action: 'educare_proccess_promote_students',
-                nonce: educareAjax.nonce,
                 form_data: form_data
                 },
                 beforeSend: function(data) {
@@ -302,7 +299,6 @@ jQuery(document).ready(function($) {
                 type: 'POST',
                 data: {
                     action: 'educare_process_marks',
-                    nonce: educareAjax.nonce,
                     form_data: form_data,
                     action_for: action_for
                 },
@@ -338,7 +334,6 @@ jQuery(document).ready(function($) {
                 type: 'POST',
                 data: {
                     action: 'educare_process_marks',
-                    nonce: educareAjax.nonce,
                     form_data: form_data,
                     action_for
                 },
@@ -466,7 +461,6 @@ jQuery(document).ready(function($) {
                 type: 'POST',
                 data: {
                     action: 'educare_class',
-                    nonce: educareAjax.nonce,
                     class: class_name,
                     id: id_no,
                     form_data: form_data,
@@ -609,7 +603,6 @@ jQuery(document).ready(function($) {
                     type: 'POST',
                     data: {
                     action: 'educare_class',
-                    nonce: educareAjax.nonce,
                     class: class_name,
                     id: id_no,
                     form_data: form_data,
@@ -662,7 +655,6 @@ jQuery(document).ready(function($) {
                 type: 'POST',
                 data: {
                     action: 'educare_get_data_from_students',
-                    nonce: educareAjax.nonce,
                     form_data: form_data
                 },
                 beforeSend: function(data) {
@@ -767,7 +759,6 @@ jQuery(document).ready(function($) {
                 type: 'POST',
                 data: {
                     action: 'educare_process_content',
-                    nonce: educareAjax.nonce,
                     form_data: form_data,
                     action_for
                 },
@@ -852,7 +843,6 @@ jQuery(document).ready(function($) {
                 type: 'POST',
                 data: {
                     action: 'educare_process_content',
-                    nonce: educareAjax.nonce,
                     form_data: form_data,
                     action_for
                 },
@@ -888,7 +878,6 @@ jQuery(document).ready(function($) {
                 type: 'POST',
                 data: {
                     action: 'educare_process_content',
-                    nonce: educareAjax.nonce,
                     form_data: form_data,
                     action_for
                 },
@@ -917,7 +906,6 @@ jQuery(document).ready(function($) {
                 type: 'POST',
                 data: {
                     action: 'educare_process_content',
-                    nonce: educareAjax.nonce,
                     form_data: form_data,
                     action_for
                 },
@@ -949,7 +937,6 @@ jQuery(document).ready(function($) {
                 type: 'POST',
                 data: {
                     action: 'educare_process_content',
-                    nonce: educareAjax.nonce,
                     form_data: form_data,
                     action_for
                 },
@@ -993,7 +980,7 @@ jQuery(document).ready(function($) {
                 type: 'POST',
                 data: {
                     action: 'educare_demo',
-                    nonce: educareAjax.nonce,
+                    nonce: educareNonce.demo_nonce,
                     Class: class_name,
                     total_demo: total_demo,
                     data_for: students,

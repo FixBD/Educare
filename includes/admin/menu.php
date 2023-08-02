@@ -146,6 +146,11 @@ function educare_enqueue_styles( $hook) {
 		'photos' => educare_check_status('photos'),
 		'group_subject' => educare_check_status('group_subject'),
 	) );
+
+	wp_localize_script( 'educare-admin', 'educareNonce', array(
+		'demo_nonce' => wp_create_nonce( 'educare_demo_nonce' ),
+		'edit_grade_system' => wp_create_nonce( 'edit_grade_system' ),
+	) );
 	
 }
 

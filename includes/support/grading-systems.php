@@ -175,7 +175,7 @@ function educare_proccess_grade_system() {
     exit;
   }
 
-  educare_verify_nonce();
+  educare_verify_nonce('edit_grade_system');
 
 	$rules = sanitize_text_field($_POST['class']);
 
@@ -243,6 +243,12 @@ function educare_proccess_grade_system() {
 				<a href='<?php echo esc_js( 'javascript:void(0);' );?>' class='addButton educare_button' title='Add more field'><i class='dashicons dashicons-plus-alt'></i></a>
 				<button id='save_addForm' class="educare_button" name="update_grade_rules"><i class='dashicons dashicons-yes'></i></button>
 				</div>
+
+        <?php
+        // Security nonce for AJAX requests.
+        $nonce = wp_create_nonce( 'update_grade_rules' );
+        echo '<input type="hidden" name="nonce" value="'.esc_attr($nonce).'">';
+        ?>
 				
 			</div>
 		</form>
@@ -277,10 +283,10 @@ function educare_save_grade_system() {
     exit;
   }
   
-  educare_verify_nonce();
-  
   // Parse/get forms data
   wp_parse_str($_POST['form_data'], $_POST);
+  // Verify the nonce to ensure the request originated from the expected source
+  educare_verify_nonce('update_grade_rules');
 
   // Save data
   educare_save_results_system();

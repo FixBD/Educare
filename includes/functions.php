@@ -1356,9 +1356,11 @@ function educare_crud_data($add_students = null, $import_data = null) {
 
 		// Security nonce for form requests.
 		$nonce = wp_create_nonce( 'educare_form_nonce' );
+		$crud_nonce = wp_create_nonce( 'educare_crud_data' );
       
     $forms = "<form method='post' action='' class='text_button'>
 			<input type='hidden' name='nonce' value='".esc_attr($nonce)."'>
+			<input type='hidden' name='delete_nonce' value='".esc_attr($crud_nonce)."'>
       <input name='id' value='".esc_attr($id)."' hidden>
       <input type='submit' name='educare_results_by_id' formaction='".esc_url($profiles)."' class='educare_button' value='&#xf177' formtarget='_blank'>
 			<input type='submit' name='edit_by_id' formaction='".esc_url($link)."&update-data' class='educare_button' value='&#xf464'>
@@ -1389,7 +1391,7 @@ function educare_crud_data($add_students = null, $import_data = null) {
 		}
 		
 		// Verify the nonce to ensure the request originated from the expected source
-		educare_verify_nonce();
+		educare_verify_nonce('educare_crud_data');
 		
     global $wpdb, $table_name, $requred_fields;
 		
@@ -1510,7 +1512,12 @@ function educare_crud_data($add_students = null, $import_data = null) {
 					}
 
 					// Verify the nonce to ensure the request originated from the expected source
-					educare_verify_nonce();
+					if (isset($_POST['delete_nonce'])) {
+						educare_verify_nonce('educare_crud_data', 'delete_nonce');
+					} else {
+						educare_verify_nonce('educare_crud_data');
+					}
+					
 					
 					$query = $wpdb->prepare("DELETE FROM $table_name WHERE id = %d", $id);
           $wpdb->query($query);
@@ -1617,7 +1624,7 @@ function educare_get_results_forms($print, $add_students = null) {
 				
 				<?php 
 				// Security nonce for form requests.
-				$nonce = wp_create_nonce( 'educare_form_nonce' );
+				$nonce = wp_create_nonce( 'educare_crud_data' );
 				echo '<input type="hidden" name="nonce" value="'.esc_attr($nonce).'">';
 				
 				if (isset($_POST['edit']) or isset($_POST['edit_by_id']) or $import_from) {
@@ -2249,6 +2256,16 @@ function educare_get_tab_management($action_for) {
 						</div>
 					</div>
 
+					<?php
+					$students_list_nonce = wp_create_nonce( 'students_list' );
+					$get_Group_nonce = wp_create_nonce( 'get_Group' );
+					$get_Class_nonce = wp_create_nonce( 'get_Class' );
+					
+					echo '<input type="hidden" name="students_list_nonce" value="'.esc_attr($students_list_nonce).'">';
+					echo '<input type="hidden" name="get_Group_nonce" value="'.esc_attr($get_Group_nonce).'">';
+					echo '<input type="hidden" name="get_Class_nonce" value="'.esc_attr($get_Class_nonce).'">';
+					?>
+
 					<input type="submit" name="students_list" id="process_marks" class="educare_button" value="Students List">
 				</div>
 			</form>
@@ -2287,7 +2304,7 @@ function educare_get_tab_management($action_for) {
 				}
 
 				// Verify the nonce to ensure the request originated from the expected source
-				educare_verify_nonce();
+				educare_verify_nonce('educare_default_photos');
 				
 				$attachment_id = sanitize_text_field($_POST['educare_attachment_id']);
 				update_option( 'educare_files_selector', absint($attachment_id) );
@@ -2297,7 +2314,7 @@ function educare_get_tab_management($action_for) {
 			<form method='post'>
 				<?php 
 				// Security nonce for form requests.
-				$nonce = wp_create_nonce( 'educare_form_nonce' );
+				$nonce = wp_create_nonce( 'educare_default_photos' );
 				echo '<input type="hidden" name="nonce" value="'.esc_attr($nonce).'">';
 				
 				educare_files_selector('set_default', '');
@@ -2497,7 +2514,7 @@ function educare_all_view($students = null, $on_load = null) {
 	<form class="add_results" action="" method="post">
 		<?php
 		// Security nonce for form requests.
-		$nonce = wp_create_nonce( 'educare_form_nonce' );
+		$nonce = wp_create_nonce( 'educare_view_results' );
 		echo '<input type="hidden" name="nonce" value="'.esc_attr($nonce).'">';
 		?>
 
@@ -2613,7 +2630,7 @@ function educare_all_view($students = null, $on_load = null) {
 			// Check request
 			if (!isset($_POST['on_load'])) {
 				// Verify the nonce to ensure the request originated from the expected source
-				educare_verify_nonce();
+				educare_verify_nonce('educare_view_results');
 			}
 
 			$table = sanitize_text_field($_POST['table']);
@@ -2811,10 +2828,12 @@ function educare_all_view($students = null, $on_load = null) {
 									<div class="action_menu">
 										<input type="submit" class="button action_button" value="&#xf349">
 										<menu class="action_link">
-												<?php
-												// Security nonce for form requests.
-												$nonce = wp_create_nonce( 'educare_form_nonce' );
-												?>
+											<?php
+											// Security nonce for form requests.
+											$nonce = wp_create_nonce( 'educare_form_nonce' );
+											$remove_nonce = wp_create_nonce( 'educare_view_results' );
+											?>
+
 											<form class="educare-modify" method="post" id="educare_results" target="_blank">
 												<?php
 												echo '<input type="hidden" name="nonce" value="'.esc_attr($nonce).'">';
@@ -2829,7 +2848,7 @@ function educare_all_view($students = null, $on_load = null) {
 
 											<form class="educare-modify" action="<?php echo esc_url($link); ?>" method="post">
 												<?php
-												echo '<input type="hidden" name="nonce" value="'.esc_attr($nonce).'">';
+												echo '<input type="hidden" name="nonce" value="'.esc_attr($remove_nonce).'">';
 												?>
 												<input type='hidden' name='educare_view_results'>
 												<input type='hidden' name='id' value='<?php echo esc_attr($id);?>'>
@@ -2881,7 +2900,7 @@ function educare_all_view($students = null, $on_load = null) {
 			<form action="<?php echo esc_url($_SERVER['REQUEST_URI']); ?>" method="post">
 				<?php 
 				// Security nonce for form request.
-				$nonce = wp_create_nonce( 'educare_form_nonce' );
+				$nonce = wp_create_nonce( 'educare_view_results' );
 				echo '<input type="hidden" name="nonce" value="'.esc_attr($nonce).'">';
 				?>
 
@@ -3097,14 +3116,14 @@ function educare_class() {
 		exit;
 	}
 
-	// Verify nonce to ensure the request is secure
-	educare_verify_nonce();
-
 	// Get data from the AJAX request
 	$class = sanitize_text_field($_POST['class']);
 	$add_students = sanitize_text_field($_POST['add_students']);
 	$id = sanitize_text_field($_POST['id']);
 	wp_parse_str($_POST['form_data'], $_POST);
+
+	// Verify nonce to ensure the request is secure
+	educare_verify_nonce('educare_crud_data');
 
 	// Check if the 'Group' field exists in the POST data
 	if (key_exists('Group', $_POST)) {
@@ -3164,7 +3183,7 @@ function educare_demo($demo_key = null) {
 	// Verify the nonce to ensure the request originated from the expected source
 	if (!$demo_key) {
 		// because, this is for import proccess, we have allready define nonce there
-		educare_verify_nonce();
+		educare_verify_nonce('educare_demo_nonce');
 	}
 	
 
@@ -3391,7 +3410,7 @@ function educare_import_result($data_for = null) {
 		}
 
 		// Verify the nonce to ensure the request originated from the expected source
-		educare_verify_nonce();
+		educare_verify_nonce('educare_import_data');
 
 		// Begin import results function
 		global $wpdb;
@@ -3544,7 +3563,7 @@ function educare_import_result($data_for = null) {
 	<form  class="add_results" method="post" action="<?php esc_url($_SERVER['REQUEST_URI']); ?>" enctype="multipart/form-data" id="upload_csv">
 		<?php
 		// Define educare nonce for secure request
-		$nonce = wp_create_nonce( 'educare_form_nonce' );
+		$nonce = wp_create_nonce( 'educare_import_data' );
 		echo '<input type="hidden" name="nonce" value="'.esc_attr($nonce).'">';
 		?>
 
@@ -3826,7 +3845,11 @@ function educare_process_settings($list) {
 			if ($in_list == 'Extra_field') {
 				$check = strtolower(substr(strstr($check, ' '), 1));
 			}
-						
+			
+			// Create nonce for update or remove forms
+			$update_nonce = wp_create_nonce( 'educare_update_'.esc_attr($in_list) );
+			$remove_nonce = wp_create_nonce( 'remove_'.esc_attr($in_list) );
+
 			if ($in_list == 'Extra_field') {
 				$data_type = strtok($target, ' ');
 				$Target = substr(strstr($target, ' '), 1);
@@ -3860,11 +3883,16 @@ function educare_process_settings($list) {
 								</div>
 							</div>
 									
-							<input type="text" name="<?php echo esc_attr($in_list);?>" hidden>
+							<input type="hidden" name="<?php echo esc_attr($in_list);?>">
 					
 							<input type="submit" name="educare_update_<?php echo esc_attr($list);?>" class="educare_button update<?php echo esc_attr(str_replace(' ', '', $list));?>" onClick="<?php echo esc_js('add(this.form)');?>" value="&#xf464 Edit">
 					
 							<input type="submit" name="<?php echo esc_attr("remove_$list");?>" class="educare_button remove<?php echo esc_attr(str_replace(' ', '', $list));?>" value="&#xf182">
+
+							<?php
+							echo '<input type="hidden" name="educare_update_'.esc_attr($in_list).'_nonce" value="'.esc_attr($update_nonce).'">';
+							echo '<input type="hidden" name="remove_'.esc_attr($in_list).'_nonce" value="'.esc_attr($remove_nonce).'">';
+							?>
 
 						</form>
 						</p>
@@ -3887,11 +3915,16 @@ function educare_process_settings($list) {
 
 							Edit - <b><?php echo esc_html($target);?></b>:<br>
 							<label for="Name" class="labels" id="name"></label>
-								<input type="text" name="<?php echo esc_attr($list);?>" value="<?php echo esc_attr($target);?>" placeholder="<?php echo esc_attr($list);?> Name">
+							<input type="text" name="<?php echo esc_attr($list);?>" value="<?php echo esc_attr($target);?>" placeholder="<?php echo esc_attr($list);?> Name">
 						
 							<input type="submit" name="educare_update_<?php echo esc_attr($list);?>" class="educare_button update<?php echo esc_attr(str_replace(' ', '', $list));?>" value="&#xf464 Edit">
 								
 							<input type="submit" name="<?php echo esc_attr("remove_$list");?>" class="educare_button remove<?php echo esc_attr(str_replace(' ', '', $list));?>" value="&#xf182">
+
+							<?php
+							echo '<input type="hidden" name="educare_update_'.esc_attr($in_list).'_nonce" value="'.esc_attr($update_nonce).'">';
+							echo '<input type="hidden" name="remove_'.esc_attr($in_list).'_nonce" value="'.esc_attr($remove_nonce).'">';
+							?>
 														
 						</form>
 						</p>
@@ -4434,6 +4467,12 @@ function educare_settings_form() {
 				echo '<input type="hidden" name="problem_detection" value="'.esc_attr(educare_check_status('problem_detection')).'">';
 				echo '<input type="hidden" name="clear_data" value="'.esc_attr(educare_check_status('clear_data')).'">';
 			}
+
+			$update_settings = wp_create_nonce( 'educare_update_settings_status' );
+			$reset_settings = wp_create_nonce( 'educare_reset_default_settings' );
+
+			echo '<input type="hidden" name="educare_update_settings_status_nonce" value="'.esc_attr($update_settings).'">';
+			echo '<input type="hidden" name="educare_reset_default_settings_nonce" value="'.esc_attr($reset_settings).'">';
 			?>
 				
 			<button type="submit" name="educare_update_settings_status" class="educare_button"><i class="dashicons dashicons-yes-alt"></i> Save</button>
@@ -4600,6 +4639,14 @@ function educare_process_class($list) {
 										<input id="educare_results_btn" class="educare_button proccess_<?php echo esc_attr($list);?>" name="update_subject" type="submit" value="&#xf464 Edit">
 
 										<input type="submit" name="remove_subject" class="educare_button proccess_<?php echo esc_attr($list);?>" value="&#xf182">
+
+										<?php
+										$update_subject_nonce = wp_create_nonce( 'update_subject' );
+										$remove_subject_nonce = wp_create_nonce( 'remove_subject' );
+										
+										echo '<input type="hidden" name="update_subject_nonce" value="'.esc_attr($update_subject_nonce).'">';
+										echo '<input type="hidden" name="remove_subject_nonce" value="'.esc_attr($remove_subject_nonce).'">';
+										?>
 										
 									</form>
 									</p>
@@ -4621,6 +4668,12 @@ function educare_process_class($list) {
 										<br>
 										
 										<button id="educare_results_btn" class="educare_button proccess_<?php echo esc_attr($list);?>" name="update_class" type="submit"><i class="dashicons dashicons-edit"></i> Edit</button>
+
+										<?php
+										$update_class_nonce = wp_create_nonce( 'update_class' );
+										
+										echo '<input type="hidden" name="update_class_nonce" value="'.esc_attr($update_class_nonce).'">';
+										?>
 
 									</form>
 									</p>
@@ -4884,8 +4937,22 @@ function educare_setting_subject($list, $form = null) {
 						<?php echo esc_html( $count++ ) . '. ' . esc_html( $class );?>
 						<span>
 							<form action="<?php echo esc_url($_SERVER['REQUEST_URI']); ?>" method="post">
-							<input type="hidden" name="educare_process_<?php echo esc_attr($list);?>"><input type="hidden" name="class" value="<?php echo esc_attr( $class );?>">
-							<input type="submit" class="proccess_<?php echo esc_attr($list);?>" name="edit_class" value="&#xf464"><input type="submit" class="proccess_<?php echo esc_attr($list);?>" name="remove_class" value="&#xf182"></form>
+
+								<input type="hidden" name="educare_process_<?php echo esc_attr($list);?>"><input type="hidden" name="class" value="<?php echo esc_attr( $class );?>">
+
+								<input type="submit" class="proccess_<?php echo esc_attr($list);?>" name="edit_class" value="&#xf464">
+
+								<input type="submit" class="proccess_<?php echo esc_attr($list);?>" name="remove_class" value="&#xf182">
+
+								<?php
+								$edit_class_nonce = wp_create_nonce( 'edit_class' );
+								$remove_class_nonce = wp_create_nonce( 'remove_class' );
+
+								echo '<input type="hidden" name="edit_class_nonce" value="'.esc_attr($edit_class_nonce).'">';
+								echo '<input type="hidden" name="remove_class_nonce" value="'.esc_attr($remove_class_nonce).'">';
+								?>
+
+							</form>
 						</span>
 					</label>
 
@@ -4914,6 +4981,7 @@ function educare_setting_subject($list, $form = null) {
 										<td><?php echo esc_html($subject);?></td>
 										<td colspan='2'>
 											<form class="educare-modify" action="<?php echo esc_url($_SERVER['REQUEST_URI']); ?>" method="post">
+
 												<input type="hidden" name="educare_process_<?php echo esc_attr($list);?>">
 
 												<input type="hidden" name="class" value="<?php echo esc_attr($class);?>"/>
@@ -4923,6 +4991,14 @@ function educare_setting_subject($list, $form = null) {
 												<input type="submit" name="edit_subject" class="button success proccess_<?php echo esc_attr($list);?>" value="&#xf464">
 												
 												<input type="submit" name="<?php echo esc_attr("remove_subject");?>" class="button error proccess_<?php echo esc_attr($list);?>" value="&#xf182">
+
+												<?php
+												$edit_subject_nonce = wp_create_nonce( 'edit_subject' );
+												$remove_subject_nonce = wp_create_nonce( 'remove_subject' );
+												
+												echo '<input type="hidden" name="edit_subject_nonce" value="'.esc_attr($edit_subject_nonce).'">';
+												echo '<input type="hidden" name="remove_subject_nonce" value="'.esc_attr($remove_subject_nonce).'">';
+												?>
 													
 											</form>
 										</td>
@@ -4979,6 +5055,11 @@ function educare_setting_subject($list, $form = null) {
 							</div>
 						</div>
 
+						<?php
+						$nonce = wp_create_nonce( 'add_subject' );
+						echo '<input type="hidden" name="add_subject_nonce" value="'.esc_attr($nonce).'">';
+						?>
+
 						<button id="educare_results_btn" class="educare_button proccess_<?php echo esc_attr($list);?>" name="add_subject" type="submit"><i class="dashicons dashicons-plus-alt"></i> Add Subject</button>
 					</div>
 				</form>
@@ -4996,6 +5077,11 @@ function educare_setting_subject($list, $form = null) {
 						</div>
 						
 						<br>
+
+						<?php
+						$nonce = wp_create_nonce( 'add_class' );
+						echo '<input type="hidden" name="add_class_nonce" value="'.esc_attr($nonce).'">';
+						?>
 						
 						<button id="educare_results_btn" class="educare_button proccess_<?php echo esc_attr($list);?>" name="add_class" type="submit"><i class="dashicons dashicons-plus-alt"></i> Add <?php echo esc_html($list);?></button>
 					</div>
@@ -5079,6 +5165,14 @@ function educare_content($list, $form = null) {
 							<input type="submit" name="educare_edit_<?php echo esc_attr($list);?>" class="button success edit<?php echo esc_attr(str_replace('_', '', $list));?>" value="&#xf464">
 							
 							<input type="submit" name="<?php echo esc_attr("remove_$list");?>" class="button error remove<?php echo esc_attr(str_replace('_', '', $list));?>" value="&#xf182">
+							
+							<?php
+							$update_nonce = wp_create_nonce( 'educare_edit_'.esc_attr($list) );
+							$remove_nonce = wp_create_nonce( 'remove_'.esc_attr($list) );
+							
+							echo '<input type="hidden" name="educare_edit_'.esc_attr($list).'_nonce" value="'.esc_attr($update_nonce).'">';
+							echo '<input type="hidden" name="remove_'.esc_attr($list).'_nonce" value="'.esc_attr($remove_nonce).'">';
+							?>
 						    	
 						</form></td>
 					</tr>
@@ -5118,6 +5212,9 @@ function educare_content($list, $form = null) {
 		}
 
 		if ($form) {
+			// Create nonce for this form
+			$nonce = wp_create_nonce( 'educare_add_'.esc_attr($list) );
+			
 			if ($list == 'Extra_field') {
 				?>
 				<form class="add_results" action="" method="post">
@@ -5141,6 +5238,11 @@ function educare_content($list, $form = null) {
 					
 					<input type="text" name="<?php echo esc_attr($list);?>" hidden>
 
+					<?php
+					// Print nonce value
+					echo '<input type="hidden" name="educare_add_'.esc_attr($list).'_nonce" value="'.esc_attr($nonce).'">';
+					?>
+
 					<button id="educare_add_<?php echo esc_attr($list);?>" class="educare_button" name="educare_add_<?php echo esc_attr($list);?>" type="submit" onClick="<?php echo esc_js('add(this.form)');?>"><i class="dashicons dashicons-plus-alt"></i> Add <?php echo esc_html($List);?></button>
 				</div>
 				</form>
@@ -5154,6 +5256,11 @@ function educare_content($list, $form = null) {
 						<?php echo esc_html($List);?>:
 						<label for="<?php echo esc_attr($list);?>" class="labels" id="<?php echo esc_attr($list);?>"></label>
 						<input type="text" name="<?php echo esc_attr($list);?>" class="fields" placeholder="<?php echo esc_attr($List);?> name" pattern="[A-Za-z0-9 ]+" title="Only Caretaker, Number and Space allowed. (A-Za-z0-9)">
+
+						<?php
+						// Print nonce value
+						echo '<input type="hidden" name="educare_add_'.esc_attr($list).'_nonce" value="'.esc_attr($nonce).'">';
+						?>
 						
 						<button id="educare_add_<?php echo esc_attr($list);?>" class="educare_button" name="educare_add_<?php echo esc_attr($list);?>" type="submit"><i class="dashicons dashicons-plus-alt"></i> Add <?php echo esc_html($List);?></button>
 					</div>
@@ -5211,9 +5318,6 @@ function educare_process_content() {
 		exit;
 	}
 	
-	// verify is request comming from valid sources
-	educare_verify_nonce();
-	
 	$action_for = sanitize_text_field($_POST['action_for']);
 	// $currenTab = sanitize_text_field($_POST['currenTab']);
 	
@@ -5226,6 +5330,9 @@ function educare_process_content() {
 	wp_parse_str($_POST['form_data'], $_POST);
 	$_POST[$action_for] = $action_for;
 	$_POST['active_menu'] = $active_menu;
+	
+	// verify is request comming from valid sources
+	educare_verify_nonce($action_for, $action_for.'_nonce');
 
 	if (isset($_POST['educare_process_Class'])) {
 		educare_process_class('Class');
@@ -5609,7 +5716,7 @@ function educare_get_students_list($Class = null, $Year = null) {
 					</div>
 
 					<?php 
-					if ($sub_in) { 
+					if ($sub_in) {
 						?>
 						<div class="button_container">
 							<input type="submit" name="add_marks" class="educare_button" value="Save Marks">
@@ -5618,6 +5725,12 @@ function educare_get_students_list($Class = null, $Year = null) {
 							<div class="action_menu"><i class="dashicons action_button dashicons-info"></i> <menu class="action_link info"><strong>Mark not visible when print?</strong><br> Please, fill up students marks and save. Then, select <b>Students List</b> and print marksheet (Save then Print).</menu></div>
 						</div>
 						<?php
+
+						$add_marks_nonce = wp_create_nonce( 'add_marks' );
+						$publish_marks_nonce = wp_create_nonce( 'publish_marks' );
+						
+						echo '<input type="hidden" name="add_marks_nonce" value="'.esc_attr($add_marks_nonce).'">';
+						echo '<input type="hidden" name="publish_marks_nonce" value="'.esc_attr($publish_marks_nonce).'">';
 					}
 					?>
 					
@@ -6203,9 +6316,6 @@ function educare_process_marks() {
 	if (!current_user_can('manage_options')) {
 		exit;
 	}
-
-	// Verify the nonce to ensure the request originated from the expected source
-	educare_verify_nonce();
 	
 	// Sanitize and parse necessary data from the AJAX request
 	$action_for = sanitize_text_field($_POST['action_for']);
@@ -6213,6 +6323,9 @@ function educare_process_marks() {
 	wp_parse_str($_POST['form_data'], $_POST);
 	$_POST[$action_for] = $action_for;
 	$_POST['data_for'] = $data_for;
+
+	// Verify the nonce to ensure the request originated from the expected source
+	educare_verify_nonce($action_for, $action_for.'_nonce');
 
 	// Sanitize other data for marks processing
 	$Class = sanitize_text_field($_POST['Class']);
@@ -6628,7 +6741,7 @@ function educare_promote_students() {
 		}
 
 		// Verify the nonce to ensure the request originated from the expected source
-		educare_verify_nonce();
+		educare_verify_nonce('educare_promote_nonce');
 
 		$requred = array (
 			'Class',
@@ -6860,7 +6973,7 @@ function educare_promote_students() {
 		<form class="add_results" action="" method="post">
 			<div class="content">
 				<?php
-					$nonce = wp_create_nonce( 'educare_form_nonce' );
+					$nonce = wp_create_nonce( 'educare_promote_nonce' );
 					echo '<input type="hidden" name="nonce" value="'.esc_attr($nonce).'">';
 				?>
 				
@@ -6969,6 +7082,7 @@ add_action( 'wp_enqueue_scripts', 'educare_enqueue_ajax_script' );
  *
  * @param string $nonce (optional) A unique string representing the action or context for which the nonce was generated.
  * Default is 'educare_form_nonce' if not provided.
+ * @param string $nonce_field for specific nonce field
  *
  * @return void The function displays an error message if the nonce is missing or invalid. Execution terminates
  * immediately after displaying the error, preventing further processing of the form submission.
@@ -6980,9 +7094,12 @@ add_action( 'wp_enqueue_scripts', 'educare_enqueue_ajax_script' );
  * Your form submission processing code comes here
  * ...
  */
-function educare_verify_nonce($nonce = 'educare_form_nonce') {
+function educare_verify_nonce($nonce = 'educare_form_nonce', $nonce_field = 'nonce') {
+	$nonce = sanitize_text_field( $nonce );
+	$nonce_field = sanitize_text_field( $nonce_field );
+
 	// check_ajax_referer( 'educare_form_nonce', 'nonce' );
-	if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( $_POST['nonce'], $nonce ) ) {
+	if ( ! isset( $_POST[$nonce_field] ) || ! wp_verify_nonce( $_POST[$nonce_field], $nonce ) ) {
     // Nonce is not valid, handle error or unauthorized access
 		echo educare_show_msg('Invalid Request', false);
 		die;

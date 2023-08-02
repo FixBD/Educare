@@ -6,7 +6,7 @@ Tags:                Result management, Academic, Results, Students, Education, 
 Requires at least:   3.8
 Tested up to:        6.2.2
 Requires PHP:        5.2.4
-Stable tag:          1.4.4
+Stable tag:          1.4.5
 License:             GPLv2 or later
 License URI:         http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -396,6 +396,15 @@ Please: You only need to give us 5 stars!
 17. Customize Grading System
 
 == Changelog ==
+
+= [1.4.5] =
+
+= Stable - Security Release =
+* Enhanced security measures.
+* It is crucial to update Educare to version 1.4.5 immediately.
+* Please see the changelog v1.4.4 for list of previous updates.
+
+**Note:** Sometimes users may need to clear browsing data to load the updated script (After update).
 
 = [1.4.4] =
 
