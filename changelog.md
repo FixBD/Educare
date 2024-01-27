@@ -1,3 +1,19 @@
+## [1.4.8]
+
+- Sets the WordPress tested up to version to 6.4.2
+- Resolved backslash issues when add extra fields with character (').
+
+## [1.4.7]
+
+- Improved security measures
+- Fixed well-known errors
+- Added a new security layer for Admin Ajax
+
+## [1.4.6]
+
+- Removed unnecessary code and comments.
+- Sets the WordPress tested up to version to 6.3.1
+
 ## [1.4.5]
 
 ### Stable - Security Release

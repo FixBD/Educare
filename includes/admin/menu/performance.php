@@ -18,7 +18,7 @@ $action = 'performance';
 $tab = array (
   // Tab name => Icon
   'promote_students' => 'chart-bar',
-  'attendance' => 'clipboard'
+  // 'attendance' => 'clipboard'
 );
 
 educare_tab_management($action, $tab);

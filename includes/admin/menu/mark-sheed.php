@@ -22,6 +22,7 @@ $action = 'mark-sheed';
 $tab = array (
 	// Tab name => Icon
   'add_marks' => 'text-page',
+  'attendance' => 'clipboard'
   // 'import_marks' => 'database-import'
 );
 

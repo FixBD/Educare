@@ -273,7 +273,7 @@ add_action('wp_ajax_educare_proccess_grade_system', 'educare_proccess_grade_syst
  * Save grading fields data
  * 
  * @since 1.2.0
- * @last-update 1.2.0
+ * @last-update 1.4.8
  * 
  * @return void
  */
@@ -283,7 +283,9 @@ function educare_save_grade_system() {
     exit;
   }
   
-  // Parse/get forms data
+  // Remove the backslash
+	$_POST['form_data'] = stripslashes($_POST['form_data']);
+  // parses query strings and sets the parsed values into the $_POST array.
   wp_parse_str($_POST['form_data'], $_POST);
   // Verify the nonce to ensure the request originated from the expected source
   educare_verify_nonce('update_grade_rules');

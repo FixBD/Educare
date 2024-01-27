@@ -140,6 +140,28 @@ function educare_check_status($target = null, $display = null) {
 
 
 /**
+ * Checks whether the current user has the necessary permissions to access a specific feature or functionality in WordPress.
+ *
+ * This function is used to restrict access to certain parts of the website to users with specific privileges.
+ *
+ * @since 1.4.7
+ * @last-update 1.4.7
+ * 
+ * @param string $msg Optional. The message to display to the user if they do not have the required permissions. Default is 'Sorry! You are not allowed to access it.'
+ */
+function educare_check_access($msg = 'Sorry! You are not allowed to access it.') {
+	// Check if the current user has the 'manage_options' capability (typically administrators).
+	if ( ! current_user_can( 'manage_options' ) ) {
+		// Display an error message to the user and terminate script execution.
+		echo educare_show_msg(esc_html__($msg, 'educare'), false);
+		die;
+	}
+}
+
+
+
+
+/**
  * ### Educare settings data
  * 
  * @since 1.2.0
@@ -1707,6 +1729,12 @@ function educare_get_results_forms($print, $add_students = null) {
 				?>
 
 				</div>
+				
+				<?php
+				if ($add_students) {
+					echo educare_guide_for('Premium version of educare supports user (Students, Teachers, Educare Admin) profiles/dashboard system.');
+				}
+				?>
 					
 				<!-- Extra field -->
 				<h2>Others</h2>
@@ -1765,7 +1793,7 @@ function educare_get_results_forms($print, $add_students = null) {
 				echo educare_guide_for('add_subject');
 
 				if (!$add_students) {
-					echo educare_guide_for('With the premium version of Educare, you can add additional mark terms and fields. Exp: Practical Marks, Exam Marks, CA1, CA2... and more. Also, you can secure the result with password or PIN.');
+					echo educare_guide_for('With the premium version of Educare, you can add additional mark terms and fields. Exp: Practical Marks, Exam Marks, CA1, CA2, CA3... and more. Also, you can secure the result with password or PIN.');
 				}
 				?>
 				<div id="result_msg">
@@ -1810,12 +1838,18 @@ function educare_get_results_forms($print, $add_students = null) {
  * Process form when click auto fill button
  * 
  * @since 1.4.0
- * @last-update 1.4.0
+ * @last-update 1.4.7
  * 
  * @return mixed
  */
 
 function educare_get_data_from_students() {
+	// Check if the current user has the access this request as 'manage_options' capability (typically administrators).
+	educare_check_access();
+	
+	// Remove the backslash
+	$_POST['form_data'] = stripslashes($_POST['form_data']);
+	// parses query strings and sets the parsed values into the $_POST array.
 	wp_parse_str($_POST['form_data'], $_POST);
 
 	$roll = sanitize_text_field($_POST['Roll_No']);
@@ -2127,15 +2161,18 @@ function educare_tab_management($action_for = 'management', array $tab = null) {
  * Note: The `educare_get_tab_management` function, which is called within this AJAX callback, is not provided in the code snippet. It is assumed that this function exists and handles the processing of the specified tab.
  * 
  * @since 1.4.0
- * @last-update 1.4.0
+ * @last-update 1.4.7
  */
 function educare_process_tab() {
+	// Check if the current user has the access this request as 'manage_options' capability (typically administrators).
+	educare_check_access();
+	
 	// Get the action for the tab from the AJAX request
 	$action_for = $_POST['action_for'];
 
 	// Set the 'tab' parameter in GET if it is set in the AJAX request
 	if (isset($_POST['tab'])) {
-			$_GET[$_POST['tab']] = true;
+		$_GET[$_POST['tab']] = true;
 	}
 
 	// Call the function to process the specified tab
@@ -2203,12 +2240,24 @@ function educare_get_tab_management($action_for) {
 			echo '<span style="font-size:100px">&#9785;</span><br><b>We are working on it!</b>';
 			echo '</div>';
 
+		} elseif (isset($_GET['attendance'])) {
+			echo "<h1>Attendance</h1>";
+
+			echo educare_guide_for('Premium version of Educare supports attendance system.');
+
+			echo '<div class="center"><img src="'.esc_url(EDUCARE_URL . 'assets/img/cover.svg').'" alt="Educare" width="50%"/></div>';
+			
 		} else {
 			echo '<div class="cover"><img src="'.esc_url(EDUCARE_URL.'assets/img/marks.svg').'" alt="Marks List" title="Add Marks"/></div>';
 			echo "<h1>Add Marks</h1>";
 
-			echo educare_guide_for("Using this features admin (teacher) can add subject wise multiple students results at a same time. So, it's most usefull for (single) teacher. There are different teachers for each subject. Teachers can add marks for their specific subject using this feature. And can print all student marks as a marksheet. After, the mark addition is done for all the subjects, students can view and print their results when admin publish it as results. Also, teacher can publish single subject results. (We call it - <b>THE GOLDEN FEATURES FOR TEACHER!</b>)");
+			echo educare_guide_for("<p>Using this features admin (teachers) can add subject wise multiple students results at a same time. So, it's most usefull for (single) teacher. This is particularly advantageous for individual teachers handling their own subjects. And can print all student marks as a marksheet. Once the mark entry process concludes for all subjects, students can easily access and print their results once the administrator publishes them as results</p>
 			
+			<p><b>Notes:</b> With the premium version, administrators have the capability to add teachers and grant them access to specific subjects to input marks!</p>
+			");
+			
+			$Class = $Group = $Exam = $Subject = $Year = '';
+
 			if (isset($_POST['students_list'])) {
 				$Class = sanitize_text_field($_POST['Class']);
 				$Group = sanitize_text_field($_POST['Group']);
@@ -2438,7 +2487,7 @@ function educare_get_tab_management($action_for) {
 			<?php
 		} else {
 			echo "<h1>Settings</h1>";
-			echo educare_guide_for('Currently you are using the free version of Educare, but it has a premium version which is even more functional and powerful.');
+			echo educare_guide_for('Currently you are using the free version. But, <b>Educare Premium Version</b> is even more functional and powerful.');
 
 			echo '<div id="msg_for_settings">'.educare_settings_form().'</div>';
 		}
@@ -3116,10 +3165,14 @@ function educare_class() {
 		exit;
 	}
 
+	// Remove the backslash
+	$_POST['form_data'] = stripslashes($_POST['form_data']);
+	
 	// Get data from the AJAX request
 	$class = sanitize_text_field($_POST['class']);
 	$add_students = sanitize_text_field($_POST['add_students']);
 	$id = sanitize_text_field($_POST['id']);
+	// parses query strings and sets the parsed values into the $_POST array.
 	wp_parse_str($_POST['form_data'], $_POST);
 
 	// Verify nonce to ensure the request is secure
@@ -5307,7 +5360,7 @@ function educare_get_all_content($list) {
  * Ajax respnce for management menu/page
  * 
  * @since 1.4.0
- * @last-update 1.4.0
+ * @last-update 1.4.7
  * 
  * @return mixed
  */
@@ -5327,6 +5380,9 @@ function educare_process_content() {
 		$active_menu = '';
 	}
 
+	// Remove the backslash
+	$_POST['form_data'] = stripslashes($_POST['form_data']);
+	// parses query strings and sets the parsed values into the $_POST array.
 	wp_parse_str($_POST['form_data'], $_POST);
 	$_POST[$action_for] = $action_for;
 	$_POST['active_menu'] = $active_menu;
@@ -5377,12 +5433,15 @@ add_action('wp_ajax_educare_process_content', 'educare_process_content');
  * ### Proccess add || update || delete [CRUD] students and results form
  * 
  * @since 1.4.0
- * @last-update 1.4.0
+ * @last-update 1.4.7
  * 
  * @return mixed
  */
 
 function educare_process_forms() {
+	// Check if the current user has the access this request as 'manage_options' capability (typically administrators).
+	educare_check_access();
+	
 	$action_for = sanitize_text_field($_POST['action_for']);
 	$data_for = sanitize_text_field($_POST['data_for']);
 	// $currenTab = sanitize_text_field($_POST['currenTab']);
@@ -5546,7 +5605,7 @@ function educare_data_management($students = null) {
  * @return void The function processes data for data management tasks and terminates script execution.
  *
  * @since 1.4.0
- * @last-update 1.4.0
+ * @last-update 1.4.7
  * 
  * @example
  * This AJAX action is hooked to the 'educare_process_data' action.
@@ -5556,6 +5615,9 @@ function educare_data_management($students = null) {
  * It processes data for data management tasks based on the specific AJAX request.
  */
 function educare_process_data() {
+	// Check if the current user has the access this request as 'manage_options' capability (typically administrators).
+	educare_check_access();
+	
 	// Sanitize and parse necessary data from the AJAX request
 	$action_for = sanitize_text_field($_GET['action_for']);
 	wp_parse_str($_GET['form_data'], $_GET);
@@ -6302,7 +6364,7 @@ function educare_get_marks_by_id($id) {
  * @return void The function processes marks for a specific class, group, subject, exam, and year combination and terminates script execution.
  *
  * @since 1.4.0
- * @last-update 1.4.0
+ * @last-update 1.4.8
  * 
  * @example
  * This AJAX action is hooked to the 'educare_process_marks' action.
@@ -6320,6 +6382,9 @@ function educare_process_marks() {
 	// Sanitize and parse necessary data from the AJAX request
 	$action_for = sanitize_text_field($_POST['action_for']);
 	$data_for = sanitize_text_field($_POST['data_for']);
+	// Remove the backslash
+	$_POST['form_data'] = stripslashes($_POST['form_data']);
+	// parses query strings and sets the parsed values into the $_POST array.
 	wp_parse_str($_POST['form_data'], $_POST);
 	$_POST[$action_for] = $action_for;
 	$_POST['data_for'] = $data_for;
@@ -6384,6 +6449,9 @@ add_action('wp_ajax_educare_process_marks', 'educare_process_marks');
  * It processes options based on a target field and a specific subject.
  */
 function educare_process_options_by() {
+	// Check if the current user has the access this request as 'manage_options' capability (typically administrators).
+	educare_check_access();
+
 	// Check if the AJAX request is to add a new subject
 	if (isset($_POST['add_subject'])) {
 		// Parse the form data from the AJAX request
@@ -6671,7 +6739,7 @@ add_action('wp_ajax_educare_proccess_view_results', 'educare_proccess_view_resul
  * @return void The function processes the promotion of students to a new class and terminates script execution.
  * 
  * @since 1.4.0
- * @last-update 1.4.0
+ * @last-update 1.4.8
  *
  * @example
  * This AJAX action is hooked to the 'educare_proccess_promote_students' action.
@@ -6681,7 +6749,9 @@ add_action('wp_ajax_educare_proccess_view_results', 'educare_proccess_view_resul
  * It processes form data and promotes students to a new class.
  */
 function educare_proccess_promote_students() {
-	// Parse the form data from the AJAX request
+	// Remove the backslash
+	$_POST['form_data'] = stripslashes($_POST['form_data']);
+	// parses query strings and sets the parsed values into the $_POST array.
 	wp_parse_str($_POST['form_data'], $_POST);
 
 	// Set the 'promote' flag to true to initiate the promotion process
