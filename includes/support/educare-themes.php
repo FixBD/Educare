@@ -1,4 +1,10 @@
 <?php
+// Prevent direct access to the file
+if (!defined('ABSPATH')) {
+  exit; // Exit if accessed directly
+}
+
+
 /** 
  * ### Default results style
  * 
@@ -28,22 +34,30 @@
  * ==================================================================
  * 
  * @since 1.0.0
- * @last-update 1.4.1
- * 
+ * @last-update 1.6.0
  * @return void
  */
-
-// Prevent direct access to the file
-if (!defined('ABSPATH')) {
-  exit; // Exit if accessed directly
-}
-
 function educare_results_style() {
-  wp_enqueue_style('educare_results', EDUCARE_URL.'assets/css/results.css', array(), '1.0', 'all');
+  // Enqueue 'bootstrap' stylesheet if not enqueued
+  if (!wp_style_is('bootstrap', 'enqueued')) {
+    wp_enqueue_style('bootstrap', EDUCARE_URL . 'assets/css/bootstrap.min.css');
+  }
 
-	// JavaScript link
-	wp_enqueue_script('jquery'); // That's men script now place at the bottom
-	wp_enqueue_script('recaptcha-v2', 'https://www.google.com/recaptcha/api.js', [], null, true);
+  // Enqueue 'educare-results' stylesheet
+  wp_enqueue_style('educare-results', EDUCARE_URL . 'assets/css/results.css', array(), '2.0', 'all');
+
+  // Enqueue 'jquery' script if not enqueued
+  if (!wp_script_is('jquery', 'enqueued')) {
+    wp_enqueue_script('jquery');
+  }
+
+  // Enqueue 'bootstrap' script if not enqueued
+  if (!wp_script_is('bootstrap', 'enqueued')) {
+    wp_enqueue_script('bootstrap', EDUCARE_URL . 'assets/js/bootstrap.bundle.min.js', array('jquery'), '5.3.3', true);
+  }
+
+  // Enqueue 'recaptcha-v2' script
+  wp_enqueue_script('recaptcha-v2', 'https://www.google.com/recaptcha/api.js', array(), null, true);
 }
 
 add_action('wp_enqueue_scripts', 'educare_results_style');
@@ -62,5 +76,44 @@ add_filter(
   20,
   2
 );
+
+
+function educare_encryptData($data, $educare) {
+  $data = json_encode($data);
+  $ivLength = openssl_cipher_iv_length('aes-256-cbc');
+  $iv = openssl_random_pseudo_bytes($ivLength);
+  $encrypted = openssl_encrypt($data, 'aes-256-cbc', $educare, 0, $iv);
+  return base64_encode($iv . $encrypted);
+}
+
+function educare_decryptData($data, $educare) {
+	$data = base64_decode($data);
+	$ivLength = openssl_cipher_iv_length('aes-256-cbc');
+	$iv = substr($data, 0, $ivLength);
+	$encrypted = substr($data, $ivLength);
+
+  if ($encrypted) {
+    $get_data = openssl_decrypt($encrypted, 'aes-256-cbc', $educare, 0, $iv);
+    
+    if ($get_data) {
+      return json_decode($get_data);
+    }
+  }
+
+  return false;
+}
+
+
+
+function educare_enqueue_front_script() {
+	wp_enqueue_script('educare-front-script', EDUCARE_URL.'assets/js/educare-front.js', array('jquery'), '2.0', false);
+	wp_localize_script( 'educare-front-script', 'educareAjax', array(
+			'url' => admin_url( 'admin-ajax.php' ),
+			'nonce' => wp_create_nonce( 'educare_form_nonce' )
+	) );
+}
+
+add_action( 'admin_enqueue_scripts', 'educare_enqueue_front_script' );
+add_action( 'wp_enqueue_scripts', 'educare_enqueue_front_script' );
 
 ?>

@@ -1,4 +1,9 @@
 <?php
+// Prevent direct access to the file
+if (!defined('ABSPATH')) {
+  exit; // Exit if accessed directly
+}
+
 /**
  * ### Educare Performance
  * 
@@ -8,19 +13,14 @@
  * @last-update 1.4.0
  */
 
-// Prevent direct access to the file
-if (!defined('ABSPATH')) {
-  exit; // Exit if accessed directly
-}
-
 // Create tab
 $action = 'performance';
 $tab = array (
   // Tab name => Icon
-  'promote_students' => 'chart-bar',
-  // 'attendance' => 'clipboard'
+  'promote_students' => 'welcome-learn-more'
 );
 
+educare_check_access();
 educare_tab_management($action, $tab);
 
 ?>

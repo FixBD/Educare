@@ -1,4 +1,9 @@
 <?php
+// Prevent direct access to the file
+if (!defined('ABSPATH')) {
+  exit; // Exit if accessed directly
+}
+
 // Educare default settings
 require_once(EDUCARE_INC.'database/default-settings.php');
 
@@ -6,16 +11,10 @@ require_once(EDUCARE_INC.'database/default-settings.php');
  * ### Check educare database version
  * 
  * @since 1.2.0
- * @last-update 1.2.4
+ * @last-update 1.6.0
  * 
- * @param string $$db for specific db table
  * @return void
  */
-
-// Prevent direct access to the file
-if (!defined('ABSPATH')) {
-  exit; // Exit if accessed directly
-}
 
 function educare_database_check($db) {
 	global $wpdb;
@@ -31,7 +30,6 @@ function educare_database_check($db) {
 		// if database version exists, that's mean our database version 1.2.0+ otherwise our database is old. (educare) old databse not support educare_info key.
 
 		if ($info) {
-
 			if ($db == 'educare_settings') {
 				$current_db = EDUCARE_SETTINGS_VERSION;
 				$istaled_db = $info->$db;
@@ -42,7 +40,6 @@ function educare_database_check($db) {
 				}
 				
 			}
-			
 		} else {
 			// old (educare) database
 			return true;
@@ -73,20 +70,18 @@ function educare_database_table($db = null) {
   $charset_collate = $wpdb->get_charset_collate();
 
 	// Create table for educare (plugins) settings
-  $Educare_settings = $wpdb->prefix."educare_settings";
-
-  $table1 = "CREATE TABLE $Educare_settings (
+  $settings = $wpdb->prefix."educare_settings";
+  $educare_settings = "CREATE TABLE $settings (
 		`id` int(11) NOT NULL AUTO_INCREMENT,
 		`list` varchar(80) NOT NULL,
 		`data` longtext NOT NULL,
 		PRIMARY KEY (id),
 		UNIQUE KEY list (list)
-	) ENGINE=InnoDB DEFAULT CHARSET=latin1";
+	) $charset_collate;";
 
 	// Create table for educare results system
-	$Educare_results = $wpdb->prefix."educare_results";
-   
-	$table2 = "CREATE TABLE $Educare_results (
+	$results = $wpdb->prefix."educare_results";
+	$educare_results = "CREATE TABLE $results (
 		`id` mediumint(11) NOT NULL AUTO_INCREMENT,
 		`Name` varchar(80) NOT NULL,
 		`Roll_No` varchar(80) NOT NULL,
@@ -99,13 +94,14 @@ function educare_database_table($db = null) {
 		`Subject` longtext NOT NULL,
 		`Result` varchar(80),
 		`GPA` varchar(80),
+		`Others` longtext NOT NULL,
+		`Status` varchar(80),
 		PRIMARY KEY (id)
   ) $charset_collate;";
 
 	// Create table for educare (plugins) settings
-  $Educare_students = $wpdb->prefix."educare_students";
-
-  $table3 = "CREATE TABLE $Educare_students (
+  $students = $wpdb->prefix."educare_students";
+  $educare_students = "CREATE TABLE $students (
 		`id` mediumint(11) NOT NULL AUTO_INCREMENT,
 		`Name` varchar(80) NOT NULL,
 		`Roll_No` varchar(80) NOT NULL,
@@ -117,40 +113,41 @@ function educare_database_table($db = null) {
 		`Subject` longtext NOT NULL,
 		`Student_ID` mediumint(11) NOT NULL,
 		`Others` longtext NOT NULL,
+		`Status` varchar(80) NOT NULL,
 		PRIMARY KEY (id)
   ) $charset_collate;";
 
 	// Create table for educare (plugins) settings
-  $Educare_marks = $wpdb->prefix."educare_marks";
-
-  $table4 = "CREATE TABLE $Educare_marks (
+  $marks = $wpdb->prefix."educare_marks";
+  $educare_marks = "CREATE TABLE $marks (
 		`id` mediumint(11) NOT NULL AUTO_INCREMENT,
 		`Class` varchar(80) NOT NULL,
+		`Group` varchar(80) NOT NULL,
 		`Exam` varchar(80) NOT NULL,
 		`Year` varchar(80) NOT NULL,
 		`Marks` longtext NOT NULL,
 		`Details` longtext NOT NULL,
-		Status varchar(80) NOT NULL,
+		`Others` longtext NOT NULL,
+		`Status` varchar(80) NOT NULL,
 		PRIMARY KEY (id)
   ) $charset_collate;";
-	
 
 	require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
 
 	if ($db == 'educare_settings') {
-		dbDelta($table1);
+		dbDelta($educare_settings);
 	} elseif ($db == 'educare_results') {
-		dbDelta($table2);
+		dbDelta($educare_results);
 	} elseif ($db == 'educare_students') {
-		dbDelta($table3);
+		dbDelta($educare_students);
 	} elseif ($db == 'educare_marks') {
-		dbDelta($table4);
+		dbDelta($educare_marks);
 	} else {
 		if (educare_database_check('educare_settings')) {
-			dbDelta($table1);
-			dbDelta($table2);
-			dbDelta($table3);
-			dbDelta($table4);
+			dbDelta($educare_settings);
+			dbDelta($educare_results);
+			dbDelta($educare_students);
+			dbDelta($educare_marks);
 		}
 	}
 
@@ -158,12 +155,11 @@ function educare_database_table($db = null) {
 		// Set educare default settings
 		educare_default_settings();
 	}
-
 }
 
 
 /**
- * ### Clean Educare Data
+ * ### Clean Educare DB
  * 
  * Clean all (educare) data from database, when user remove/delete/uninstall educare from plugin list. If user uncheck Clear Data at educare settings, this action will be ignored.
  * 
@@ -173,8 +169,8 @@ function educare_database_table($db = null) {
  * @return void
  */
 
-function educare_uninstall_action() {
-	if (educare_check_status('clear_data') == 'checked') {
+function educare_uninstall_action($action = null) {
+	if (educare_check_status('clear_data') == 'checked' || $action) {
 		global $wpdb;
 
 		// Educare database
@@ -183,6 +179,9 @@ function educare_uninstall_action() {
 			'educare_results',
 			'educare_students',
 			'educare_marks',
+			'educare_teachers',
+			'educare_payment',
+			'educare_attendance'
 		);
 
 		// Drop/remove table from database
@@ -191,11 +190,14 @@ function educare_uninstall_action() {
 			$wpdb->query( "DROP TABLE IF EXISTS $table" );
 		}
 
+		delete_option('educare_db_sys_tem');
 		// remove educare default students photos
 		delete_option('educare_files_selector');
-
-		// All clean!!!
-
+		// clear dismissed notices data
+		educare_clear_dismissed_notices();
 	}
+
+	delete_option('educare_svr_data');
+	// All clean!!!
 }
 

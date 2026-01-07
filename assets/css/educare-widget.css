@@ -1,0 +1,56 @@
+/**
+* == Educare Widget ==
+*
+* Contributors: FixBD
+* Author URI: http://fixbd.com
+* Source: https://github.com/fixbd/educare/blob/fixbd/assets/css/educare-widget.css
+* @since 1.6.0
+* @version: 1.0.0
+* @last-update 1.6.0
+*/
+
+.educare-widget .logo {
+  margin-bottom: 1rem;
+}
+.educare-widget .logo img {
+  width: 120px;
+}
+
+.educare-widget .text-center {
+  text-align: center;
+}
+
+.educare-widget .my-2 {
+  margin: 1rem 0;
+}
+
+.educare-widget .d-flex {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.educare-widget .d-flex > * {
+  flex: 1;
+  height: 100%;
+}
+
+.educare-widget .d-flex > a {
+  padding: 6px 5%;
+  background-color: rgba(0, 0, 0, 0.05);
+  border-radius: 6px;
+  text-align: center;
+  color: rgb(11, 12, 11);
+  text-decoration: none;
+}
+
+.educare-widget .d-flex > a.all-data {
+  flex: 1;
+  padding: 5%;
+  background-color: rgba(0, 128, 0, 0.05);
+  border-radius: 6px;
+  text-align: center;
+  color: rgb(0, 80, 0);
+  text-decoration: none;
+}

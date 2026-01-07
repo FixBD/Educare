@@ -1,17 +1,15 @@
 /**
-== Clone Field ==
+* == Clone Field ==
 *
-* Contributors: fixbd
-* GitHub link: https://github.com/FixBD/Educare/blob/FixBD/assets/css/style.css
+* Contributors: FixBD
+* Author URI: http://fixbd.com
+* GitHub link: https://github.com/fixbd/educare/blob/fixbd/assets/css/style.css
 * Tags: jQuery field, jQuery form field copy on click, Clone input field
 * Requires: jQuery
-* Tested up to: jQuery v-2.1.3
-* Stable tag: 1.0
-* License: GPLv2 or later
-* License URI: http://www.gnu.org/licenses/gpl-2.0.html
-*
-*****************************************************************
-*****************************************************************
+* Tested up to: jQuery v-3.7.1
+* @since 1.4.5
+* @version 1.0.0
+* @last-update 1.6.0
 */
 
 .fixbd_cloneField * {
@@ -32,8 +30,8 @@
 .fixbd_cloneField input {
 	width: 100%;
 	display: block;
-	margin: 4px 0;
-	border-radius: 4px;
+	margin: 0;
+	border-radius: 18px;
 }
 
 .fixbd_cloneField a {
@@ -43,7 +41,7 @@
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	border-radius: 4px;
+	border-radius: 18px;
 }
 .fixbd_cloneField a:active {
 	background: green;
@@ -54,6 +52,8 @@
 }
 .fixbd_cloneField a.remove_button {
 	background: rgb(210,88,80);
+	padding: 7px;
+	margin: 0 4px;
 }
 .fixbd_cloneField a.disabled {
 	background: #ddd;
@@ -63,7 +63,7 @@
   position: -webkit-sticky;
   position: sticky;
   top: 0;
-  padding: 8px 0;
+  padding: 8px;
   background-color: #eee;
   border-bottom: 1px solid #ccc;
   z-index: 200;
@@ -79,7 +79,7 @@
 	background-color: #e6e6e6;
 	padding: 12px;
 	margin-bottom: 12px;
-	border-radius: 4px;
+	border-radius: 18px;
 }
 .fixbd_cloneField .subField:hover {
 	background-color: #ddd;
@@ -105,3 +105,7 @@ content: " ";
 	border: none;
 }
 
+.cloneField td {
+  margin: 0;
+  padding: 0;
+}

@@ -1,13 +1,11 @@
 /**
- * Educare functionality only (mainly for ajax)
+ * == Educare functionality only (mainly for ajax) ==
  *
  * Autor: FixBD
  * Autor Link: https://fixbd.net
- * Source: https://github.com/fixbd/educare/assets/js/educare.js
- *
+ * Source: https://github.com/fixbd/educare/assets/js/educare-wp.js
  */
 
-// jQuery 
 // Front-End Results System
 jQuery(document).ready(function($) {
   // Ajax functionality for educare_results shortcode

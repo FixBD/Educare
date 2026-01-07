@@ -180,7 +180,11 @@ function educare_get_marks($Subject) {
 		$gpa = array_sum($main_subjects);
 		$gpa += $add_optinal_mark;
 		if (count($main_subjects) >= 0) {
-			$gpa /= count($main_subjects);
+			
+			if ($main_subjects) {
+				$gpa /= count($main_subjects);
+			}
+			
 			// ignore unnecessary digits!
 			$gpa = number_format((float)$gpa, 2, '.', '');
 		}

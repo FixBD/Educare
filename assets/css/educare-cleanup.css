@@ -1,0 +1,47 @@
+/**
+* == Addjust WP default styles with Educare ==
+*
+* Contributors: FixBD
+* Author URI: http://fixbd.com
+* Source: https://github.com/fixbd/educare/blob/fixbd/assets/css/educare-cleanup.css
+* @since 1.6.0
+* @version: 1.0.0
+* @last-update 1.6.0
+*/
+
+/* Normalize wp */
+#wpcontent {
+  padding-left: 0 !important;
+  position: relative;
+}
+
+@media (max-width: 600px) {
+  #wpcontent {
+    padding-top: 46px;
+  }
+}
+
+@media (max-width: 600px) {
+  #wpbody {
+    padding-top: 0;
+  }
+}
+.update-nag {
+	display: none;
+}
+
+#wpfooter {
+  display: none !important;
+}
+/* #wp-admin-bar-wp-logo {
+  display: none;
+} */
+
+.media-modal-content {
+  border-radius: 18px;
+}
+
+a:focus, a:active {
+  outline: 1px solid rgb(13,83,86);
+  box-shadow: none;
+}

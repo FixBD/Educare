@@ -1,4 +1,9 @@
 <?php
+// Prevent direct access to the file
+if (!defined('ABSPATH')) {
+  exit; // Exit if accessed directly
+}
+
 /**
  * ### Manage Educare Students
  * 
@@ -8,17 +13,8 @@
  *  @last-update 1.4.0
  */
 
-// Prevent direct access to the file
-if (!defined('ABSPATH')) {
-	exit; // Exit if accessed directly
-}
-
-if (educare_database_check('educare_students')) {
-	educare_database_table('educare_students');
-}
-
+educare_check_access();
 educare_get_data_management('students');
-// educare_get_data_management('results');
 
 ?>
 

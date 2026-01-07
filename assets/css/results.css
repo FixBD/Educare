@@ -1,25 +1,48 @@
-/** ============================================================
-	* Educare results style dev by FixBD
-	* URL: https://github.com/FixBD/Educare/blob/FixBD/assets/css/results.css
-	* @since v1.0.0
-	* @Version: v1.2.0
-	* @last-update v1.4.2
-	* License - GPL 2.0
-	# Unlimited modify allowed!!!
-============================================================ **/
+/**
+* == Educare Default Results Card ==
+*
+* Contributors: FixBD
+* Author URI: http://fixbd.com
+* Official Website: https://fixbd.com/plugins/educare/add-ons/results-card/default-results-card
+* Autor Link: https://fixbd.com
+* URL: https://github.com/fixbd/educare/blob/fixbd/assets/css/results.css
+* @since 1.0.0
+* @version 1.2.0
+* @last-update 1.6.0
+*/
+
+* {
+	--educare-result-banner-bg: #f1f1f1;
+	--educare-result-banner-color: #202020cc;
+	--educare-result-banner-title: #303030;
+	--educare-result-head-bg: #01a94d;
+	--educare-result-head-color: #fff;
+	--educare-result-thead: #01a94d10;
+	--educare-result-thead-color: #003100;
+	--educare-result-table-border: rgba(0, 0, 0, 0.1);
+}
+
+*,
+*::before,
+*::after {
+	box-sizing: inherit;
+	-webkit-font-smoothing: antialiased;
+	/* word-break: break-word; */
+	word-wrap: break-word;
+}
+
+body {
+	box-sizing: border-box;
+}
 
 /* Global style */
-.educare_results {
-	margin: 28px auto;
-	font-family: "Roboto", Arial, sans-serif;
-}
 .educare_results h1,
 .educare_results h2,
 .educare_results h3,
 .error_notice {
 	text-align: center;
 }
-.educare_results input,
+.educare_results input:not(input[type=radio], input[type=checkbox]),
 .educare_results select,
 .educare_results input[type="number"] {
 	background-color: rgba(255, 255, 255, 0.5);
@@ -54,7 +77,7 @@
   padding: 16px 20px;
   font-weight: 700;
   border: none;
-  border-radius: 4px;   */
+  border-radius: 4px; */
 	margin: 18px auto;
   -webkit-transition: all .2s ease-in-out;
   -moz-transition: all .2s ease-in-out;
@@ -71,7 +94,7 @@
 .educare_results .failed,
 .educare_results .success {
 	background: none;
-	padding: 6px;
+	padding: 0px;
 }
 .educare_results .failed,
 .error_notice b {
@@ -92,16 +115,16 @@
 
 /* Results body & search forms Style */
 .educare_results .results_form,
-.educare_results .result_body,
-.notice-error {
+.educare_results .result_body {
 	padding: 3% 4%;
 	margin: 0 auto;
 	font-size: 16px;
+	max-width: 1280px;
 	border-radius: 12px;
 }
 .educare_results .results_form {
 	background: rgba(255, 255, 255, 0.200);
-	max-width: 720px;
+	max-width: 580px;
 	box-shadow: 0px 5px 30px rgba(0, 0, 0, 0.200);
 }
 .results_form.error_notice,
@@ -115,14 +138,23 @@
 }
 .educare_results .table_body {
 	overflow-x: auto;
-	margin-bottom: 8px;
 }
-.result_body h2,
-.result_body h3 {
-	color: white;
-	background: rgba(0, 156, 0, 0.733);
+.result_body h2 {
 	padding: 22px;
-	margin: 0;
+	margin: 0px !important;
+	color: #202020cc;
+}
+.result_body h2.head {
+	color: var(--educare-result-head-color);
+	background: var(--educare-result-head-bg);
+}
+.default-template h2.details {
+	color: #333;
+	background:#f5f5f5;
+}
+
+.result_body h2.head small {
+	font-size: 50%;
 }
 .result_body h2.students_name {
 	color: inherit;
@@ -141,34 +173,44 @@
 	border-radius: 100%;
 }
 .result_body table {
-	background: #eee;
+	/* background: #eee; */
 	width: 100%;
+	table-layout: unset !important;
 	text-align: left;
 	border-collapse: collapse;
 	margin: 0 auto;
+}
+.results-content table tr:nth-child(even) {
+	background-color: rgba(0, 0, 0, 0.06);
 }
 .result_body .result_details td,
 .result_body .grade_sheet td,
 .result_body .grade_sheet th {
 	text-align: center;
 	padding: 8px;
-	border: 1px solid rgba(20,20,20,0.10);
+	border: 1px solid var(--educare-result-table-border);
+	white-space: nowrap;
+}
+.result_body .grade_sheet thead {
+	color: var(--educare-result-thead-color);
+	background: var(--educare-result-thead);
 }
 .result_body .result_details td {
 	text-align: left;
 }
-.result_body .grade_sheet th:first-child {
-	padding: 0px;
-	min-width: 100%;
-	max-width: 28px;
-}
-.result_body .grade_sheet td:nth-child(2),
-.result_body .grade_sheet th:nth-child(2) {
+.result_body .grade_sheet.list td:nth-child(2),
+.result_body .grade_sheet.list th:nth-child(2) {
 	text-align: left;
-	padding-left: 3%;
 }
-.result_body .grade_sheet th {
-	background: rgba(0,115,0,0.20);
+.result_body .grade_sheet.rattings td,
+.result_body .grade_sheet.rattings th {
+	text-align: left;
+}
+
+.result_body .grade_sheet.list th:first-child,
+.rattings-status {
+	width: 42px;
+	text-align: center !important;
 }
 
 #educare-loading {
@@ -193,66 +235,461 @@
 	border-radius: 8px;
 }
 
+html:dir(rtl) #educareResults,
+html:dir(rtl) #educareResults * {
+  direction: rtl;
+	text-align: right;
+}
+
 
 
 /* Print Style */
 @media print {
-  * {
-    visibility: hidden;
-		/* padding: 0px !important;
-		margin: 0px !important; */
+	/* for clean others style */
+	*:not(#educareResults *) {
+		/* all: unset !important; */
+		height: 0px !important;
+		max-height: 0px !important;
+		min-height: 0px !important;
+		visibility: hidden !important;
+		padding: 0 !important;
+    margin: 0 !important;
+		-webkit-print-color-adjust: exact; 
+    print-color-adjust: exact;
   }
-  body * {
-    visibility: hidden;
+	
+	*:not(#educareResults *) {
+    
   }
+
 	.no_print {
 	  display: none;
 	}
+
 	body,
 	html {
-		width: 1280px;
+		font-size: 1rem !important;
+		width: 1700px;
 		min-width: 100%;
 		padding: 0px !important;
 		margin: 0px !important;
 	}
-	.educare_results,
-	.result_body,
-	.results_form,
-	.result_body .student_photos img {
+
+	.result_body * {
+    visibility: visible;
+  }
+
+	.result_body {
+		width: 100%;
+		min-width: 100%;
+		position: absolute;
+    top: 0;
+		left: 0;
 		margin: 0 auto;
-		width: 50%;
-		height: 10%;
-		max-width: 100px;
-		max-height: 100px;
 	}
-	table, th, td {
-		border: 1px solid #ddd;
+
+	.results-container {
+		border-radius: unset !important;
 	}
+
 	table {
     border-collapse: collapse;
   }
-  .result_body, .result_body * {
-    visibility: visible;
-  }
-  .result_body {
-		width: 100%;
-		min-width: 100%;
-    position: absolute;
-    top: 0;
-		left: 0;
-  }
-	.result_body h3 {
-		color: white !important;
-		background-color: #1db100 !important;
-		-webkit-print-color-adjust: exact; 
+
+	table, th, td {
+		border: 1px solid #ddd;
+		white-space: nowrap;
 	}
+
 	.result_body th {
-		background-color: rgba(0,115,0,0.20) !important;
-		-webkit-print-color-adjust: exact; 
+		background-color: rgba(13,83,86,0.2) !important;
 	}
+
+	h2.Name,
+	h2.details {
+		color: #666 !important;
+		font-size: calc(1.3rem + 1.3vw) !important;
+	}
+
+	h2.details {
+		padding: 4px;
+	}
+
+	.educare_remarks {
+		display: block !important;
+	}
+
+	/* Extra */
+  .result_body,
+  .results-container,
+  body,
+	html {
+    width: 100% !important;
+    min-width: 100% !important;
+    max-width: 100% !important;
+  }
+
+	/* A4 size */
+	/* @page {
+    size: 210mm 297mm;
+  } */
+
+	/* @page {
+    size: A3 landscape;
+  } */
+
+	@page educare-id-card-template-body {
+    size: A4;
+    margin: 0mm 4mm;
+  }
+
+	.educare-id-card-template-body {
+		page: educare-id-card-template-body;
+	}
+
+	.educare-id-card-template-body .results-container {
+    height: 297mm;
+  }
+
+	@page educare-result-page {
+    size: 262mm 372mm;
+    margin: 10mm;
+  }
+
+  body {
+    page: educare-result-page;
+  }
 }
 
-.left-text {
+
+/* Remarks */
+.educare_remarks {
+	margin: 1rem 0px;
+}
+.educare_remarks.print_only_remarks {
+	display: none;
+}
+.educare_remarks table,
+.educare_remarks table th,
+.educare_remarks table td,
+.educare_remarks table td:first-child {
 	text-align: left;
+	border: none;
+	background-color: white;
+}
+.remarks_head {
+	background-color: #f1f1f1 !important;
+}
+.educare_remarks table td:first-child {
+	width: 180px;
+}
+.educare_remarks table td:nth-child(even) {
+	border-bottom: 1px dotted gray;
+}
+.remarks-sign {
+	width: 90px;
+}
+.remarks-date {
+	width: 70px;
+}
+.remarks-sign-field,
+.remarks-date-field {
+	width: 16%;
+}
+th.remarks_head {
+	padding: 8px;
+	text-align: left;
+	background-color: #f1f1f1;
 }
 
+.text-center {
+	text-align: center;
+}
+
+
+
+.fixbd-flex {
+	display: flex;
+	align-items: center;
+}
+.default-template .fixbd-flex.student-photos {
+	justify-content: space-around;
+}
+.fixbd-flex > * {
+	display: flex;
+	flex: 2;
+	align-items: center;
+	justify-content: center;
+}
+.student-details table {
+	display: block;
+}
+
+.banner {
+	background-color: var(--educare-result-banner-bg);
+	color: var(--educare-result-banner-color);
+	text-align: center;
+	transition: 0.3s;
+	padding: 2vw;
+	/* overflow-x: auto; */
+}
+
+.educare-container .banner {
+	background-color: transparent;
+}
+
+/* .banner:hover {
+	background-color: #0b7bcd;
+} */
+/* .banner:hover .title p {
+	color: white;
+	text-shadow: 2px 2px 8px rgba(0,0,0,0.2);
+} */
+.banner .title {
+	flex: 6;
+	display: block;
+}
+
+.banner .title h1  {
+	color: var(--educare-result-banner-title);
+	font-weight: 600;
+	font-size: calc(1.2rem + 2.2vw) !important;
+	padding: 0;
+	margin: 0 0 1vw;
+	font-weight: normal;
+	text-shadow: 2px 2px 8px rgba(0,0,0,0.1);
+}
+
+.title h1 input {
+	font-size: 22px;
+}
+
+.banner .title p  {
+	color: #0A1D2B;
+	font-size: 1.8vw;
+	margin:0;
+	padding: 0;
+}
+
+.banner img  {
+	width: 9vw;
+	/* max-width: 110px; */
+}
+
+.educare-id-card .card {
+  background-image: url('../img/cardbox.svg');
+	background-size: contain;
+  background-position: bottom right;
+  background-repeat: no-repeat;
+}
+
+table td {
+	padding: 8px 12px;
+}
+
+table td input {
+	display: inline;
+}
+
+.fixbd-flex .img {
+	max-width: 120px;
+	background: white;
+	padding: 0;
+	margin: 8px;
+	border: 1px solid rgb(255, 255, 255);
+	border-radius: 8px;
+	overflow: hidden;
+}
+.default-template .fixbd-flex.student-photos .s-photos {
+	justify-content: end;
+}
+
+.student-details {
+	display: inline-block;
+}
+/* .student-photos {
+	background: rgb(13,83,86);
+} */
+.student-photos table {
+	background: none;
+	border: none;
+}
+.student-photos table td {
+	padding: 2px 12px;
+	/* color: white; */
+	font-size: small;
+	border: none;
+}
+
+.results-container {
+	border: 1px solid rgba(3,62,68,0.2);
+	border-radius: 12px;
+	overflow: hidden;
+	margin-bottom: 2rem;
+}
+
+
+/* v1.6.0 */
+#educareResults {
+	font-size: 1rem;
+}
+#educareResults * {
+  box-sizing: border-box;
+}
+#educareResults input:not(input[type=radio], input[type=checkbox]), select, textarea {
+  display: block;
+	font-size: 16px;
+	font-weight: 400;
+  width: 100%;
+  padding: 12px;
+  line-height: 1.5;
+  background-color: rgba(255, 255, 255, 0.5);
+  background-clip: padding-box;
+  border: 1px solid rgba(0,0,0,.18);
+  border-radius: 50px;
+  transition: border-color .15s ease-in-out, box-shadow .15s ease-in-out;
+}
+#educareResults .container {
+  margin: 40px;
+}
+#educareResults .content {
+  padding: 40px;
+}
+#educareResults .box {
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: 1rem;
+}
+#educareResults label {
+  /* padding: 12px 12px 12px 0; */
+  display: inline-block;
+}
+#educareResults button,
+#educareResults input[type=submit] {
+	margin: 6px 6px 0px 0px;
+}
+#educareResults input[type=submit]:hover {
+  background-color: #45a049;
+}
+#educareResults .col-25 {
+  float: left;
+  width: 20%;
+  margin-top: 6px;
+}
+#educareResults .col-75 {
+  float: left;
+  width: 80%;
+  margin-top: 6px;
+}
+/* Clear floats after the columns */
+#educareResults .row:after {
+  content: "";
+  display: table;
+  clear: both;
+}
+
+/* Responsive layout - when the screen is less than 600px wide, make the two columns stack on top of each other instead of next to each other */
+@media screen and (max-width: 600px) {
+  #educareResults .col-25, #educareResults .col-75, input[type=submit] {
+    width: 100%;
+    margin-top: 0;
+  }
+}
+
+
+/* Msgs */
+#educareResults .notice {
+	padding: initial;
+	text-align: center;
+	margin: 20px;
+	border-radius: 1rem;
+}
+#educareResults .notice p {
+	padding: 20px 40px;
+}
+#educareResults .notice-error {
+	background: #ff000010;
+}
+#educareResults .notice-error {
+	background: #15ff0010;
+}
+
+#educareResults .notice-success,
+#educareResults .success {
+	color: green;
+	background: #15ff0010;
+}
+#educareResults .notice-error,
+#educareResults .failed {
+	color: red;
+}
+
+
+/* Table tag */
+th small,
+h2 small {
+  display: block;
+  font-weight: normal;
+}
+
+#educareResults h2 {
+	text-align: center;
+}
+
+#educareResults thead {
+	vertical-align: middle;
+}
+
+
+/* Profile page */
+.profiles-cover {
+  border-bottom: 0px !important;
+  padding: 0px !important;
+  height: auto !important;
+  max-height: auto !important;
+}
+
+.profiles-cover .transbox {
+  padding: 4% !important;
+  background-color: #000000;
+  opacity: 0.6;
+}
+
+.profiles-page section {
+  padding: 0px;
+  margin: 18px auto 0;
+}
+
+.scrollable-row {
+  overflow-x: auto;
+  display: flex;
+}
+
+.scrollable-col {
+  flex: 1 0 300px; /* Set your desired minimum width for each column */
+  margin-right: 10px; /* Add some spacing between columns if needed */
+  white-space: nowrap;
+}
+
+.exam-overview .scrollable-col:nth-of-type(odd) {
+  background-color: rgba(153, 205, 50, 0.2);
+}
+.exam-overview .scrollable-col:nth-of-type(even) {
+  background: rgba(255, 255, 0, 0.2);
+	border-left: 2px dashed rgba(128, 128, 128, 0.5);
+}
+
+/* Educare ID Card */
+.educare-id-card .card {
+	max-width: unset;
+	min-width: unset;
+	width: 700px;
+	height: 370px;
+	position: relative;
+}
+
+.educare-card-footer {
+	position: absolute;
+	bottom: 0;
+	left: 0;
+	right: 0;
+}

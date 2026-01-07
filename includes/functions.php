@@ -4,25 +4,44 @@ if (!defined('ABSPATH')) {
   exit; // Exit if accessed directly
 }
 
+// Define Educare prefix
+define('EDUCARE_PREFIX', 'educare_');
+// Define default students photos
+define('EDUCARE_STUDENTS_PHOTOS', EDUCARE_URL.'assets/img/default.jpg');
+// Define default template thumbnail
+define('EDUCARE_TEMPLATE_THUMBNAIL', EDUCARE_URL.'assets/img/template.svg');
+define('EDUCARE_SVR', 'https://fixbd.com');
+
 /** 
-* Include Educare Admin Menu
+* == Include Educare Admin Menu ==
 *	- All Students
 *	- All Results
-* - Mark Sheed
+*	- All Teachers
+*	- Attendance
+* - Mark Sheet
 *	- Performance
 *	- Management
 *	- Settings
 *	- About us
 */
 require_once(EDUCARE_ADMIN.'menu.php');
-// add grading systems fuctionality
+// Educare supported script for front-end
+require_once(EDUCARE_INC.'support/educare-themes.php');
+// Educare grading systems fuctionality
 require_once(EDUCARE_INC.'support/grading-systems.php');
-// function for default/custom results card
-require_once(EDUCARE_INC.'support/educare-default-results-card.php');
-// Define default students photos
-define('EDUCARE_STUDENTS_PHOTOS', EDUCARE_URL.'assets/img/default.jpg');
-// Define Educare prefix
-define('EDUCARE_PREFIX', 'educare_');
+// Educare results system (front view)
+require_once(EDUCARE_INC.'support/results-systems.php');
+require_once(EDUCARE_ADMIN.'svr.php');
+require_once(EDUCARE_ADMIN.'updater.php');
+require_once(EDUCARE_ADMIN.'db-updater.php');
+// Educare default import system
+require_once(EDUCARE_INC.'support/educare-default-import-system.php');
+// Educare results and certificate shortcode functionality
+require_once(EDUCARE_INC.'support/shortcode/educare-results.php');
+// Educare template list. Custom results card and this functinality
+require_once(EDUCARE_TEMP.'template-functions.php');
+// Educare dashbord widget functinality
+require_once(EDUCARE_INC.'support/dashbord-widget.php');
 
 
 
@@ -53,7 +72,7 @@ function educare_esc_str($str) {
 
 
 /** =====================( Functions Details )======================
- * ### For check settings status
+ * For check settings status
  * 
  * * Usage example: educare_check_status('confirmation');
  * For checking settings status, if specific settings is enable return{checked}. or disabled return{unchecked}.
@@ -92,21 +111,17 @@ function educare_esc_str($str) {
  * 
  * @return string
  */
-
 function educare_check_status($target = null, $display = null) {
 	global $wpdb;
 	$table = $wpdb->prefix."educare_settings";
-	
+   
 	$search = $wpdb->get_results(
     $wpdb->prepare("SELECT * FROM $table WHERE list = %s", 'Settings')
 	);
 	
 	if ($search) {
-		
 		foreach ( $search as $print ) {
-			$data = $print->data;
-			$data = json_decode($data);
-			// $id = $print->id;
+			$data = educare_decrypt_data($print->data);
 
 			if (empty($target)) {
 				return $data;
@@ -116,10 +131,12 @@ function educare_check_status($target = null, $display = null) {
 		if ($display) {
 			$status = 'unchecked';
 			
-			if (property_exists($data->display, $target)) {
-				$name = $data->display->$target;
-				$value = $name[0];
-				$status = $name[1];
+			if (isset($data->display)) {
+				if (property_exists($data->display, $target)) {
+					$name = $data->display->$target;
+					$value = $name->title;
+					$status = $name->status;
+				}
 			}
 
 			if ($status == 'checked') {
@@ -128,8 +145,12 @@ function educare_check_status($target = null, $display = null) {
 				return false;
 			}
 		} else {
-			if (property_exists($data, $target)) {
-				return $data->$target;
+			if ($data) {
+				if (property_exists($data, $target)) {
+					return $data->$target;
+				} else {
+					return false;
+				}
 			} else {
 				return false;
 			}
@@ -140,39 +161,16 @@ function educare_check_status($target = null, $display = null) {
 
 
 /**
- * Checks whether the current user has the necessary permissions to access a specific feature or functionality in WordPress.
- *
- * This function is used to restrict access to certain parts of the website to users with specific privileges.
- *
- * @since 1.4.7
- * @last-update 1.4.7
- * 
- * @param string $msg Optional. The message to display to the user if they do not have the required permissions. Default is 'Sorry! You are not allowed to access it.'
- */
-function educare_check_access($msg = 'Sorry! You are not allowed to access it.') {
-	// Check if the current user has the 'manage_options' capability (typically administrators).
-	if ( ! current_user_can( 'manage_options' ) ) {
-		// Display an error message to the user and terminate script execution.
-		echo educare_show_msg(esc_html__($msg, 'educare'), false);
-		die;
-	}
-}
-
-
-
-
-/**
- * ### Educare settings data
+ * Educare settings data
  * 
  * @since 1.2.0
- * @last-update 1.2.4
+ * @last-update 1.6.0
  * 
  * @param string $list					Class, Group, Setting, Exam, Year, Extra_field
  * @param string $target				for specific data
  * 
  * @return array|bool
  */
-
 function educare_check_settings($list, $target = null) {
 	global $wpdb;
 	$table = $wpdb->prefix."educare_settings";
@@ -184,9 +182,11 @@ function educare_check_settings($list, $target = null) {
 	if ($search) {
 		
 		foreach ( $search as $print ) {
-			$data = $print->data;
-			$data = json_decode($data);
-			// $id = $print->id;
+			if ($list === 'Settings') {
+				$data = educare_decrypt_data($print->data);
+			} else {
+				$data = json_decode($print->data);
+			}
 
 			if (empty($target)) {
 				return $data;
@@ -194,6 +194,10 @@ function educare_check_settings($list, $target = null) {
 		}
 		
 		if ($target) {
+			if (!is_object($data)) {
+				return false;
+			}
+			
 			if (property_exists($data, $target)) {
 				return $data->$target;
 			} else {
@@ -208,68 +212,128 @@ function educare_check_settings($list, $target = null) {
 
 
 /**
- * ### Notify user if anythink wrong in educare (database)
+ * Notify user if anythink wrong in educare (database)
  * 
  * @since 1.2.0
- * @last-update 1.2.4
+ * @last-update 1.6.0
  * 
  * @param bool $fix_form		to get database update form
  * @param string $db				for specific database
  * 
  * @return void|HTML
  */
-
 function educare_database_error_notice($fix_form = null, $db = null) {
-	echo '<div class="educare_post">';
-
 	if ($fix_form) {
-		echo '<div class="logo"><img src="'.esc_url(EDUCARE_URL."assets/img/educare.svg").'" alt="Educare"/></div>';
+		echo '<div class="m-4 text-center"><img src="'.esc_url(EDUCARE_URL."assets/img/educare.svg").'" alt="Educare"/ width="50%" style="max-width: 300px;"></div>';
 
 		if (isset($_POST['update_educre_database'])) {
 			global $wpdb;
-			$database = array (
-				'educare_settings',
-				'educare_results',
-				'educare_students',
-				'educare_marks',
-			);
+			// check if user access this request
+			educare_check_access('settings');
 
 			if ($db == 'educare_settings') {
+				$database = array (
+					'educare_settings',
+					'educare_results',
+					'educare_students',
+					'educare_marks',
+					'educare_teachers',
+					'educare_payment',
+					'educare_attendance'
+				);
+
 				foreach ($database as $edb) {
 					$edb = sanitize_text_field( $edb );
-					$remove = $wpdb->prefix . $edb;
-					$wpdb->query( $wpdb->prepare( "DROP TABLE %s", $remove ) );
+					$remove = $wpdb->prefix.$edb;
+					$wpdb->query( "DROP TABLE $remove" );
 				}
 
 				// new database
 				educare_database_table();
 				
+			} elseif ($db = 'general_update') {
+				// update all database according to the latest version
+				educare_update_database();
 			} else {
 				$edb = sanitize_text_field( $db );
 				$edb = $wpdb->prefix.$edb;
-				$wpdb->query( $wpdb->prepare( "DROP TABLE %s", $edb ) );
-
-				// new db (table)
+				$wpdb->query( "DROP TABLE $edb" );
 				educare_database_table($db);
 			}
 			
-			echo "<div class='notice notice-success is-dismissible'><p>Successfully updated (Educare) database click here to <a href='".esc_url($_SERVER['REQUEST_URI'])."'>Start</a></p></div>";
+			echo '<div class="notice notice-success is-dismissible m-5"><p>'.
+				sprintf(
+					__(
+						'Successfully updated (Educare) database. Click here to <a href="%s">Start</a>.',
+						'educare'
+					),
+					esc_url($_SERVER["REQUEST_URI"])
+				)
+			.'</p></div>';
 		} else {
 			?>
-			<form class="add_results" action="<?php echo esc_url($_SERVER['REQUEST_URI']); ?>" method="post">
+			<form class="alert alert-primary p-5 m-5 rounded" action="<?php echo esc_url($_SERVER['REQUEST_URI']); ?>" method="post">
 				<div class="content">
-					<b>Database Update Required</b>
-					<p>Your current (Educare) database is old or corrupt, you need to update database to run new version <b><?php echo esc_html( EDUCARE_VERSION );?></b> of educare, it will only update <strong>Educare related database</strong>. Click to update database</p>
-					<p><strong>Please note:</strong> You should backup your (Educare) database before updating to this new version (only for v1.0.2 or earlier users).</p>
-					<button class="button" name="update_educre_database">Update Educare Database</button>
+					<?php
+					echo sprintf(
+						__(
+							'<h5>Database Update Required</h5><p>Your current Educare database is outdated or may be corrupted. To run the latest version (<b>%d</b>) of Educare, an update to the database is required. This process will only update Educare-related data, leaving all other WordPress data unaffected. Please click to proceed with the database update.</p><p><strong>Please note:</strong> It is recommended to back up your Educare database before proceeding with the update.</p>',
+							'educare'
+						),
+						esc_html( EDUCARE_VERSION )
+					)
+					?>
+					<button class="btn btn-outline-danger" name="update_educre_database"><?php _e('Update Database', 'educare');?></button>
 				</div>
 			</form>
 			<?php
 		}
 	} else {
-		echo "<div class='notice notice-error is-dismissible'><p>Something went wrong!. Please go to (Educare) settings or <a href='/wp-admin/admin.php?page=educare-settings'>click here to fix</a></p></div>";
+		echo '<div class="notice notice-error is-dismissible m-5"><p>'.sprintf(__(
+			'Oops! Something went wrong. Please visit (Educare) settings or <a href="%s">click here to fix</a>.',
+			'educare'
+		), esc_url(admin_url('admin.php?page=educare-settings'))).'</p></div>';
 	}
-	echo '<div>';
+}
+
+
+/**
+ * Delete confirmation
+ * 
+ * Pop-up delete/remove confirmation if {confirmation} status is => checked.
+ * 
+ * For example, when users delete/remove a Subject, like - Science. this function pop-up (alart) the user like this - You want to remove 'Science' from the 'Subject' list. Are you sure?.
+ * 
+ * Simple but powerful!
+ * 
+ * @since 1.0.0
+ * @last-update 1.0.0
+ * 
+ * @param string $list				Specific keys value: Subject/Class/Exam/Year/Extra Field...
+ * @param string $content			Specific keys value
+ * @param string|int $year		Specific keys value
+ * 
+ * @return string
+ */
+function educare_confirmation($list, $content = null, $year = null) {
+	if (educare_check_status('confirmation') == 'checked') {
+		if ($content) {
+			if ($list == 'remove_results') {
+				if (empty($year)) {
+					$message = "Are you sure to delete all results of the ".esc_html($content)."? It will delete all session results.";
+					echo "onclick='return confirm(".' " '.esc_js( $message ).' " '.")' ";
+				} else {
+					$message = "Are you sure to delete all results of the ".esc_html($content)." in ".esc_html($year)." ? It will delete only your selected year (".esc_html($year).") results.";
+					echo "onclick='return confirm(".' " '.esc_js( $message ).' " '.")' ";
+				}
+			} else {
+				$message = "You want to remove ".esc_html($content)." from the ".esc_html($list)." list. Are you sure?";
+				echo "onclick='return confirm(".' " '.esc_js( $message ).' " '.")' ";
+			}
+		} else {
+			return "onclick='return confirm(".' " '.esc_js( $list ).' " '.")' ";
+		}
+	}
 }
 
 
@@ -278,82 +342,195 @@ function educare_database_error_notice($fix_form = null, $db = null) {
  * Function for educare smart guideline
  * 
  * @since 1.0.0
- * @last-update v1.2.2
+ * @last-update 1.6.0
  * 
  * @param string $guide	  Specific string/msgs
- * @param string $details	Specific var/string
- * @param bool $success A boolean flag indicating whether it's a success message (true) or an error message (false).
+ * @param string $success	messege type (success, info, warning or error)
  * 
- * @return string The HTML markup for the admin notice.
+ *	@return string|html
  */
-
-function educare_guide_for($guide, $details = null, $success = true) {
+function educare_guide_for($guide, $success = 'info') {
 	if (educare_check_status('guide') == 'checked') {
+		$notice_id = sanitize_text_field($guide);
+		$user_id = get_current_user_id();
+		// Retrieve the current array of dismissed notices
+		$dismissed_notices = get_user_meta($user_id, 'educare_dismissed_notices', true);
+
+		if ($dismissed_notices) {
+			if (in_array($notice_id, $dismissed_notices)) return;
+		}
+
 		$url = '/wp-admin/admin.php?page=educare-management&';
 
 		if ($guide == 'add_class') {
-			$guide = "Do you want to add more <b>Class</b>, <b>Exam</b> or <b>Year</b>? click here to add <a href='".esc_url($url . 'Class')."' target='_blank'>Class</a>, <a href='".esc_url($url . 'Exam')."' target='_blank'>Exam</a> or <a href='".esc_url($url . 'Year')."' target='_blank'>Year</a>";
+			$guide = sprintf(
+				__(
+					"Do you want to add more <b>Class</b>, <b>Exam</b> or <b>Year</b>? Click here to add <a href='%s' target='_blank'>Class</a>, <a href='%s' target='_blank'>Exam</a> or <a href='%s' target='_blank'>Year</a>.",
+					'educare'
+				),
+				esc_url($url . 'Class'),
+				esc_url($url . 'Exam'),
+				esc_url($url . 'Year')
+			);
 		}
 		
 		if ($guide == 'add_extra_field') {
-			$guide = "Do you want to add more <b>Field</b> ? click here to <a href='".esc_url($url . 'Extra_field')."' target='_blank'>Add extra field</a>";
+			$guide = sprintf(
+				__(
+					"Click here to <a href='%s' target='_blank'>Add More Fields</a>.",
+					'educare'
+				),
+				esc_url($url . 'Extra_field')
+			);
 		}
 		
 		if ($guide == 'add_subject') {
-			$guide = "Do you want to add more <b>Subject</b> ? click here to <a href='".esc_url($url . 'Subject')."' target='_blank'>Add Subject</a>";
+			$guide = sprintf(
+				__(
+					"Click here to <a href='%s' target='_blank'>Add More Subject</a>. You can also disable, hide and control one or more of these marks term from <a href='%s' target='_blank'>Card Settings</a>.",
+					'educare'
+				),
+				esc_url($url . 'Subject'),
+				esc_url('/wp-admin/admin.php?page=educare-settings&menu=Results_card')
+			);
 		}
 		
 		if ($guide == 'optinal_subject') {
-			$guide = "If this student has an optional subject, then select optional subject. otherwise ignore it.<br><b>Note: It's important, when students will have a optional subject</b>";
+			$guide = __("If this student has an optional subject, then select optional subject. otherwise ignore it.<br><b>Note: It's important, when students will have a optional subject</b>.", 'educare');
 		}
 
 		if ($guide == 'display_msgs') {
-			$guide = "It is not possible to deactivate both (<b>Regi number or Roll number</b>). Because, it is difficult to find students without roll or regi number. So, you need to deactivate one of them (Regi or Roll Number). If your system has one of these, you can select it. Otherwise, it is better to have both selected (<b>Recommended</b>).";
+			$guide = __("It is not possible to deactivate both (<b>Regi number or Roll number</b>). Because, it is difficult to find students without roll or regi number. So, you need to deactivate one of these (Regi or Roll Number). If your system has one of these, you can select it. Otherwise, it is better to have both selected (<b>Recommended</b>).", 'educare');
 		}
 
 		if ($guide == 'db_error') {
-			$guide = "Database connections error. Make sure to alnabled Educare <b>(AI) Problem Detection</b> options. Also, you can go to plugin (Educare) settings and press <b>Reset Settings</b> to fix this error. If you unable to fix it, you can contact your developers or share in Educare support forum.";
+			$guide = __("Something went wrong! Please fix it, Otherwise some of our plugin settings will be not work properly. So, please contact to your developer for solve this issue. Make sure to alabled educare <b>(AI) Problem Detection</b> options. Also, you can go to plugin (Educare) settings and press <b>Reset Settings</b> to fix this error. Hope you understand.", 'educare');
 		}
 
-		if ($success) {
-			$success = 'success';
-		} else {
+		if (!$success) {
 			$success = 'error';
 		}
 
-		return "<div class='notice notice-".esc_attr( $success )." is-dismissible'><p>".wp_kses_post($guide)."</p></div>";
+		return "<div class='notice notice-".esc_attr($success)." is-dismissible educare-notice' data-id='".esc_attr($notice_id)."'><p>".wp_kses_post($guide)."</p></div>";
 	}
 }
 
+
+/**
+ * Function for notice
+ * 
+ * @since 1.6.0
+ * @last-update 1.6.0
+ * 
+ *	@return string|html
+ */
+function educare_dismiss_notice() {
+	if (!isset($_POST['noticeKey'])) {
+    wp_send_json_error();
+  }
+
+	$notice_key = sanitize_text_field($_POST['noticeKey']);
+	// Example: Store notice dismissal in user meta (as an array)
+	$user_id = get_current_user_id();
+
+	if ($user_id) {
+		// Retrieve the current array of dismissed notices
+		$dismissed_notices = get_user_meta($user_id, 'educare_dismissed_notices', true);
+
+		// Ensure the value is an array
+		if (!is_array($dismissed_notices)) {
+			$dismissed_notices = array();
+		}
+
+		// Add the new notice key to the array if not already present
+		if (!in_array($notice_key, $dismissed_notices)) {
+			$dismissed_notices[] = $notice_key;
+		}
+
+		// Update user meta with the updated array
+		update_user_meta($user_id, 'educare_dismissed_notices', $dismissed_notices);
+		wp_send_json_success();
+	} else {
+		wp_send_json_error();
+	}
+}
+
+add_action('wp_ajax_educare_dismiss_notice', 'educare_dismiss_notice');
+
+
+/**
+ * Function for dismiss notice
+ * 
+ * @since 1.6.0
+ * @last-update 1.6.0
+ * 
+ *	@return string|html
+ */
+function educare_clear_dismissed_notices() {
+	wp_clear_scheduled_hook('educare_svr_event');
+
+	// Define the roles to target
+	$roles_to_target = array('administrator', 'educare_admin', 'educare_teachers', 'educare_class_admin');
+
+	// Get users who have one of the specified roles
+	$users = get_users(array(
+		'role__in' => $roles_to_target // Fetch users with any of the roles
+	));
+
+	// Loop through users and delete the meta key
+	foreach ($users as $user) {
+		// Delete the 'educare_dismissed_notices' meta key for each user
+		delete_user_meta($user->ID, 'educare_dismissed_notices');
+	}
+}
 
 
 
 /**
- * Generates HTML markup for displaying success or error messages as WordPress admin notices.
+ * Display a message notice to the user.
  *
- * @param string $msg The message to be displayed in the notice.
- * @param bool $success A boolean flag indicating whether it's a success message (true) or an error message (false).
- * @param bool $sticky A boolean flag indicating whether the notice should be sticky (true) or not (false).
+ * This function displays a message notice to the user in the WordPress admin area.
  *
- * @return string The HTML markup for the admin notice.
+ * @param string $msg The message content to display.
+ * @param bool $success Whether the message is a success message (default: true).
+ * @param bool $sticky Whether the notice should be sticky (default: true).
+ * @return string The HTML markup for the notice.
  */
 function educare_show_msg($msg, $success = true, $sticky = true) {
-	// Determine the notice type (success or error) based on the $success flag
-	if ($success) {
-		$notice_type = 'success';
-	} else {
-		$notice_type = 'error';
+	if (educare_check_status('guide') !== 'checked') {
+		return ''; // Explicit return to avoid undefined behavior
 	}
 
-	// Generate HTML markup for the admin notice based on the $sticky flag
-	if ($sticky) {
-		// If the notice is sticky, wrap it with a div having class 'sticky_msg'
-		return "<div class='sticky_msg'><div class='notice notice-" . esc_attr($notice_type) . " is-dismissible'><p>" . wp_kses_post($msg) . "</p><button class='notice-dismiss'></button></div></div>";
+	// Restrict allowed notice types
+	$allowed_notice_types = array('success', 'error', 'warning', 'info');
+
+	// Determine the notice type
+	if ($success === true) {
+		$notice_type = 'success';
+	} elseif ($success === false) {
+		$notice_type = 'error';
+	} elseif (in_array($success, $allowed_notice_types, true)) {
+		$notice_type = $success;
 	} else {
-		// If the notice is not sticky, just generate the notice HTML without the 'sticky_msg' wrapper
-		return "<div class='notice notice-" . esc_attr($notice_type) . " is-dismissible'><p>" . wp_kses_post($msg) . "</p></div>";
+		$notice_type = 'info'; // Default to 'info' if invalid value is provided
 	}
+
+	// Construct the message
+	$message = '<div class="notice notice-' . esc_attr($notice_type);
+
+	if ($sticky) {
+		$message .= ' is-dismissible">';
+		$message .= '<p>' . wp_kses_post($msg) . '</p>';
+		$message .= '<button class="notice-dismiss"></button></div>';
+		return '<div class="sticky_msg">' . $message . '</div>';
+	}
+
+	$message .= '"><p>' . wp_kses_post($msg) . '</p></div>';
+
+	return $message;
 }
+
+
 
 
 
@@ -375,7 +552,6 @@ function educare_show_msg($msg, $success = true, $sticky = true) {
  * 
  * @return string|int|float|bool / database value
  */
-
 function educare_value($list, $id, $arr = null, $add_students = null) {
 	global $wpdb, $import_from;
 	
@@ -433,14 +609,13 @@ function educare_value($list, $id, $arr = null, $add_students = null) {
 		echo '</select>';
  * 
  * @since 1.0.0
- * @last-update 1.4.2
+ * @last-update 1.2.0
  * 
  * @param string $list			Specific string
  * @param int|string $id		Specific var
  * 
  * @return string
  */
-
 function educare_get_options($list, $id, $selected_class = null, $add_students = null) {
 	global $wpdb;
 	$table = $wpdb->prefix."educare_settings";
@@ -459,7 +634,7 @@ function educare_get_options($list, $id, $selected_class = null, $add_students =
 			$results = $print->data;
 			// $subject = ["Class", "Regi_No", "Roll_No", "Exam", "Name"];
 
-			if ($list == 'Class' or $list == 'Group') {
+			if ($list == 'Class' or $list == 'Group' or $list == 'Rattings') {
 				$results = json_decode($results, true);
 				$cls = array();
 				foreach ( $results as $class => $sub ) {
@@ -490,6 +665,7 @@ function educare_get_options($list, $id, $selected_class = null, $add_students =
 					$results = array_merge($results, $_POST['select_subject']);
 				} else {
 					$all_subject = educare_value('Subject', $id, '', $add_students);
+					$all_subject =  json_decode($all_subject, true);
 
 					if (isset($_POST['Group'])) {
 						$Group = sanitize_text_field($_POST['Group']);
@@ -504,8 +680,6 @@ function educare_get_options($list, $id, $selected_class = null, $add_students =
 							$Group = $all_group->$Group;
 							
 							if ($all_subject) {
-								$all_subject =  json_decode($all_subject, true);
-								
 								foreach ($Group as $sub) {
 									if (key_exists($sub, $all_subject)) {
 										array_push($results, $sub);
@@ -539,6 +713,11 @@ function educare_get_options($list, $id, $selected_class = null, $add_students =
 	$serial = 0;
 	
 	if ($results) {
+		// Sorts an array in descending order
+
+		if ($list == 'Year') {
+			rsort($results);
+		}
 		
 		foreach ( $results as $print ) {
 			$display = str_replace('_', ' ', $print);
@@ -655,7 +834,7 @@ function educare_get_options($list, $id, $selected_class = null, $add_students =
 				
 			}
 			
-			if ($list == 'Class' or $list == 'Group' or $list == 'Exam' or $list == 'Year') {
+			if ($list == 'Class' or $list == 'Group' or $list == 'Exam' or $list == 'Year'  or $list == 'Term'  or $list == 'School') {
 				$selected = '';
 				$check = "";
 				if ($id == $display) {
@@ -676,10 +855,76 @@ function educare_get_options($list, $id, $selected_class = null, $add_students =
 			</tr>
 			<?php
 		} else {
-			echo "<div class='notice notice-error is-dismissible'><p>Currently, You don't have added any ".esc_html(str_replace('_', ' ', $list))." Please, <a href='".esc_url("/wp-admin/admin.php?page=educare-management&$list")."' target='_blank'>Click Here</a> to add ".esc_html(str_replace('_', ' ', strtolower($list))).".</p></div>";
+			echo "<option value=''><div class='notice notice-error is-dismissible'><p>".__('Empty', 'educare')."</p></div><option>";
 		}
 	}
 	
+}
+
+
+
+/**
+ * function for all subject
+ * usage => for html option
+ * echo '<select name="">';
+ * echo educare_get_all_subject(true);
+ * echo '</select>';
+ * 
+ * usage => for retrn array
+ * educare_get_all_subject();
+ * 
+ * @param bool $options 			for return subject with html option structure
+ * @return mixed
+ * @since 1.4.2
+ * @last-update 1.4.2
+ * 
+ */
+ function educare_get_all_subject($options = false, $selected_sub = array()) {
+	$class = educare_get_data('Class');
+	$group = educare_get_data('Group');
+
+	$subject = array();
+
+	// get class wise subject
+	if ($class) {
+		foreach ($class as $class_name) {
+			$sub = educare_get_data('Class', $class_name);
+			if ($sub) {
+				$subject = array_unique(array_merge($subject, $sub));
+			}
+		}
+	}
+
+	// get group wise subject
+	if ($group) {
+		foreach ($group as $group_name) {
+			$sub = educare_get_data('Group', $group_name);
+			if ($sub) {
+				$subject = array_unique(array_merge($subject, $sub));
+			}
+		}
+	}
+
+	if ($options) {
+		if ($subject) {
+			$options = '';
+
+			// $selected_sub = array();
+			if (isset($_POST['Subject'][0]['all'])) {
+				$selected_sub = $_POST['Subject'][0]['all'];
+			}
+
+			foreach ($subject as $value) {
+				// keep selected subject
+				$is_selected = in_array($value, $selected_sub);
+				$options .= '<option value="' . esc_attr($value) . '" ' . selected($is_selected, true, false) . '>' . esc_html($value) . '</option>';
+			}
+
+			return $options;
+		}
+	} else {
+		return $subject;
+	}
 }
 
 
@@ -703,7 +948,6 @@ function educare_get_options($list, $id, $selected_class = null, $add_students =
  * 
  * @return string|html
  */
-
 function educare_get_options_for_subject($data_for, $target, $value = null) {
 	global $wpdb;
 	$table = $wpdb->prefix."educare_settings";
@@ -716,15 +960,21 @@ function educare_get_options_for_subject($data_for, $target, $value = null) {
 			$data = json_decode($data, true);
 
 			if (key_exists($target, $data)) {
-				foreach ($data[$target] as $subject) {
-					$selected = '';
-					$check = "";
-					if ($subject == $value) {
-						$selected = 'selected';
-						$check = '✓';
-					}
+				if ($data[$target]) {
+					echo '<option value="">All Subject</option>';
+					
+					foreach ($data[$target] as $subject) {
+						$selected = '';
+						$check = "";
+						if ($subject == $value) {
+							$selected = 'selected';
+							$check = '✓';
+						}
 
-					echo '<option value="'.esc_attr($subject).'" '.esc_attr($selected).'>'.esc_html($subject).''.esc_html($check).'</option>';
+						echo '<option value="'.esc_attr($subject).'" '.esc_attr($selected).'>'.esc_html($subject).''.esc_html($check).'</option>';
+					}
+				} else {
+					echo '<option value="">All Subject</option><option value="" disabled>Subject Not Found</option>';
 				}
 			}
 		}
@@ -745,7 +995,6 @@ function educare_get_options_for_subject($data_for, $target, $value = null) {
  * 
  * @return mixed
  */
-
 function educare_show_options($target, $current = null, $option_for = 'Class') {
 	global $wpdb;
 	$table = $wpdb->prefix."educare_settings";
@@ -781,94 +1030,6 @@ function educare_show_options($target, $current = null, $option_for = 'Class') {
 }
 
 
-
-/**
- * Display specific class subject
- * 
- * Usage example: educare_get_subject('class name', $id);
- * 
- * @since 1.2.0
- * @last-update 1.2.0
- * 
- * @param string $class			Select class for get subject
- * @param int $id						Select specific database rows by id
- * 
- * @return string
- */
-
-function educare_get_subject($class, $group, $id, $add_students = null) {
-
-	if (isset($_POST['Add'])) {
-		$id = 'add';
-	}
-
-	if (isset($_POST['Group'])) {
-		$group = sanitize_text_field($_POST['Group']);
-	}
-
-	?>
-	<table class="grade_sheet list">
-		<thead>
-			<tr>
-				<th>No</th>
-				<th>Subject</th>
-				<?php 
-				if (!$add_students) {
-					?>
-					<th>Marks</th>
-					<th>Grade</th>
-					<?php
-				}
-				?>
-			</tr>
-		</thead>
-		
-		<tbody>
-			<?php 
-			educare_get_options('Subject', $id, $class, $add_students);
-			?>
-
-			<tbody id="Group_list"></tbody>
-
-		</tbody>
-	</table>
-
-	<div id="sub_msgs"></div>
-
-	<div id="add_to_button">
-		<div id='edit_add_subject' class='educare_button'>
-			<i class='dashicons dashicons-edit'></i>
-		</div>
-	</div>
-	
-	<h4>Optional Subject</h4>
-	
-	<?php echo educare_guide_for('optinal_subject');?>
-
-	<div class="select">
-		<div>
-			<p>Select Group:</p>
-			<?php educare_options_by("Group", $group);?>
-		</div>
-
-		<div>
-			<p>Optional Subject:</p>
-			<select id="optional_subject" class="fields">
-				<?php 
-				echo '<option>None</option>';
-				educare_get_options('optinal', $id, $class, $add_students);
-				?>
-			</select>
-		</div>
-			
-	</div>
-	
-	<input type="hidden" id="optional" type="text">
-	<?php
-}
-
-
-
 /**
  * Specific students data
  * Usage example: educare_get_data_by_student($id, $data);
@@ -881,13 +1042,11 @@ function educare_get_subject($class, $group, $id, $add_students = null) {
  * 
  * @return mixed
  */
-
 function educare_get_data_by_student($id, $data) {
 	global $wpdb;
 	$table = $wpdb->prefix."educare_results";
 	$id = sanitize_text_field($id);
-	$query = $wpdb->prepare( "SELECT * FROM $table WHERE id = %d", $id );
-	$results = $wpdb->get_row($query);
+	$results = $wpdb->get_row("SELECT * FROM $table WHERE id='$id'");
 
 	if ($results) {
 		if ($data == 'Details') {
@@ -895,9 +1054,6 @@ function educare_get_data_by_student($id, $data) {
 			$count = 1; // for add specific tags (div/tr/ul) in every 4 foreach loop
 
 			foreach ($details as $key => $value) {
-				if ($key == 'Photos') {
-					break;
-				}
 				if ($count%2 == 1) {  
 					echo "<tr>";
 				}
@@ -912,26 +1068,107 @@ function educare_get_data_by_student($id, $data) {
 			
 			}
 		}
+
 		if ($data == 'Subject') {
 			$subject = json_decode($results->Subject, true);
 			$serial = 1;
 			$count = 1; // for add specific tags (div/tr/ul) in every 4 foreach loop
-			
-			foreach ($subject as $name => $marks) {
-				$mark = educare_display_marks($marks);
-				echo "<tr>
-				<td>".esc_html($serial++)."</td>
-				<td>".esc_html(str_replace('_', ' ', $name))."</td>
-				<td>".esc_html($mark)."</td>
-				<td>".wp_kses_post(educare_letter_grade($marks))."</td>
-				</tr>";
-			}
+			$results_card = educare_get_card_data();
+			$results_card = educare_requred_data($results_card, true);
+
+			?>
+			<div class="table_body">
+				<table class="grade_sheet">
+					<thead>
+						<tr>
+							<?php
+							$field = array (
+								'no',
+								'subject',
+								'marks',
+								'grade'
+							);
+	
+							foreach ($field as $field_name) {
+								if (key_exists($field_name, $results_card)) {
+									echo '<th>'.esc_html( $results_card[$field_name] ).'</th>';
+								}
+							}
+							?>
+						</tr>
+					</thead>
+					
+					<tbody>
+						<?php
+						
+						foreach ($subject as $name => $marks) {
+							$mark = educare_display_marks($marks);
+							echo "<tr>";
+								if (key_exists('no', $results_card)) echo "<td>".esc_html($serial++)."</td>";
+								if (key_exists('subject', $results_card)) echo "<td>".esc_html(str_replace('_', ' ', $name))."</td>";
+								if (key_exists('marks', $results_card)) echo "<td>".esc_html($mark)."</td>";
+								if (key_exists('grade', $results_card)) echo "<td>".wp_kses_post(educare_letter_grade($marks))."</td>";
+							echo "</tr>";
+						}
+						?>
+					</tbody>
+				</table>
+			</div>
+			<?php
 		}
 
 	} else {
 		echo '<div class="error_results"><div class="error_notice">Something went wrong!</div></div>';
 	}
 
+}
+
+
+
+/**
+ * Get the URL of a WordPress attachment.
+ *
+ * This function retrieves the URL of a WordPress attachment based on the provided attachment ID.
+ *
+ * @since 1.6.0
+ * @last-update 1.6.0
+ * 
+ * @param int|null $id The attachment ID (default: null).
+ * @param bool $blank Whether to return a blank URL if the attachment is not found (default: false).
+ * @return string The URL of the attachment.
+ */
+function educare_get_attachment($id = null, $blank = false) {
+	// Get the attachment URL based on the provided ID
+	$attachment = wp_get_attachment_url($id);
+
+	if ($attachment) {
+		// If attachment URL is found, return it
+		return $attachment;
+	} else {
+		if ($blank) {
+			if ($blank === 'logo1' && $id == 0) {
+				return EDUCARE_URL . 'assets/img/card-logo1.svg';
+			}
+
+			if ($blank === 'logo2' && $id == 0) {
+				return EDUCARE_URL . 'assets/img/card-logo2.svg';
+			}
+
+			// Return a blank URL if requested
+			return false;
+		} else {
+			// Get the default attachment URL from settings
+			$default_attachment = wp_get_attachment_url(get_option('educare_files_selector', 0));
+
+			if ($default_attachment) {
+				// Return the default attachment URL if available
+				return $default_attachment;
+			} else {
+				// Return a predefined default URL
+				return EDUCARE_STUDENTS_PHOTOS;
+			}
+		}
+	}
 }
 
 
@@ -947,50 +1184,38 @@ function educare_get_data_by_student($id, $data) {
  * @last-update 1.0.0
  * 
  * @param string $list		Getting file selector for Add/Update/Default
- * @param object $print		Get old data when update
+ * @param object $print	Get old data when update
  * 
  * @return null|HTML
  */
-
-function educare_files_selector($type, $print) {
+function educare_files_selector($print) {
 	wp_enqueue_media();
-	$educare_save_attachment = get_option( 'educare_files_selector', 0 );
 	
-	$display = 'none';
-	$default_photos = wp_get_attachment_url( get_option( 'educare_files_selector' ) );
-	$educare_attachment_id = get_option( 'educare_files_selector' );
-	
-	if ($default_photos == null) {
-		$default_img = EDUCARE_URL.'assets/img/default.jpg';
-    } else {
-		$default_img = $default_photos;
-	}
-	
-	if ($type == 'update') {
-		$img = $print->Photos;
-    $img_type = "Students Photos";
-		$guide = "If you change students photos, Please upload or select  a custom photos from gallery that's you want!";
+	$attachment_id = get_option( 'educare_files_selector' );
+	$default_img = educare_get_attachment($attachment_id);
+
+	if (isset($_POST['Others']['Photos'])) {
+		$img = sanitize_text_field($_POST['Others']['Photos']);
+		$img_src = wp_get_attachment_url( $img );
+    $img_type = __("Custom Photos", 'educare');
+		$guide = __("If you change photos, Please upload or select  a custom photos from gallery that's you want!", 'educare');
 	} else {
-		$img = $default_img;
-		$img_type = "Default Photos";
-		$guide = "Current students photos are default. Please upload or select  a custom photos from gallery that's you want!";
+		$img = '';
+		$img_src = $default_img;
+		$img_type = __("Default Photos", 'educare');
+		$guide = __("Current photos are default. Please upload or select  a custom photos from gallery that's you want!", 'educare');
 	}
 
 	if ($img == 'URL' or $img == '') {
-		$img = $default_img;
+		$img_src = $default_img;
 	}
-
-	if ($type != 'update') {
-		$default_img = EDUCARE_URL.'assets/img/default.jpg';
-	}
-	
 	?>
 
 	<!-- Default value -->
 	<div class="educare_data_field">
-		<div class="educareFileSelector_educare_attachment_id" data-value="<?php echo esc_url($educare_attachment_id);?>"></div>
+		<div class="educareFileSelector_img_src" data-value="<?php echo esc_url($img_src);?>"></div>
 		<div class="educareFileSelector_default_img" data-value="<?php echo esc_url($default_img);?>"></div>
-		<div class="educareFileSelector_img" data-value="<?php echo esc_attr($img);?>"></div>
+		<div class="educareFileSelector_img" data-value="<?php echo esc_url($img);?>"></div>
 		<div class="educareFileSelector_img_type" data-value="<?php echo esc_html($img_type);?>"></div>
 		<div class="educareFileSelector_guide" data-value="<?php echo esc_html($guide);?>"></div>
 	</div>
@@ -998,43 +1223,35 @@ function educare_files_selector($type, $print) {
 	<div id='educare_files_selector_disabled'>
 		<div id='educare_files_uploader' class='educare_upload add'>
 			<div class='educare_files_selector'>
-				<img id='educare_attachment_preview' class='educare_student_photos' src='<?php echo esc_url($img);?>'/>
-				
+				<img id='educare_attachment_preview' class='educare_student_photos' src='<?php echo esc_url($img_src);?>'/>
 				<h3 id='educare_img_type' class='title'><?php echo esc_html($img_type);?></h3>
 			</div>
 			
 			<p id='educare_guide'><?php echo esc_html($guide);?></p>
 			<div id='educare_default_help'></div>
 				
-			<input type="hidden" name='Photos' id='educare_attachment_url' value='<?php echo esc_attr(esc_url($img));?>'>
+			<input type="hidden" name='educare_attachment_url' id='educare_attachment_url' value='<?php echo esc_attr($img_src);?>'>
+			<input type="hidden" name='Others[Photos]' id='educare_attachment_id' value='<?php echo esc_attr($img);?>'>
 		
-			<input type='button' id='educare_attachment_title' class="button full" value='Please Select a students photos' disabled>
+			<input type='button' id='educare_attachment_title' class="btn btn-sm my-1 full" value='<?php _e('Please select a photos', 'educare');?>' disabled>
 			
-			<input type='button' id='educare_attachment_clean' class='button educare_clean full' value='&#xf171 Undo' style='display: <?php echo esc_attr($display);?>'>
+			<input type='button' id='educare_attachment_clean' class='btn btn-sm btn-danger my-1 educare_clean full' value='&#xf171 Undo' style='display: none'>
 
 			<div class="select">
-				<input id="educare_upload_button" type="button" class="button" value="<?php _e( 'Upload Students Photos' ); ?>"/>
+				<input id="educare_upload_button" type="button" class="btn btn-sm btn-success my-1" value="<?php _e('Upload Photos', 'educare');?>">
 
 				<?php
-				if ($type == 'add_results') {
-					echo "<input type='hidden' id='educare_attachment_default'>";
+				if ($img_src != $default_img) {
+					echo "<input type='button' id='educare_attachment_default' class='button' onClick='".esc_js('javascript:;')."' value='Use Default photos'>";
 				} else {
-					if ($img != $default_img) {
-						echo "<input type='button' id='educare_attachment_default' class='button' onClick='".esc_js('javascript:;')."' value='Use Default photos'>";
-					} else {
-						echo "<input type='hidden' id='educare_attachment_default'>";
-					}
+					echo "<input type='hidden' id='educare_attachment_default'>";
 				}
 				?>
 			</div>
-
-			<input type="hidden" name='educare_attachment_id' id='educare_attachment_id' value='<?php echo esc_attr(get_option( 'educare_files_selector' )); ?>'>
-
 		</div>
 	</div>
 
 	<?php
-
 }
 
 
@@ -1046,20 +1263,16 @@ function educare_files_selector($type, $print) {
 ====================( BEGIN CRUD FUNCTIONALITY )===================*/
 
 /**
- * sample array
-$array = array(
-  'Roll_No' => 1,
-  'Regi_No' => 2,
-  'Year' => 2022,
-  'Class' => 'Class 6',
-  'Exam' => ''
-);
- */
-
-
-/**
  * Requred form fields
  * 
+ * sample array
+	$array = array(
+		'Roll_No' => 1,
+		'Regi_No' => 2,
+		'Year' => 2022,
+		'Class' => 'Class 6',
+		'Exam' => ''
+	);
  * Usage example: educare_requred_data(educare_check_status('display');
  * 
  * @since 1.3.0
@@ -1071,105 +1284,119 @@ $array = array(
  * 
  * @return array
  */
-
 function educare_requred_data($array, $value = null, $all = null) {
   $default = $array;
   $requred = array();
 
-  foreach ($default as $key => $val) {
-    if ($all) {
-      if ($value) {
-        $requred[$key] = $val[0];
-      } else {
-        array_push($requred, $key);
-      }
-    } else {
-      if ($val[1] == 'checked') {
-        
-        if ($value) {
-          $requred[$key] = $val[0];
-        } else {
-          array_push($requred, $key);
-        }
-        
-      }
-    }
-  }
+	if ($default) {
+		foreach ($default as $key => $val) {
+			if ($all) {
+				if ($value) {
+					$requred[$key] = $val->title;
+				} else {
+					array_push($requred, $key);
+				}
+			} else {
+				if ($val->status == 'checked') {
+					
+					if ($value) {
+						$requred[$key] = $val->title;
+					} else {
+						array_push($requred, $key);
+					}
+					
+				}
+			}
+		}
+	}
 
   return $requred;
 }
 
 
 
-
-
 /**
- * Combine fields from two arrays into a new associative array while optionally ignoring specified keys.
- *
- * @param array $array1 The first array of fields to combine.
- * @param array|null $ignore An optional array of keys to ignore in the resulting array.
- * @param array|null $array2 An optional second array to combine with the first array. If not provided, it uses $_POST.
- * @param bool|null $normal An optional flag to indicate whether to use normal or required data for $array1.
- *
- * @return array The combined array containing values from $array2 with keys from $array1.
+ * Combine requred data with forms field ($_POST)
+ * 
+ * Usage example: educare_combine_fields($array);
  * 
  * @since 1.3.0
  * @last-update 1.3.0
  * 
+ * @param array $array		for combine with $_POST
+ * @param array $ignore	for remove specific key from array
+ * @return array
  */
 function educare_combine_fields($array1, $ignore = null, $array2 = null, $normal = null) {
-	// If $normal is not specified, use educare_requred_data function to get required data from $array1
 	if (!$normal) {
 		$array1 = educare_requred_data($array1);
 	}
-
-	// If $array2 is not specified, use $_POST as the second array
+  
 	if (!$array2) {
 		$array2 = $_POST;
 	}
+  
+  $combine = array();
 
-	// Initialize an empty array to store the combined values
-	$combine = array();
+  foreach ($array1 as $value) {
+    if (key_exists($value, $array2)) {
+      $combine[$value] = sanitize_text_field( $array2[$value] );
+    } else {
+      $combine[$value] = false;
+    }
+  }
 
-	// Iterate through the elements of $array1
-	foreach ($array1 as $value) {
-		// Check if the key exists in $array2
-		if (key_exists($value, $array2)) {
-			// Sanitize the text field value and add it to the combined array
-			$combine[$value] = sanitize_text_field($array2[$value]);
-		} else {
-			// If the key does not exist in $array2, set its value to false in the combined array
-			$combine[$value] = false;
-		}
-	}
-
-	// If $ignore array is provided, remove the specified keys from the combined array
-	if ($ignore) {
-		foreach ($ignore as $remove) {
-			unset($combine[$remove]);
-		}
-	}
-
-	return $combine;
+  if ($ignore) {
+    foreach ($ignore as $remove) {
+      unset($combine[$remove]);
+    }
+  }
+  
+  return $combine;
 }
 
+
+
+/**
+ * Combine keys and properties from a stdClass object based on provided keys.
+ *
+ * This function combines keys and properties from a stdClass object based on the provided keys.
+ *
+ * @param array $keys An array of keys to filter the properties.
+ * @param stdClass $object The stdClass object containing properties.
+ * @return array An associative array with filtered keys and their corresponding values.
+ */
+function educare_combineKeysAndProperties(array $keys, stdClass $object): array {
+	$result = array();
+
+	// Loop through each property of the stdClass object
+	foreach ($object as $property => $value) {
+		// Check if the property is in the provided keys array
+		if (in_array($property, $keys)) {
+			// Add the property and its value to the result array
+			$result[$property] = $value;
+		}
+	}
+
+	return $result;
+}
 
 
 
 /**
  * Check if specific array key is empy or not
+ * 
  * Same as array_keys($array, null);
  * 
  * @since 1.3.0
  * @last-update 1.4.0
  * 
- * @param array $array			for check empty
- * @param bool $normal 			for ignore educare settings status
- * @param bool $text_only		To return messege only (without <p> tag)
+ * @param array $array		for check empty
+ * @param bool $normal 		for ignore educare settings status
+ * @param bool $text_only	return without extra html
  * @return bool|string
  */
-
-function educare_is_empty(array $array, $normal = null, $text_only = null) {
+function educare_is_empty(array $array, $normal = null, $text_only = null, $data_only = null) {
   $empty_key = array();
 
   // Loop to find empty elements 
@@ -1178,7 +1405,22 @@ function educare_is_empty(array $array, $normal = null, $text_only = null) {
 			$val = $key;
 			$val = str_replace('_', ' ', $val);
 		} else {
-			$val = educare_check_status($key, true);
+			if ($key == 'user_login') {
+				$val = 'User Name';
+			}
+			elseif ($key == 'user_email') {
+				$val = 'User Email';
+			}
+			elseif ($key == 'user_pass') {
+				$val = 'User Password';
+			} else {
+				$val = educare_check_status($key, true);
+
+				if (!$val) {
+					$val = str_replace('_', ' ', $key);
+				}
+			}
+			
 		}
 
     if(empty($value)) {
@@ -1189,15 +1431,16 @@ function educare_is_empty(array $array, $normal = null, $text_only = null) {
 
   // return $empty_key;
   if ($empty_key) {
-		$msg = 'You must fill <b>' . implode(', ', $empty_key) . '</b>';
+		if ($data_only) {
+			return $empty_key;
+		}
+
+		$msg = sprintf(__('You mast fill <b>%s</b>', 'educare'), implode(', ', $empty_key));
 
 		if ($text_only) {
 			return $msg;
 		} else {
-			$msgs = "<div class='notice notice-error is-dismissible'><p>";
-			$msgs .= $msg;
-			$msgs .= "</p></div>";
-			return $msgs;
+			return educare_show_msg($msg, false);
 		}
 
   } else {
@@ -1208,7 +1451,7 @@ function educare_is_empty(array $array, $normal = null, $text_only = null) {
 
 
 /** 
- * ### Auto create sql command
+ * Auto create sql command
  * 
  * Usage example: educare_get_sql($requred);
  * array to sql command
@@ -1219,10 +1462,8 @@ function educare_is_empty(array $array, $normal = null, $text_only = null) {
  * @last-update 1.3.0
  * 
  * @param array $requred		for create sql
- * @param array $cond				for specific condition like AND, OR
  * @return string
  */
-
 function educare_get_sql($requred, $cond = 'AND') {
   ob_start();
 
@@ -1250,747 +1491,66 @@ function educare_get_sql($requred, $cond = 'AND') {
 
 
 /**
- * Gennarete dynamic sql
- * 
- * @param string $roles           for select table
- * @param array $requred_fields   for generate sql
- * @param bool $crud              if data for CRUD process
- * 
- * @return string (sql)
- */
-
- function educare_get_dynamic_sql($roles, $requred_fields, $crud = false) {
-	global $wpdb;
-	// Define table name
-	$table = $roles;
-	$table_name = $wpdb->prefix.EDUCARE_PREFIX.$table;
-
-	// Build the SELECT query
-	if ($requred_fields) {
-		$sql = "SELECT * FROM $table_name WHERE ";
-	} else {
-		$sql = "SELECT * FROM $table_name ";
-	}
-	
-	$prepared_values = array();
-
-	foreach ($requred_fields as $key => $value) {
-		// We need to encrypt the plain text password using wp_hash_password() to match the stored encrypted password in the user_pass field. But  wp_hash_password() generates a different hash each time it's called, even for the same password. In that case, you won't be able to directly compare the encrypted password stored in the database with the hashed password generated by wp_hash_password(). To verify the password, you can use the wp_check_password() function instead.
-		if ($key == 'user_pass') {
-			continue;
-			// $value = wp_check_password($value);
-		}
-
-		$sql .= "`$key`=%s AND ";
-
-		$prepared_values[] = $value;
-	}
-
-	// Check to ignore specific ID
-	if ($crud) {
-		if (isset($_POST['id']) && !empty($_POST['id'])) {
-			$id = sanitize_text_field( $_POST['id'] );
-			$sql .= $wpdb->prepare('id <> %d AND ', $id);
-		}
-	}
-	
-	// Remove the last 'AND'
-	$sql = rtrim($sql, 'AND ');
-	$sql = $wpdb->prepare($sql, $prepared_values);
-	return $sql;
-}
-
-
-
-/**
- *  Add/Edit/Delete students and results
- * Processing students and results forms
- * 
- * @since 1.3.0
- * @last-update 1.3.0
- * 
- * @param bool $add_students		if data for students
- * @param bool $import_data			if data for import system
- * @return mixed
- */
-
-function educare_crud_data($add_students = null, $import_data = null) {
-  global $wpdb, $update_data, $table_name, $requred_title, $requred_data, $requred_fields, $msg, $import_from;
-	$table_name = $wpdb->prefix . 'educare_'.$add_students.'';
-	$msg = $add_students;
-
-	if ($add_students != 'results') {
-    $ignore = array(
-			'Name',
-      'Exam'
-    );
-  } else {
-		$ignore = array(
-			'Name'
-    );
-  }
-  
-  $requred = educare_check_status('display');
-	$requred_title = educare_requred_data($requred, true, true);
-  $requred_fields = educare_combine_fields($requred, $ignore);
-  $requred_data = educare_combine_fields($requred);
-
-  // show error/success notice
-  function notice($msgs, $print = null, $add_students = null) {
-    global $requred_data, $requred_title, $msg;
-
-    foreach ($requred_data as $key => $value) {
-      $$key = sanitize_text_field($value);
-    }
-
-    foreach ($requred_title as $key => $value) {
-      $var = strtolower($key);
-
-			if (isset($requred_data[$key])) {
-				if ($print) {
-					if(property_exists($print, $key)) {
-						$$var = "<br>$value: <b>".$print->$key."</b>";
-					}
-				} else {
-					$$var = "<br>$value: <b>$requred_data[$key]</b>";
-				}
-			} else {
-				$$var = '';
-			}
-    }
-    
-    if ((isset($_POST['id']))) {
-      $id = sanitize_text_field($_POST['id']);
-    } elseif ($print) {
-      $id = $print->id;
-    } else {
-      $id = '';
-    }
-
-		$link = admin_url();
-		$link .= 'admin.php?page=educare-all-'.$add_students.'';
-		
-		if ($add_students == 'results') {
-			$profiles = '/'.educare_check_status("results_page");
-		} else {
-			$profiles = $link . '&profiles=' . $id;
-		}
-
-		// Security nonce for form requests.
-		$nonce = wp_create_nonce( 'educare_form_nonce' );
-		$crud_nonce = wp_create_nonce( 'educare_crud_data' );
-      
-    $forms = "<form method='post' action='' class='text_button'>
-			<input type='hidden' name='nonce' value='".esc_attr($nonce)."'>
-			<input type='hidden' name='delete_nonce' value='".esc_attr($crud_nonce)."'>
-      <input name='id' value='".esc_attr($id)."' hidden>
-      <input type='submit' name='educare_results_by_id' formaction='".esc_url($profiles)."' class='educare_button' value='&#xf177' formtarget='_blank'>
-			<input type='submit' name='edit_by_id' formaction='".esc_url($link)."&update-data' class='educare_button' value='&#xf464'>
-			<input type='submit' name='delete' formaction='".esc_url($_SERVER['REQUEST_URI'])."' class='educare_button' value='&#xf182' onClick='".esc_js( 'return educareConfirmation()' )."'>
-    </form>";
-    
-    // create and show msgs
-    if ($msgs == 'added' or $msgs == 'updated') {
-      echo "<div class='notice notice-success is-dismissible'><p>";
-        echo "Successfully ".esc_html($msgs)." ".esc_html($msg)."." . wp_kses_post($name . $class . $roll_no . $regi_no) . $forms;
-      echo "</p></div>";
-    }
-    
-    if ($msgs == 'exist') {
-      echo "<div class='notice notice-error is-dismissible'><p>Sorry, ".esc_html($msg)." is allready exist." . wp_kses_post($name . $class) . $forms;
-      echo "</p></div>";
-    }
-    
-    if ($msgs == 'not_found') {
-      echo "<div class='notice notice-error is-dismissible'><p>Result not found. Please try again</p></div>";
-    }
-  }
-
-  function educare_insert_data($add_students = null) {
-		// Check user capability to manage options
-		if (!current_user_can('manage_options')) {
-			exit;
-		}
-		
-		// Verify the nonce to ensure the request originated from the expected source
-		educare_verify_nonce('educare_crud_data');
-		
-    global $wpdb, $table_name, $requred_fields;
-		
-		if (educare_check_status('Name', true)) {
-			$data['Name'] = sanitize_text_field($_POST['Name']);
-		}
-
-    foreach ($requred_fields as $key => $value) {
-      $data[$key] = $value;
-    }
-
-		if (isset($_POST['Group'])) {
-			$data['Group'] = sanitize_text_field($_POST['Group']);
-		} else {
-			$data['Group'] = '';
-		}
-
-    // unset($requred_fields['Year']);
-    $Photos = sanitize_text_field($_POST['Photos']);
-    $Details = educare_array_slice($_POST, 'Year', 'end_exatra_fields');
-
-		if ($Photos == esc_url('URL')) {
-			$Details['Photos'] = 'URL';
-		} else {
-			$Details['Photos'] = $Photos;
-		}
-    
-    $Details = json_encode($Details);
-
-    $data['Details'] = $Details;
-
-    if ($add_students != 'results') {
-      $Subject = educare_array_slice($_POST, 'end_exatra_fields', 'Group');
-      $Subject = json_encode($Subject);
-			$data['Subject'] = $Subject;
-    } else {
-			$Subject = educare_array_slice($_POST, 'GPA', 'Group');
-      $Subject = json_encode($Subject);
-      $Result = sanitize_text_field($_POST['Result']);
-      $GPA = sanitize_text_field($_POST['GPA']);
-
-      $data['Subject'] = $Subject;
-      $data['Result'] = $Result;
-      $data['GPA'] = $GPA;
-		}
-    
-    if (isset($_POST['id'])) {
-      $id = sanitize_text_field($_POST['id']);
-      $wpdb->update($table_name, $data, array('ID' => $id));
-    } else {
-      $wpdb->insert($table_name, $data);
-    }
-    
-    // Show success msgs
-    if($wpdb->insert_id > 0) {
-      // echo 'Added';
-      $id = $wpdb->insert_id;
-			$query = $wpdb->prepare("SELECT * FROM $table_name WHERE id = %d", $id);
-      $insert_data = $wpdb->get_row($query);
-			notice('added', $insert_data, $add_students);
-    } else {
-      // echo 'Updated';
-			$query = $wpdb->prepare("SELECT * FROM $table_name WHERE id = %d", $id);
-      $insert_data = $wpdb->get_row($query);
-			notice('updated', $insert_data, $add_students);
-    }
-  }
-
-	if (isset($_POST['id'])) {
-		$id = sanitize_text_field($_POST['id']);
-	} else {
-		$id = false;
-	}
-
-  if (!educare_is_empty($requred_fields) or $id) {
-    if (isset($_POST['id']) and !isset($_POST['update'])) {
-      $sql = "id='$id'";
-    } else {
-      $sql = educare_get_sql($requred_fields);
-    }
-    
-    $select = "SELECT * FROM $table_name WHERE $sql";
-    $results = $wpdb->get_results($select);
-
-    if ($results) {
-      
-      foreach ($results as $print) {
-				
-				if ($import_data) {
-					return $print;
-				}
-
-        if (isset($_POST['edit']) or isset($_POST['edit_by_id'])) {
-          // return $results;
-          // echo 'edit forms';
-          if ($add_students != 'results') {
-            educare_get_results_forms($print, true);
-          } else {
-            educare_get_results_forms($print);
-          }
-        } elseif (isset($_POST['update'])) {
-
-          if ($id == $print->id) {
-            // ignore current data
-            $update_data = true;
-            // global $print;
-            continue;
-          } else {
-            // duplicate data exist
-            notice('exist', $print, $add_students);
-            return;
-          }
-          
-        } elseif (isset($_POST['delete'])) {
-					// Check user capability to manage options
-					if (!current_user_can('manage_options')) {
-						exit;
-					}
-
-					// Verify the nonce to ensure the request originated from the expected source
-					if (isset($_POST['delete_nonce'])) {
-						educare_verify_nonce('educare_crud_data', 'delete_nonce');
-					} else {
-						educare_verify_nonce('educare_crud_data');
-					}
-					
-					
-					$query = $wpdb->prepare("DELETE FROM $table_name WHERE id = %d", $id);
-          $wpdb->query($query);
-          echo '<div class="notice notice-success is-dismissible"><p>Succesfully deleted '.esc_html($msg).'.</p></div>';
-          return;
-        } else {
-          // if action for add but data already exist 
-          // if (isset($_POST['Add']))
-					notice('exist', $print, $add_students);
-          return;
-        }
-
-      }
-
-    } else {
-
-      // if action for add data
-      if (isset($_POST['Add'])) {
-
-				educare_insert_data($add_students);
-
-      } elseif (isset($_POST['update'])) {
-        $update_data = true;
-      } else {
-        echo "<div class='sticky_msg'><div class='notice notice-error is-dismissible'><p>Sorry, ".esc_html($msg)." not found. Please try again</p></div></div>";
-
-				if (!$import_from) {
-					educare_get_search_forms();
-				}
-      }
-      
-    }
-
-  } else {
-    // Empty requred fields
-    if ($_POST) {
-      echo educare_is_empty($requred_fields, 'display');
-    }
-    
-    if (isset($_POST['edit']) or isset($_POST['edit_by_id'])) {
-			educare_get_search_forms();
-    }
-
-    return;
-  }
-  
-  if ($update_data) {
-		educare_insert_data($add_students);
-  }
-
-}
-
-
-
-/**
- * Print students results forms for add/update/delete students results
- * 
- * Usage example: educare_get_results_forms($print, 'add/update')
- * 
- * it's only print forms field (Name, Class, Exam, Roll No, Regi No, Year...)
- * required educare_crud_data() function for work properly
- * Actually, this function only for print forms under educare_crud_data();
- * 
- * @since 1.0.0
- * @last-update 1.4.2
- * 
- * @param object $print				Getting object value
- * @param bool $add_students		if forms for add students (since 1.2.4)
- * 
- * @return null||HTML
- */
-
-function educare_get_results_forms($print, $add_students = null) {
-	global $requred_title, $requred_data, $requred_fields, $import_from;
-
-	foreach ($requred_data as $key => $value) {
-		if ($print) {
-			$id = $print->id;
-			$Group = $print->Group;
-
-			if ($import_from) {
-				$submit = 'Add';
-			} else {
-				$submit = 'update';
-			}
-
-			if (property_exists($print, $key)) {
-				$$key = $print->$key;
-			} else {
-				$$key = $value;
-			}
-		} else {
-			$id = $Group = '';
-			$$key = sanitize_text_field($value);
-			$submit = 'Add';
-		}
-	}
-
-	?>
-	
-	<div id="educare-form">
-		<form id="crud-forms" class="add_results" action="" method="post">
-			<div class="content">
-				
-				<?php 
-				// Security nonce for form requests.
-				$nonce = wp_create_nonce( 'educare_crud_data' );
-				echo '<input type="hidden" name="nonce" value="'.esc_attr($nonce).'">';
-				
-				if (isset($_POST['edit']) or isset($_POST['edit_by_id']) or $import_from) {
-					$photos = $print->Details;
-					$photos = json_decode($photos);
-					
-					educare_files_selector('update', $photos);
-
-					if (!$import_from) {
-						echo "<input type='hidden' id='id_no' name='id' value='".esc_attr($id)."'/>";
-					}
-				} else {
-					// echo "<input type='hidden' id='id_no'>";
-					educare_files_selector('add_results', '');
-				}
-				?> 
-				<h2>Students Details</h2>
-					
-				<div class="select">
-					<label for="Class" class="labels" id="class"></label>
-					<label for="Exam" class="labels" id="exam"></label>
-				</div>
-				
-				<?php
-					$check_name = educare_check_status('Name', true);
-					if ($check_name) {
-						echo '<p>'.esc_html($check_name).':</p>
-						<label for="Name" class="labels" id="name"></label>
-						<input type="text" name="Name" value="'.esc_attr($Name).'" placeholder="Enter '.esc_html($check_name).'">
-						';
-					}
-
-					if (key_exists('Roll_No', $requred_fields)) {
-						echo '<p>'.esc_html($requred_title['Roll_No']).':</p>
-						<label for="Roll_No" class="labels" id="roll_no"></label>
-						<input type="number" name="Roll_No" value="'.esc_attr($Roll_No).'" placeholder="Enter '.esc_html($requred_title['Roll_No']).'">
-						';
-					}
-
-					if (key_exists('Regi_No', $requred_fields)) {
-						echo '<p>'.esc_html($requred_title['Regi_No']).':</p>
-						<label for="Regi_No" class="labels" id="regi_no"></label>
-						<input type="text" name="Regi_No" value="'.esc_attr($Regi_No).'" placeholder="Enter '.esc_html($requred_title['Regi_No']).'">
-						';
-					}
-				?>
-				
-				<?php echo educare_guide_for('add_class');?>
-
-				<div class="select">
-					<select id="Class" name="Class" class="form-control">
-						<?php educare_get_options('Class', $Class);?>
-					</select>
-				
-				<?php 
-				if (key_exists('Exam', $requred_fields) or $import_from) {
-					?>
-					<select id="Exam" name="Exam" class="fields">
-						<?php educare_get_options('Exam', $Exam);?>
-					</select>
-					<?php
-				}
-
-				if (!$add_students) {
-					echo '</div> <div class="select">';
-				}
-
-				if (key_exists('Year', $requred_fields)) {
-					?>
-					<select id="Year" name="Year" class="fields">
-						<?php educare_get_options('Year', $Year);?>
-					</select>
-					<?php
-				}
-
-				if (!$add_students) {
-					echo '<div id="data_from_students" title="Get data/details from specific student profiles. For this, you need to fill roll no, regi no, class and year."><div class="educare_button">Auto Fill</div></div>';
-				}
-				
-				?>
-
-				</div>
-				
-				<?php
-				if ($add_students) {
-					echo educare_guide_for('Premium version of educare supports user (Students, Teachers, Educare Admin) profiles/dashboard system.');
-				}
-				?>
-					
-				<!-- Extra field -->
-				<h2>Others</h2>
-				<?php
-				echo educare_guide_for('add_extra_field');
-				
-				if (isset($_POST['Add'])) {
-					educare_get_options('Extra_field', 'add');
-				} else {
-
-					if ($add_students) {
-						educare_get_options('Extra_field', $id, '', true);
-					} else {
-						educare_get_options('Extra_field', $id);
-					}
-					
-				}
-
-				echo '<input type="hidden" name="end_exatra_fields" value="true">';
-
-				if (!$add_students) {
-					?>
-					<h2>Students Results</h2>
-					
-					<?php
-					if (educare_check_status('auto_results') == 'checked') {
-						$disabled = 'disabled';
-						
-						echo educare_guide_for('Currently you can not modify (Result, GPA and Grade options. For this disable <b>Auto Result</b> system from educare (plugins) settings. Click here to <a href="/wp-admin/admin.php?page=educare-settings#settings" target="_blank">disable auto results</a>');
-
-						echo '<input type="hidden" name="Result" value="'.esc_attr(educare_value('Result', $id)).'">';
-						echo '<input type="hidden" name="GPA" value="'.esc_attr(educare_value('GPA', $id)).'">';
-					} else {
-						$disabled = '';
-					}
-					?>
-
-					<div class="select">
-						<p>Result:</p>
-						<p>GPA:</p>
-					</div>
-					<div class="select">
-						<select name="Result" class="form-control" <?php echo esc_attr( $disabled );?>>
-						<?php if (isset($_POST['Add'])) { echo '<option>Select Status</option>'; }?>
-							<option value="Passed" <?php if (educare_value('Result', $id) == 'Passed') { echo 'Selected'; }?>>Passed</option>
-							<option value="Failed" <?php if (educare_value('Result', $id) == 'Failed') { echo 'Selected'; }?>>Failed</option>
-						</select>
-						
-						<input type="number" name="GPA" class="fields" value="<?php echo esc_attr(educare_value('GPA', $id));?>" placeholder="0.00" step="any" <?php echo esc_attr( $disabled );?>>
-					</div>
-					<?php
-				}
-				?>
-
-				<?php 
-				echo educare_guide_for('add_subject');
-
-				if (!$add_students) {
-					echo educare_guide_for('With the premium version of Educare, you can add additional mark terms and fields. Exp: Practical Marks, Exam Marks, CA1, CA2, CA3... and more. Also, you can secure the result with password or PIN.');
-				}
-				?>
-				<div id="result_msg">
-					<?php educare_get_subject($Class, $Group, $id, $add_students) ?>
-				</div>
-
-				<br>
-				<?php
-				// if ($submit != 'Add') { 
-				// 	echo educare_guide_for('If you want to update old class data ('.esc_html($requred_title['Name']).', '.esc_html($requred_title['Roll_No']).', '.esc_html($requred_title['Regi_No']).', Details) please check it otherwise uncheck.');
-
-				// 	echo '<input type="checkbox" name="update_old_data" checked> Update old data <br>';
-				// }
-
-				if ($add_students) {
-					$btn_value = 'Students';
-				} else {
-					$btn_value = 'Results';
-				}
-				?>
-
-				<button type="submit" name="<?php echo esc_attr($submit);?>" class="educare_button educare_crud"><i class="dashicons dashicons-<?php if ($submit == 'Add') {echo 'plus-alt';}else{echo 'edit';}?>"></i> <?php echo esc_html($submit .' '. $btn_value);?></button>
-						
-				<?php
-				// remove delete button when Add results
-				if ($submit != 'Add') {
-					?>
-						<button type="submit" name="delete" class="educare_button" onClick="<?php echo esc_js( 'return educareConfirmation()' )?>"><i class="dashicons dashicons-trash"></i>Delete</button>
-					<?php
-				}
-				?>
-				
-			</div>
-		</form>
-	</div>
-	<?php
-}
-
-
-
-/**
  * Process form when click auto fill button
  * 
  * @since 1.4.0
- * @last-update 1.4.7
+ * @last-update 1.4.0
  * 
  * @return mixed
  */
-
 function educare_get_data_from_students() {
 	// Check if the current user has the access this request as 'manage_options' capability (typically administrators).
 	educare_check_access();
-	
+
 	// Remove the backslash
 	$_POST['form_data'] = stripslashes($_POST['form_data']);
 	// parses query strings and sets the parsed values into the $_POST array.
 	wp_parse_str($_POST['form_data'], $_POST);
 
-	$roll = sanitize_text_field($_POST['Roll_No']);
-	$regi = sanitize_text_field($_POST['Regi_No']);
-	$class = sanitize_text_field($_POST['Class']);
-	$year = sanitize_text_field($_POST['Year']);
+	// Verify the nonce to ensure the request originated from the expected source
+	educare_verify_nonce('educare_crud_data', 'crud_data_nonce');
 
-	$_POST = array (
-		'Roll_No' => $roll,
-		'Regi_No' => $regi,
-		'Class' => $class,
-		'Year' => $year,
-	);
+	if (isset($_POST['auto_fill'])) {
+		$_POST['roles'] = 'students';
+		echo educare_crud_data_new();
 
-	global $import_from;
-	$import_from = 1;
+		$_POST['roles'] = 'results';
+		unset($_POST['default']['id']);
+		educare_get_forms();
+	} else {
+		echo educare_crud_data_new();
 
-	$print = educare_crud_data('students', true);
-
-	educare_get_results_forms($print, '');
+		if(!isset($_POST['search'])) {
+			educare_get_forms();
+		}
+	}
 	
 	die;
 }
 
-// Add the 'educare_get_data_from_students' function as an AJAX action
 add_action('wp_ajax_educare_get_data_from_students', 'educare_get_data_from_students');
 
 
-
 /**
- * Display forms for search students results
+ * Process single student results data
  * 
- * Search specific results for Edit/Delete/View
- * Search results by Class, Exam, Year, Roll & Regi No for Edit/Delete/View specific results.
- * Admin can Edit/Delete/View the results.
- * Users only view the results.
+ * @since 1.6.0
+ * @last-update 1.6.0
  * 
- * @since 1.0.0
- * @last-update 1.4.1
- * 
- * @return null||HTML
+ * @return mixed
  */
-
-function educare_get_search_forms($front = null) {
-	global $requred_fields, $requred_data, $requred_title;
-	$custom_results = educare_check_status('custom_results');
-
-	foreach ($requred_data as $key => $value) {
-		$$key = sanitize_text_field($value);
-		$title = strtolower($key);
-		$$title = $requred_title[$key];
-	}
-
-	if ($custom_results == 'checked' and has_action('educare_custom_results_forms') and $front) {
-		return do_action( 'educare_custom_results_forms');
-	} else {
-		?>
-		<div class="results_form">
-			<form class="add_results" action="" method="post" id="educare_search_forms">
-				<div class="content">
-					<?php
-					// Security nonce for AJAX requests.
-					$nonce = wp_create_nonce( 'educare_form_nonce' );
-					echo '<input type="hidden" name="nonce" value="'.esc_attr($nonce).'">';
-
-					echo '<div class="select add-subject">';
-						if (key_exists('Class', $requred_fields)) {
-							?>
-							<div>
-								<p><?php echo esc_html($class);?>:</p>
-								<select id="Class" name="Class" class="fields">
-									<?php educare_get_options('Class', $Class);?>
-								</select>
-							</div>
-							<?php
-						}
-
-						if (key_exists('Exam', $requred_fields)) {
-							?>
-							<div>
-								<p><?php echo esc_html($exam);?>:</p>
-								<select id="Exam" name="Exam" class="fields">
-									<?php educare_get_options('Exam', $Exam);?>
-								</select>
-							</div>
-							<?php
-						}
-					echo '</div>';
-
-					if (key_exists('Roll_No', $requred_fields)) {
-						echo '<p>'.esc_html($roll_no).':</p>
-						<label for="Roll_No" class="labels" id="roll_no"></label>
-						<input type="number" name="Roll_No" value="'.esc_attr($Roll_No).'" placeholder="Enter '.esc_attr($roll_no).'">
-						';
-					}
-
-					if (key_exists('Regi_No', $requred_fields)) {
-						echo '<p>'.esc_html($regi_no).':</p>
-						<label for="Regi_No" class="labels" id="regi_no"></label>
-						<input type="text" name="Regi_No" value="'.esc_attr($Regi_No).'" placeholder="Enter '.esc_attr($regi_no).'">
-						';
-					}
-					?>
-					
-					<div>
-						<p>Select Year:</p>
-						<select id="Year" name="Year" class="fields">
-							<?php educare_get_options('Year', $Year);?>
-						</select>
-					</div>
-
-					<?php
-					if ($front) {
-
-						if (educare_check_status('re_captcha') == 'checked') {
-							$site_key = educare_check_status('site_key');
-
-							if ( current_user_can( 'manage_options' ) and $site_key == '' ) {
-								echo educare_guide_for('<small>The Google Recaptcha checkbox field is hidden. Please enter/paste your google recaptcha v2 site key at <br><a href="'.esc_url( admin_url() ).'/admin.php?page=educare-settings&menu=Security" target="_blank"><code>Educare > Settings > Security > Site Key</code></a><br><br><small>(Only admin can view these messages)</small>', '', false);
-							}
-
-							echo '<div class="g-recaptcha" data-sitekey="'.esc_attr($site_key).'"></div>';
-						}
-
-						echo '<button id="results_btn" class="results_button button" name="educare_results" type="submit">View Results </button>';
-					} else {
-						echo '<button id="edit_btn" name="edit" type="submit" class="educare_button"><i class="dashicons dashicons-search"></i> Search for edit</button>';
-					}
-					?>
-
-				</div>
-			</form>
-		</div>
-		<?php
-	}
+function educare_crud_results() {
+	echo educare_get_advance_banner('The features you are requesting are supported in the Educare Premium version. It includes advanced functionalities like add specific student resutls via all students list.', false);
+	
+	die;
 }
+
+add_action('wp_ajax_educare_crud_results', 'educare_crud_results');
 
 
 
 /** 
- * ### educare_get_data_management('results')
+ * educare_get_data_management('results')
  * 
  * @since 1.4.0
  * @last-update 1.4.0
@@ -1999,9 +1559,7 @@ function educare_get_search_forms($front = null) {
  * 
  * @return null|HTML
  */
-
-function educare_get_data_management($students) {
-
+function educare_get_data_management($students, $front = false) {
 	if ($students == 'students') {
 		$icon = 'businessman';
 	} elseif ($students == 'results') {
@@ -2011,21 +1569,19 @@ function educare_get_data_management($students) {
 	}
 
 	?>
-	<div class="container educare-page">
-
+	<div class="educare-container">
 		<div class="tab students">
-			<button class="tablinks active" id="default" title="View all <?php echo esc_attr($students)?>" data="all-data"><i class="dashicons dashicons-<?php echo esc_attr($icon)?>"></i><span>All</span></button>
-			<button class="tablinks" title="Add new <?php echo esc_attr($students)?>" data="add-data"><i class="dashicons dashicons-plus-alt"></i><span>Add</span></button>
-			<button class="tablinks" title="Update <?php echo esc_attr($students)?> Data" data="update-data"><i class="dashicons dashicons-update"></i><span>Edit</span></button>
-			<button class="tablinks" title="Import <?php echo esc_attr($students)?>" data="import-data"><i class="dashicons dashicons-database-import"></i><span>Import</span></button>
+			<button class="tablinks active" id="default" title="<?php echo sprintf(__('All %s', 'educare'), esc_html__($students, 'educare'))?>" data="all-data"><i class="dashicons dashicons-<?php echo esc_attr($icon)?>"></i><span><?php _e('All', 'educare')?></span></button>
+			<button class="tablinks" title="<?php echo sprintf(__('Add %s', 'educare'), esc_html__($students, 'educare'))?>" data="add-data"><i class="dashicons dashicons-plus-alt"></i><span><?php _e('Add', 'educare')?></span></button>
+			<button class="tablinks" title="<?php echo sprintf(__('Edit %s', 'educare'), esc_html__($students, 'educare'))?>" data="update-data"><i class="dashicons dashicons-update"></i><span><?php _e('Edit', 'educare')?></span></button>
+			<button class="tablinks position-relative" title="<?php echo sprintf(__('Import %s', 'educare'), esc_html__($students, 'educare'))?>" data="import-data"><i class="dashicons dashicons-database-import"></i><span><?php _e('Import', 'educare')?></span></button>
 		</div>
 		
 		<div class="educare_post">
 			<div id="educare-data">
-				<?php educare_data_management($students);?>
+				<?php educare_data_management($students, $front);?>
 			</div>
-		</div> <!-- / .educare Settings -->
-
+		</div>
 	</div>
 
 	<?php
@@ -2074,27 +1630,40 @@ function educare_get_data_management($students) {
  * @param array $tab						All tab
  * @return mixed
  */
-
-function educare_tab_management($action_for = 'management', array $tab = null) {
-
+ function educare_tab_management($action_for = 'management', $tab = null, $front = false) {
 	if (!$tab) {
 		$tab = array (
 			// tab name => icon
 			'Class' => 'awards',
 			'Group' => 'groups',
+			'Rattings' => 'star-half',
+			'School' => 'admin-multisite',
 			'Exam' => 'welcome-write-blog',
 			'Year' => 'calendar',
+			'Term' => 'image-filter',
+			'Staff_position' => 'businessman',
 			'Extra_field' => 'welcome-add-page',
 		);
 	}
 
-	echo '<div class="container educare-page">';
+	if (has_filter('educare_tab_management')) {
+		$tab = apply_filters( 'educare_tab_management', $action_for, $tab, $front );
+	}
+
+	echo '<div class="educare-container">';
 		echo '<div class="tab tab_management">';
 			$activate = array_key_first($tab);
 			$active_tab = '';
 
+			$advance = array(
+				'Rattings',
+				'School',
+				'Term',
+				'Staff_position'
+			);
+
 			foreach ($tab as $name => $icon) {
-				$title = ucwords(str_replace('_', ' ', $name));
+				$title = ucwords(str_replace('-', ' ', $name));
 
 				if ($name == $activate) {
 					$activate = 'active';
@@ -2102,7 +1671,20 @@ function educare_tab_management($action_for = 'management', array $tab = null) {
 					$activate = '';
 				}
 
-				echo '<button class="tablinks '.esc_attr($activate).'" id="'.esc_attr($name).'" title="Manage '.esc_html($title).'"><i class="dashicons dashicons-'.esc_attr($icon).'"></i><span>'.esc_html($title).'</span></button>';
+				$badge = $advance_fields = '';
+
+				if (in_array($name, $advance)) {
+					$advance_fields = educare_advance_fields();
+					$badge = 'lock';
+				}
+
+				echo '<button class="tablinks position-relative '.esc_attr($activate).' '.esc_attr($advance_fields).'" id="'.esc_attr($name).'" title="Manage '.esc_html(str_replace('_', ' ', $title)).'">
+					<i class="dashicons dashicons-'.esc_attr($icon).'"></i>
+					<span>'.esc_html(str_replace('_', ' ', $title)).'</span>
+					<div class="position-absolute top-50 start-50 translate-middle educare-badge '.esc_attr($badge).' p-1">
+						'.educare_advance_fields_badge().'
+					</div>
+				</button>';
 
 				if ( isset($_GET[$name])) {
 					$active_tab = sanitize_text_field( $name );
@@ -2115,15 +1697,20 @@ function educare_tab_management($action_for = 'management', array $tab = null) {
 		
 		<div class="educare_post educare_settingss <?php echo esc_attr($action_for) ?>">
 			<div id="educare-data">
-				<?php educare_get_tab_management($action_for);?>
+				<?php educare_get_tab_management($action_for, $front);?>
 			</div>
 		</div>
 
 	</div>
 
 	<?php
-	$url = admin_url();
-	$url .= 'admin.php?page=educare-' . esc_attr($action_for);
+	if ($front) {
+		$url = '/'.educare_check_status("profiles_page").'/?'.educare_check_status("front_dashboard").'=';
+	} else {
+		$url = admin_url().'admin.php?page=';
+	}
+	
+	$url .= 'educare-' . esc_attr($action_for);
 
 	// Keep slected specific menu
 	if (isset($_GET['menu'])) {
@@ -2137,6 +1724,7 @@ function educare_tab_management($action_for = 'management', array $tab = null) {
 	<div class="educare_data_field">
 		<div class="educareTabManagement_url" data-value="<?php echo esc_url($url);?>"></div>
 		<div class="educareTabManagement_action_for" data-value="<?php echo esc_attr($action_for);?>"></div>
+		<div class="educareTabManagement_front" data-value="<?php echo esc_attr($front);?>"></div>
 		<div class="educareTabManagement_menu" data-value="<?php echo esc_attr($menu);?>"></div>
 		<div class="educareTabManagement_active_tab" data-value="<?php echo esc_attr($active_tab);?>"></div>
 	</div>
@@ -2146,45 +1734,31 @@ function educare_tab_management($action_for = 'management', array $tab = null) {
 
 
 
-
-/**
- * AJAX callback function to process a specific tab in the educare tab area.
- *
- * The `educare_process_tab` function is an AJAX callback function that handles the request to process a specific tab in the educare management area.
- *
- * The function performs the following tasks:
- * - Retrieves the action for the tab from the AJAX request.
- * - If the 'tab' parameter is set in the AJAX request, it sets the corresponding GET parameter to true.
- * - Calls the `educare_get_tab_management` function to process the specified tab.
- * - Terminates the script execution and sends the response as JSON.
- *
- * Note: The `educare_get_tab_management` function, which is called within this AJAX callback, is not provided in the code snippet. It is assumed that this function exists and handles the processing of the specified tab.
+/** 
+ * Response ajax request from tab button
  * 
  * @since 1.4.0
- * @last-update 1.4.7
+ * @last-update 1.4.0
+ * 
+ * @return null|HTML
  */
 function educare_process_tab() {
 	// Check if the current user has the access this request as 'manage_options' capability (typically administrators).
 	educare_check_access();
-	
-	// Get the action for the tab from the AJAX request
-	$action_for = $_POST['action_for'];
 
-	// Set the 'tab' parameter in GET if it is set in the AJAX request
+	$action_for = $_POST['action_for'];
+	$front = $_POST['front'];
+	unset($_POST['front']);
+
 	if (isset($_POST['tab'])) {
-		$_GET[$_POST['tab']] = true;
+		$_GET[$_POST['tab']] = '';
 	}
 
-	// Call the function to process the specified tab
-	educare_get_tab_management($action_for);
-
-	// Terminate the script execution and send the response as JSON
+	educare_get_tab_management($action_for, $front);
 	die;
 }
 
-// Add the 'educare_process_tab' function as an AJAX action
 add_action('wp_ajax_educare_process_tab', 'educare_process_tab');
-
 
 
 
@@ -2192,14 +1766,14 @@ add_action('wp_ajax_educare_process_tab', 'educare_process_tab');
  * Proccess ajax request from tab button and display data
  * 
  * @since 1.4.0
- * @last-update 1.4.2
+ * @last-update 1.4.0
  * 
  * @param string $action_for		$_GET request for ajax response
+ * @param bool $front  if display tab in front end dashboard
+ * 
  * @return mixed
  */
-
-function educare_get_tab_management($action_for) {
-	
+ function educare_get_tab_management($action_for, $front = false) {
 	if ($action_for == 'management') {
 		if (isset($_GET['Group'])) {
 			echo "<h1>Group List</h1>";
@@ -2211,17 +1785,43 @@ function educare_get_tab_management($action_for) {
 			
 			// Group forms
 			educare_setting_subject("Group", true);
+		} elseif (isset($_GET['Rattings'])) {
+			echo "<h1>Rattings List</h1>";
+			echo wp_kses_post(educare_get_unlock_banner());
+
+			// Group list
+			echo '<div id="msg_for_Rattings">';
+				educare_setting_subject("Rattings");
+			echo '</div>';
+			
+			// Rattings forms
+			educare_setting_subject("Rattings", true);
 		} elseif (isset($_GET['Exam'])) {
 			echo "<h1>Exam List</h1>";
 			educare_get_all_content('Exam');
 		} elseif (isset($_GET['Year'])) {
 			echo "<h1>Year List</h1>";
 			educare_get_all_content('Year');
+		} elseif (isset($_GET['School'])) {
+			echo "<h1>School List</h1>";
+			echo wp_kses_post(educare_get_unlock_banner());
+			educare_get_all_content('School');
+		} elseif (isset($_GET['Term'])) {
+			echo "<h1>Term</h1>";
+			echo wp_kses_post(educare_get_unlock_banner());
+			educare_get_all_content('Term');
+		} elseif (isset($_GET['Staff_position'])) {
+			echo "<h1>Staff Position</h1>";
+			echo wp_kses_post(educare_get_unlock_banner());
+			educare_get_all_content('Staff_position');
 		} elseif (isset($_GET['Extra_field'])) {
 			echo "<h1>Extra Field</h1>";
 			educare_get_all_content('Extra_field');
 		} else {
-			echo '<div class="cover"><img src="'.esc_url(EDUCARE_URL.'assets/img/cover.svg').'" alt="educare cover"/></div>';
+			if (educare_check_status('show_cover_photos') === 'checked') {
+				echo '<div class="cover"><img src="'.esc_url(EDUCARE_URL.'assets/img/cover.svg').'" alt="educare cover"/></div>';
+			}
+			
 			// Class list
 			echo '<div id="msg_for_Class">';
 				educare_setting_subject("Class");
@@ -2232,250 +1832,243 @@ function educare_get_tab_management($action_for) {
 		}
 		
 		return;
-	} elseif ($action_for == 'mark-sheed') {
-		if (isset($_GET['import_marks'])) {
-			echo "<h1>Import Marks</h1>";
+	} elseif ($action_for == 'mark-sheet') {
+		$_GET['page'] = 'educare-mark-sheet';
+		
+		if (isset($_GET['import-data'])) {
+			echo '<h1>'.sprintf(__('Import %s', 'educare'), __('Marks', 'educare')).'</h1>';
 
 			echo '<div id="msgs" style="text-align:center;">';
-			echo '<span style="font-size:100px">&#9785;</span><br><b>We are working on it!</b>';
+			echo '<span style="font-size:100px">&#9785;</span><br><b>'.__('We are working on it!', 'educare').'</b>';
 			echo '</div>';
 
-		} elseif (isset($_GET['attendance'])) {
-			echo "<h1>Attendance</h1>";
-
-			echo educare_guide_for('Premium version of Educare supports attendance system.');
-
-			echo '<div class="center"><img src="'.esc_url(EDUCARE_URL . 'assets/img/cover.svg').'" alt="Educare" width="50%"/></div>';
-			
+		} elseif  (isset($_GET['update-data'])) {
+			educare_add_marks('marks', null, $front);
+		} elseif  (isset($_GET['add-data'])) {
+			educare_add_marks('marks', null, $front);
 		} else {
-			echo '<div class="cover"><img src="'.esc_url(EDUCARE_URL.'assets/img/marks.svg').'" alt="Marks List" title="Add Marks"/></div>';
-			echo "<h1>Add Marks</h1>";
+			educare_display_data('marks', null, $front);
+		}
 
-			echo educare_guide_for("<p>Using this features admin (teachers) can add subject wise multiple students results at a same time. So, it's most usefull for (single) teacher. This is particularly advantageous for individual teachers handling their own subjects. And can print all student marks as a marksheet. Once the mark entry process concludes for all subjects, students can easily access and print their results once the administrator publishes them as results</p>
-			
-			<p><b>Notes:</b> With the premium version, administrators have the capability to add teachers and grant them access to specific subjects to input marks!</p>
-			");
-			
-			$Class = $Group = $Exam = $Subject = $Year = '';
+		return;
+	} elseif ($action_for == 'attendance') {
+		$_GET['page'] = 'educare-attendance';
 
-			if (isset($_POST['students_list'])) {
-				$Class = sanitize_text_field($_POST['Class']);
-				$Group = sanitize_text_field($_POST['Group']);
-				$Exam = sanitize_text_field($_POST['Exam']);
-				$Subject = sanitize_text_field($_POST['Subject']);
-				$Year = sanitize_text_field($_POST['Year']);
+		if ($front) {
+			$url = '/'.educare_check_status("profiles_page").'/?'.educare_check_status("front_dashboard").'=';
+		} else {
+			$url = admin_url().'admin.php?page=';
+		}
+		
+		if (isset($_GET['import-data'])) {
+			echo '<h1>'.sprintf(__('Import %s', 'educare'), __('Attendance', 'educare')).'</h1>';
+
+			echo '<div id="msgs" style="text-align:center;">';
+			echo '<span style="font-size:100px">&#9785;</span><br><b>'.__('Attendance import is temporarily unavailable.', 'educare').'</b>';
+			echo '</div>';
+
+		} elseif  (isset($_GET['update-data'])) {
+			// form to find or show students
+			if (educare_get_unlock_banner()) {
+				// Show banner
+				educare_show_school_banner();
+				echo wp_kses_post(educare_get_unlock_banner());
+				return;
 			}
-			?>
-	
-			<form method='post' action="" class="add_results educareProcessMarksCrud">
-				<div class="content">
-				<div class="select">
-						<select id="Class" name="Class" class="form-control">
-						<option value="">Select Class</option>
-							<?php educare_get_options('Class', $Class);?>
-						</select>
 
-						<select id="Group" name="Group" class="form-control">
-						<option value="">Select Group</option>
-							<?php educare_get_options('Group', $Group);?>
-						</select>
-					</div>
+			educare_add_marks('attendance', null, $front);
+		} elseif  (isset($_GET['add-data'])) {
+			if (educare_get_unlock_banner()) {
+				// Show banner
+				educare_show_school_banner();
+				echo wp_kses_post(educare_get_unlock_banner());
+				return;
+			}
 
-					<div class="select">
-						<select id="Exam" name="Exam" class="form-control">
-							<?php educare_get_options('Exam', $Exam);?>
-						</select>
+			// form to find or show students
+			educare_add_marks('attendance', null, $front);
+		} else {
+			// Show banner
+			educare_show_school_banner();
+			
+			echo '<div class="add_results">';
+				echo '<div class="content">';
+					echo '<h4 class="mb-4 p-2 text-center">'.__('Attendance', 'educare').'</h4>';
 
-						<select id="Subject" name="Subject" class="form-control">
-							<option value="">Select Subject</option>
-						</select>
-					</div>
-
-					<div class="select">
-						<div>
-						<p>Select Year:</p>
-							<select id="Year" name="Year" class="form-control">
-								<?php educare_get_options('Year', $Year);?>
-							</select>
-						</div>
-
-						<div>
-							<p>Students Per Page:</p>
-							<input id="results_per_page" type="number" value="30">
-						</div>
-					</div>
-
-					<?php
-					$students_list_nonce = wp_create_nonce( 'students_list' );
-					$get_Group_nonce = wp_create_nonce( 'get_Group' );
-					$get_Class_nonce = wp_create_nonce( 'get_Class' );
+					if (educare_check_status('show_cover_photos') === 'checked') {
+						echo '<div class="cover mb-4"><img src="'.esc_url(EDUCARE_URL.'assets/img/marks.svg').'" alt="Attendance List" title="Attendance"/></div>';
+					}
 					
-					echo '<input type="hidden" name="students_list_nonce" value="'.esc_attr($students_list_nonce).'">';
-					echo '<input type="hidden" name="get_Group_nonce" value="'.esc_attr($get_Group_nonce).'">';
-					echo '<input type="hidden" name="get_Class_nonce" value="'.esc_attr($get_Class_nonce).'">';
 					?>
-
-					<input type="submit" name="students_list" id="process_marks" class="educare_button" value="Students List">
+					<div class="flex">
+						<a href="<?php echo $url;?>educare-attendance&add-data" class="flex-content bg-light py-5 px-3 rounded-4 text-decoration-none">
+							<div class="box-content">
+								<h3 class="text-center"><?php _e('Add New', 'educare');?></h3>
+							</div>
+						</a>
+						<a href="<?php echo $url;?>educare-attendance&add-data" class="flex-content bg-light py-5 px-3 rounded-4 text-decoration-none">
+							<div class="box-content">
+								<h3 class="text-center"><?php _e('View Attendance', 'educare');?></h3>
+							</div>
+						</a>
+					</div>
 				</div>
-			</form>
-
-			<div id="msgs"></div>
+			</div>
 			<?php
 		}
 
 		return;
 	} elseif ($action_for == 'performance') {
-		if (isset($_GET['attendance'])) {
-			echo "<h1>Attendance</h1>";
+		// check if user access this request
+		// educare_check_access('performance');
 
-			echo '<div id="msgs" style="text-align:center;">';
-			echo '<span style="font-size:100px">&#9785;</span><br><b>We are working on it!</b>';
-			echo '</div>';
-			
-		} else {
-			echo '<div class="cover"><img src="'.esc_url(EDUCARE_URL.'assets/img/achivement.svg').'" alt="Achivement" title="Achivement"/></div>';
-			echo "<h1>Promote</h1>";
-
-			echo educare_guide_for('Here you can change multiple students class, year, group just one click! Most usefull when you need to promote students (one class to onother) or need to update mulltiple studens');
-			
-			echo '<div id="promote_msgs">';
-			educare_promote_students();
-			echo '</div>';
-		}
-
+		echo '<div id="promote_msgs">';
+		educare_promote_students();
+		echo '</div>';
 	} elseif ($action_for == 'settings') {
-		if (isset($_GET['default_photos'])) {
-			// echo "<h1>Default Photos</h1>";
-			if ( isset( $_POST['educare_default_photos'] ) && isset( $_POST['educare_attachment_id'] ) ) {
-				// Check user capability to manage options
-				if (!current_user_can('manage_options')) {
-					exit;
-				}
+		// check if user access this request
+		educare_check_access('settings');
 
+		if (isset($_GET['default_photos'])) {
+			if ( isset( $_POST['educare_default_photos'] ) && isset( $_POST['Others']['Photos'] ) ) {
 				// Verify the nonce to ensure the request originated from the expected source
 				educare_verify_nonce('educare_default_photos');
+
+				// check if user access this request
+				educare_check_access('settings');
 				
-				$attachment_id = sanitize_text_field($_POST['educare_attachment_id']);
+				$attachment_id = sanitize_text_field($_POST['Others']['Photos']);
 				update_option( 'educare_files_selector', absint($attachment_id) );
 			}
 
 			?>
 			<form method='post'>
 				<?php 
-				// Security nonce for form requests.
+				// Security nonce for this form.
 				$nonce = wp_create_nonce( 'educare_default_photos' );
 				echo '<input type="hidden" name="nonce" value="'.esc_attr($nonce).'">';
 				
-				educare_files_selector('set_default', '');
-				
-				if ( isset( $_POST['educare_default_photos'] ) && isset( $_POST['educare_attachment_id'] ) ) {
-					echo "<div class='notice notice-success is-dismissible'><p>Successfully update default students photos</p></div>";
-				}
+				educare_files_selector('');
 				?>
 				
-				<button id='educare_default_photos' type="submit" name="educare_default_photos" class="educare_button full"><i class="dashicons dashicons-yes-alt"></i> Save</button>
+				<?php 
+				echo '<div class="educare_upload">';
+
+					if ( isset( $_POST['educare_default_photos'] ) && isset( $_POST['Others']['Photos'] ) ) {
+						echo "<div class='notice notice-success is-dismissible'><p>".__('Successfully update default students photos', 'educare')."</p></div>";
+					}
+					?>
+
+					<button id='educare_default_photos' type="submit" name="educare_default_photos" class="educare_button full"><i class="dashicons dashicons-yes-alt"></i> <?php _e('Save', 'educare');?></button>
+				</div>
+				
 			</form>
 			
 			<?php
 		} elseif (isset($_GET['grading_system'])) {
-			echo "<h1>Grading System</h1>";
+			echo '<h1>'.__('Grading System', 'educare').'</h1>';
 			?>
-			<?php echo educare_guide_for('If you need to change default grading value, simply click edit button and enter your custom (Country) starndard rules. Allso, you can add your custom rules using code. For this please visit Educare support forum or carfully read plugin readme files');?>
+			<?php echo educare_guide_for(__('If you need to change default grading value, simply click edit button and enter your custom (Country) starndard rules. Allso, you can add your custom rules using code. For this please visit Educare support forum or carfully read plugin readme files', 'educare'));?>
 			
-			<p>Grading systems: <i id="help" title="How does it work? Click to view" class="dashicons dashicons-editor-help"></i></p>
+			<p><?php _e('Grading Systems', 'educare');?>: <i id="help" title="<?php _e('How does it work? Click to view', 'educare');?>" class="dashicons dashicons-editor-help"></i></p>
 			<div class="select">
 				<select id="grading" name="grading" class="form-control">
-					<option value="Default">Default</option>
-					<option value="Custom" disabled>Custom</option>
+					<option value="Default"><?php _e('Default', 'educare');?></option>
 				</select>
 			</div>
 
 			<div id="show_help" style="display: none;">
-				<div class="notice notice-success educare-notice"><p>
-					<h3>How it's work?</h3>
+				<div class="notice notice-info educare-notice"><p>
+					<h5><?php _e("How it's work?", 'educare');?></h5>
 					<p>
-					We are mentioning the process how to calculate CGPA (GPA) from Marks in HSC. To do this, add up the grade points for the six major subjects and divide with 6 (total subject). For example, your grade points for <b>six</b> main subjects are listed below:</p><br>
+					<?php _e('We are mentioning the process how to calculate CGPA (GPA) from Marks in HSC. To do this, add up the grade points for the six major subjects and divide with 6 (total subject). For example, your grade points for <b>six</b> main subjects are listed below:', 'educare');?></p><br>
+					<div class="table_container">
+						<table class="grade_sheet bg-light">
+							<thead>
+								<tr>
+								<th><?php _e('Subject', 'educare');?></th>
+								<th><?php _e('Mark', 'educare');?></th>
+								<th><?php _e('Grade Points', 'educare');?></th>
+								<th><?php _e('Letter grade', 'educare');?></th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr>
+									<td>Subject 1</td>
+									<td>85</td>
+									<td>5</td>
+									<td>A+</td>
+								</tr>
+								<tr>
+									<td>Subject 2</td>
+									<td>70</td>
+									<td>4</td>
+									<td>A</td>
+								</tr>
+								<tr>
+									<td>Subject 3</td>
+									<td>68</td>
+									<td>3.5</td>
+									<td>A-</td>
+								</tr>
+								<tr>
+									<td>Subject 4</td>
+									<td>55</td>
+									<td>3</td>
+									<td>B</td>
+								</tr>
+								<tr>
+									<td>Subject 5</td>
+									<td>95</td>
+									<td>5</td>
+									<td>A+</td>
+								</tr>
+								<tr>
+									<td>Subject 6</td>
+									<td>80</td>
+									<td>5</td>
+									<td>A+</td>
+								</tr>
+								<tr>
+									<td><?php _e('Total', 'educare');?></td>
+									<td></td>
+									<td>21</td>
+									<td></td>
+								</tr>
+								<tr>
+									<td><strong>GPA</strong></td>
+									<td></td>
+									<td><strong>25.5/6 = 4.25</strong></td>
+									<td>A</td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
 
-					<table>
-						<thead>
-							<tr>
-							<th>Subject</th>
-							<th>Mark</th>
-							<th>Grade Points</th>
-							<th>Letter grade</th>
-							</tr>
-						</thead>
-						<tbody>
-							<tr>
-								<td>Subject 1</td>
-								<td>85</td>
-								<td>5</td>
-								<td>A+</td>
-							</tr>
-							<tr>
-								<td>Subject 2</td>
-								<td>70</td>
-								<td>4</td>
-								<td>A</td>
-							</tr>
-							<tr>
-								<td>Subject 3</td>
-								<td>68</td>
-								<td>3.5</td>
-								<td>A-</td>
-							</tr>
-							<tr>
-								<td>Subject 4</td>
-								<td>55</td>
-								<td>3</td>
-								<td>B</td>
-							</tr>
-							<tr>
-								<td>Subject 5</td>
-								<td>95</td>
-								<td>5</td>
-								<td>A+</td>
-							</tr>
-							<tr>
-								<td>Subject 6</td>
-								<td>80</td>
-								<td>5</td>
-								<td>A+</td>
-							</tr>
-							<tr>
-								<td>Total</td>
-								<td></td>
-								<td>21</td>
-								<td></td>
-							</tr>
-							<tr>
-								<td><strong>GPA</strong></td>
-								<td></td>
-								<td><strong>25.5/6 = 4.25</strong></td>
-								<td>A</td>
-							</tr>
-						</tbody>
-					</table>
-
-					<p>
-						<ul style="list-style-type:circle;">
-							<li><strong>Step 1:</strong> Add the grade points i.e <code>5+4+3.5+3+5+5 = 25.5</code></li>
-							<li><strong>Step 2:</strong> Divide the sum by (total subject) 6 i.e <code>25.5/6 = 4.25</code></li>
-							<li>Thus, your GPA is <code>4.25</code></li>
-							<li>And, Letter grade is <code>A</code></li>
-						</ul>
-					</p>
-
-					<p>Basically, <strong>GPA = Total grade points/Total subject</strong></p>
 					<br>
-					<strong>How to define grade point and letter grade?</strong>
-					<pre><code>if ($marks >= 80 and $marks <= 100) { $point = 5; }</code></pre>or<pre><code>if ($marks >= 80 and $marks <= 100) { $grade = 'A+'; }</code></pre>
+					
+					<ul style="list-style-type:circle;">
+						<li><b>Step 1:</b> Add the grade points i.e <code>5+4+3.5+3+5+5 = 25.5</code></li>
+						<li><b>Step 2:</b> Divide the sum by (total subject) 6 i.e <code>25.5/6 = 4.25</code></li>
+						<li>Thus, your GPA is <code>4.25</code></li>
+						<li>And, Letter grade is <code>A</code></li>
+					</ul>
+
+					<p>Basically, GPA = Total grade points/Total subject</p>
+					<p><b>How to define grade point and letter grade (Programmally)?</b></p>
+					<p><b>Grade point:</b></p>
+					</p><pre><code>if ($marks >= 80 and $marks <= 100) { $point = 5; }</code></pre>
 					</p>
+
+					<p><b><?php _e('Letter grade', 'educare');?>:</b><br>
+					<pre><code>if ($marks >= 80 and $marks <= 100) { $grade = 'A+'; }</code></pre>
+					</p>
+
 				</div>
 			</div>
 
-			<div id="result_msg">
-				<p><b>Default Rules</b></p>
+			<div id="result_msg" class="grading_system">
+				<div class="my-3 text-center"><?php _e('Default Rules', 'educare');?></div>
 				<?php educare_show_grade_rule();?>
 			</div>
 			
@@ -2486,15 +2079,16 @@ function educare_get_tab_management($action_for) {
 
 			<?php
 		} else {
-			echo "<h1>Settings</h1>";
-			echo educare_guide_for('Currently you are using the free version. But, <b>Educare Premium Version</b> is even more functional and powerful.');
+			echo '<h1>'.__('Settings', 'educare').'</h1>';
 
+			echo wp_kses_post(educare_get_unlock_banner(true));
+			
 			echo '<div id="msg_for_settings">'.educare_settings_form().'</div>';
 		}
 	} else {
-		echo '<div id="msgs" style="text-align:center;">';
-		echo '<span style="font-size:100px">&#9785;</span><br>
-		<b>Sorry your requested data is missing!</b>';
+		echo '<div id="msgs" class="text-center">';
+		echo '<span style="fs-1">&#9785;</span><br>
+		<b>'.__('Sorry your requested data is missing!', 'educare').'</b>';
 		echo '</div>';
 	}
 }
@@ -2502,515 +2096,976 @@ function educare_get_tab_management($action_for) {
 
 
 /**
- * Display data (students and results)
+ * Educare add marks
  * 
- * @since 1.0.0
- * @last-update 1.2.4
+ * usage: educare_add_marks('marks')
  * 
- * @param bool $add_students		if data for students
- * @param bool $on_load 				if (directly) show data when page is loaded
+ * @since 1.4.2
+ * @last-update 1.6.0
  * 
- * @return null || HTML
+ * @param string $db			for specific users or data (Students, Teachers, Results, Marks...)
+ * @param int $per_page 		Data per (one) page. Default is 15 (baseed on educare settings)
+ * 
+ * @return void|HTML
  */
-
-function educare_all_view($students = null, $on_load = null) {
+function educare_add_marks($db = 'marks', $per_page = null, $front = false) {
 	global $wpdb;
-	// Table name
-	$tablename = $wpdb->prefix."educare_".$students."";
-	$msgs = $students;
+	// Define table name to access data
+	$roles = 'students';
+	// $table = $wpdb->prefix.EDUCARE_PREFIX.$roles;
+	
+	// Define all empty fields to ignore php error
+  $Year = $Class = $Group = $Exam = $Subject = $search = $order_by = $order = '';
 
-	if (!isset($_POST["educare_view_results"]) and !isset($_POST['remove'])) {
-		if ($on_load) {
-			$action = 'table=All&year=All&time=id&order=DESC&results_per_page='.sanitize_text_field($on_load).'&on_load';
-			wp_parse_str($action, $_POST);
+	// default data per page when page load
+	if (!$per_page) {
+		$per_page = educare_check_status('data_per_page');
+	}
+	// default page when page load
+	$page_no = 1;
+	// Center pagination
+	$center = 2;
+
+	$requred = educare_check_status('display');
+	// Getting all requered field key and title
+	$requred_title = educare_requred_data($requred, true);
+
+	$get_data = array();
+
+	// allow edit when click edit button
+	if (isset($_POST['students_list'])) {
+		$get_data = array(
+			'Class' => '',
+			'Exam' => '',
+			'Year' => '',
+			'Group' => '',
+			'Subject' => '',
+			'order_by' => 'id',
+			'order' => 'DESC',
+			'students_list_nonce' => '',
+			'students_list' => true,
+			'add-data' => true
+		);
+
+		foreach ($get_data as $get_data_key => $get_data_value) {
+			if (isset($_POST[$get_data_key])) {
+				$get_data[$get_data_key] = sanitize_text_field($_POST[$get_data_key]);
+			}
+		}
+
+		foreach ($get_data as $datkey => $datavalue) {
+			$_GET[$datkey] = $datavalue;
 		}
 	}
 	
-	// define empty variables for ignore error
-	$table = $year = $data = $select_year = $order = $time = $sub_term = $sub = '';
-	$results_per_page = 10;
-
-	if (isset($_POST["educare_view_results"]) or isset($_POST['remove']) or isset($_POST['on_load'])) {
-		$table = sanitize_text_field($_POST['table']);
-		$year = sanitize_text_field($_POST['year']);
-
-		// echo '<pre>';	
-		// print_r($_POST);
-		// echo '</pre>';
-
-		if ($table != 'All') {
-			$data = sanitize_text_field($_POST['data']);
-			$sub_term = sanitize_text_field($_POST['sub_term']);
-		}
-		
-		if ($year != 'All') {
-			$select_year = sanitize_text_field($_POST['select_year']);
-		}
-		
-		$order = sanitize_text_field($_POST['order']);
-		$time = sanitize_text_field($_POST['time']);
-		$results_per_page = sanitize_text_field($_POST['results_per_page']);
+	if (isset($_GET['page-no']) && $_GET['page-no']!='' && $_GET['page-no']!='0') {
+		$page_no = $_GET['page-no'];
+	}
+	if (isset($_GET['per-page']) && $_GET['per-page']!=''&& $_GET['per-page']!='0') {
+		$per_page = $_GET['per-page'];
 	}
 
-	// remove records
-	if (isset($_POST['remove'])) {
-		echo "<div class='notice notice-success is-dismissible'><p>Successfully deletet your selectet ".esc_html( $msgs )."</p></div>";
+	$url = admin_url().'admin.php?';
+
+	if ($_GET) {
+		$pageURL = $url;
+		foreach ($_GET as $key => $value) {
+			if (!$value) {
+				if ($key !== 'add-data' && $key !== 'students_list') {
+					continue;
+				}
+			}
+
+			$value = sanitize_text_field( $value );
+			// Define dynamic variable
+			$$key = $value;
+			// Define page url
+			$pageURL .= $key.'='.$value.'&';
+		}
+	} else {
+		// Default page url
+		$pageURL = admin_url().'admin.php?page=educare-all-students&';
 	}
-	
+
+	// ignore index page -1, and increase $per_page (by default 5) in each page
+  $offset = ($page_no-1) * $per_page;
+	// current page - 1
+	$previous = $page_no - 1;
+	// current page + 1
+	$next = $page_no + 1;
+	// Requred fields to add marks
+	$requred_fields = array (
+		'Class',
+		'Exam',
+		'Year'
+	);
+
+	// Others fields to related with marks, for sort, search, group or subject wise student.
+	$default_fields = array (
+		'Group',
+		'Subject',
+		'order_by',
+		'order'
+	);
+
+	// 1. for process marks fuctionality
+	$default_fields = array_merge($requred_fields, $default_fields);
+	$default_fields = educare_combine_fields($default_fields, '', $_GET, true);
+
+	// 2. for save marks as specific Class, Exam and Year
+	$requred_fields = educare_combine_fields($requred_fields, '', $default_fields, true);
+
+	// 3. for get students list
+	$search_students = $default_fields;
+	if ($search) {
+		$search_students['search'] = $search;
+	}
+	if (!$Group) {
+		unset($search_students['Group']);
+	}
+
+	unset($search_students['Subject'], $search_students['Exam']);
+
+	// 4. for pagination
+	$offset_students = $search_students;
+	$offset_students['offset'] = $offset;
+	$offset_students['per-page'] = $per_page;
+
+	// 5. for get marks data
+	$search_marks = $requred_fields;
+
+	// finaly creat dynamic sql
+	$search_students = educare_dynamic_sql($search_students, $roles);
+	$offset_students = educare_dynamic_sql($offset_students, $roles);
+	$search_marks = educare_dynamic_sql($search_marks, $db);
+
+	// Forms
+	// Check requred fields data
+	$requred = educare_check_status('display');
+	// Getting all requered field key and title
+	$requred_title = educare_requred_data($requred, true, false);
+
+	$group_title = isset($requred_title['Group']) ? $requred_title['Group'] : '';
+	$class_title = isset($requred_title['Class']) ? $requred_title['Class'] : '';
+	$exam_title = isset($requred_title['Exam']) ? $requred_title['Exam'] : '';
+
+	// Show banner
+	educare_show_school_banner();
+
 	?>
-
-	<!-- Search Form -->
-	<form class="add_results" action="" method="post">
-		<?php
-		// Security nonce for form requests.
-		$nonce = wp_create_nonce( 'educare_view_results' );
-		echo '<input type="hidden" name="nonce" value="'.esc_attr($nonce).'">';
-		?>
-
+	<form method="get" id="filter_data" class="add_results add_marks">
 		<div class="content">
+			<?php
+			// Show page title
+			if (isset($_GET['page']) && $_GET['page'] === 'educare-mark-sheet') {
+				$form_title = 'marks';
+			} else {
+				$form_title = 'attendance';
+			}
+			if (isset($_GET['add-data'])) {
+				$form_type = 'add';
+			} else	{
+				$form_type = 'update';
+			}
 
-			<div class="select add-subject">
-				<div>
-					<p>Results By:</p>
-					<select id='select_table' name="table" onChange="<?php echo esc_js('select_Table()');?>">
-						<option value='All' <?php if ($table == 'All') echo 'selected';?>>All</option>
-						<option value='Class' <?php if ($table == 'Class') echo 'selected';?>>Class</option>
-						<option value='Exam' <?php if ($table == 'Exam') echo 'selected';?>>Exam</option>
+			echo educare_get_page_title(esc_html($form_title), esc_html($form_type));
+
+			if ($form_title == 'marks') {
+				if (educare_guide_for(__("<p>This feature allows teachers to enter subject-wise results for multiple students at once, making it especially useful for individual teachers. Since different teachers handle different subjects, each teacher can add marks for their assigned subject and generate a mark sheet for all students.</p><p>Once marks for all subjects are entered, students can view and print their results after the admin publishes them. Additionally, teachers can publish results for individual subjects when needed.</p><p>(We call this the <b>GOLDEN FEATURE</b> for teachers!)</p>", 'educare'))) {
+					echo '<div class="mb-4">';
+					echo educare_guide_for(__("<p>This feature allows teachers to enter subject-wise results for multiple students at once, making it especially useful for individual teachers. Since different teachers handle different subjects, each teacher can add marks for their assigned subject and generate a mark sheet for all students.</p><p>Once marks for all subjects are entered, students can view and print their results after the admin publishes them. Additionally, teachers can publish results for individual subjects when needed.</p><p>(We call this the <b>GOLDEN FEATURE</b> for teachers!)</p>", 'educare'));
+					echo '</div>';
+				}
+			}
+			
+			foreach ($_GET as $key => $value) {
+				if ($key == 'page-no') {
+					continue;
+				}
+				
+				echo '<input type="hidden" name="'.esc_attr( $key ).'" value="'.esc_attr( $value ).'">';
+			}
+
+			if ($front) {
+				$db_for = $db;
+
+				if ($db_for == 'marks') {
+					$db_for = 'mark-sheet';
+				}
+
+				echo '<input type="hidden" name="'.esc_attr( educare_check_status("front_dashboard") ).'" value="educare-'.esc_attr( $db_for ).'">';
+			}
+			?>
+
+			<div class="row gy-3">
+				<?php
+				if ($class_title) {
+					?>
+					<div class="col-md-6">
+						<label for="Class" class="form-label"><?php _e(sprintf(__('Select %s', 'educare'), __(esc_html($requred_title['Class']), 'educare'))); ?></label>
+						<select id="Class" name="Class" class="form-control">
+							<option value=""><?php _e(sprintf(__('Select %s', 'educare'), __(esc_html($requred_title['Class']), 'educare'))); ?></option>
+							<?php educare_get_options('Class', $Class);?>
+						</select>
+					</div>
+					<?php
+				} else {
+					echo '<input type="hidden" name="Class" value="">';
+				}
+				?>
+				
+				<?php
+				if ($group_title) {
+					?>
+					<div class="col-md-6">
+						<label for="Group" class="form-label"><?php _e(sprintf(__('Select %s', 'educare'), __(esc_html($requred_title['Group']), 'educare'))); ?></label>
+						<select id="Group" name="Group" class="form-control">
+							<option value=""><?php _e(sprintf(__('Select %s', 'educare'), __(esc_html($requred_title['Group']), 'educare'))); ?></option>
+							<?php educare_get_options('Group', $Group);?>
+						</select>
+					</div>
+					<?php
+				} else {
+					echo '<input type="hidden" name="Group" value="">';
+				}
+				?>
+
+				<div class="col-md-6">
+					<label for="Year" class="form-label"><?php _e(sprintf(__('Select %s', 'educare'), __(esc_html($requred_title['Year']), 'educare'))); ?></label>
+					<select id="Year" name="Year" class="form-control">
+						<option value=""><?php _e(sprintf(__('Select %s', 'educare'), __(esc_html($requred_title['Year']), 'educare'))); ?></option>
+						<?php educare_get_options('Year', $Year);?>
+					</select>
+				</div>
+
+				<div class="col-md-6">
+					<label for="Subject" class="form-label"><?php _e(sprintf(__('Select %s', 'educare'), __('Subject', 'educare'))); ?></label>
+					<select id="Subject" name="Subject" class="form-control">
+						<option value=""><?php _e(__('All', 'educare'));?></option>
+						<?php 
+						if ($Subject) {
+							if ($Group) {
+								educare_get_options_for_subject('Class', $Class, $Subject);
+								educare_get_options_for_subject('Group', $Group, $Subject);
+							} else {
+								educare_get_options_for_subject('Class', $Class, $Subject);
+							}
+						} else {
+							educare_get_options_for_subject('Class', $Class, $Subject);
+						}
+						?>
+					</select>
+				</div>
+
+				<?php
+				if ($db == 'marks') {
+					?>
+					<div class="col-md-6">
+						<label for="Exam" class="form-label"><?php _e(sprintf(__('Select %s', 'educare'), __(esc_html($exam_title), 'educare'))); ?></label>
+						
+						<select id="Exam" name="Exam" class="form-control">
+							<?php educare_get_options('Exam', $Exam);?>
+						</select>
+					</div>
+
+					<?php
+				}
+				?>
+
+				<div class="col-md-6">
+					<label for="order_by" class="form-label"><?php _e(__('Order By', 'educare')); ?></label>
+					
+					<select id='order_by' name="order_by">
+						<option value='id' <?php esc_attr(selected( 'id', $order_by )) ;?>><?php _e(__('Time', 'educare')); ?></option>
+						
+						<?php
+						if (isset($requred_title['Name'])) {
+							echo '<option value="Name" '.esc_attr(selected( "Name", $order_by )).'>'.__(__(esc_html($requred_title["Name"]), 'educare')).'</option>';
+						}
+
+						if (isset($requred_title['Roll_No'])) {
+							echo '<option value="Roll_No" '.esc_attr(selected( "Roll_No", $order_by )).'>'.__(__(esc_html($requred_title["Roll_No"]), 'educare')).'</option>';
+						}
+
+						if (isset($requred_title['Regi_No'])) {
+							echo '<option value="Regi_No" '.esc_attr(selected( "Regi_No", $order_by )).'>'.__(__(esc_html($requred_title["Regi_No"]), 'educare')).'</option>';
+						}
+						?>
 					</select>
 				</div>
 				
-				<div class="select">
-					<div>
-						<p id='select_data_label'>Select One:</p>
-						<select id='select_data' name="data">
-							<option>All Results</options>
-						</select>
-					</div>
-
-					<div>
-						<p id='term_label'>All</p>
-						<select id='term' name="sub_term">
-							<option>All</options>
-						</select>
-					</div>
-				</div>
-
-			</div>
-
-			<div class="select">
-				<p>Select Year:</p>
-				<p>Select One:</p>
-			</div>
-
-			<div class="select">
-
-				<select id='year' name="year" onChange="<?php echo esc_js('select_Year()');?>">
-					<option value='All' <?php if ($year == 'All') echo 'selected';?>>All</option>
-					<option value='Year' <?php if ($year == 'Year') echo 'selected';?>>Select Year</option>
-				</select>
-				
-				<select id='select_year' name="select_year">
-					<option>All Years</options>
-				</select>
-
-			</div>
-			
-			<div class="select">
-				<p>Order By:</p>
-				<p>Asc/Desc</p>
-			</div>
-
-			<div class="select">
-
-				<select id='select_time' name="time">
-					<option value='id' <?php if ($time == 'id') echo 'selected';?>>Time</option>
-					<option value='Name' <?php if ($time == 'Name') echo 'selected';?>>Name</option>
-					<option value='Roll_No' <?php if ($time == 'Roll_No') echo 'selected';?>>Roll No</option>
-					<option value='Regi_No' <?php if ($time == 'Regi_No') echo 'selected';?>>Regi No</option>
-				</select>
-				
-				<select id='select_order' name="order">
-					<option value='DESC' <?php if ($order == 'DESC') echo 'selected';?>>Desc</option>
-					<option value='ASC' <?php if ($order == 'ASC') echo 'selected';?>>Asc</option>
-				</select>
-
-			</div>
-			
-			<p><?php echo esc_html( ucfirst($msgs) );?> Per Page:</p>
-			<div class="select">
-				<select id='results_per_page' name='results_per_page'>
-					<?php
-						for ( $a = 5; $a < 305; $a+=5 ) {
-							ob_start();
-							if ($a == $results_per_page) {
-								echo 'selected';
-							}
-							$select = ob_get_clean();
-							
-							echo "<option value='".esc_attr($a)."' ".esc_attr($select).">".esc_html($a)."</option>";
-						}
-					?>
-				</select>
+				<div class="col-md-6">
+					<label for="select_order" class="form-label"><?php _e(__('Asc', 'educare')); ?>/<?php _e(__('Desc', 'educare')); ?></label>
 					
-				<button type="submit" name="educare_view_results" class="educare_button" style="margin: 0;"><i class="dashicons dashicons-visibility"></i> View</button>
+					<select id='select_order' name="order">
+						<option value='DESC' <?php esc_attr(selected( 'DESC', $order )) ;?>><?php _e(__('Desc', 'educare')); ?></option>
+						<option value='ASC' <?php esc_attr(selected( 'ASC', $order )) ;?>><?php _e(__('Asc', 'educare')); ?></option>
+					</select>
+				</div>
 			</div>
 
-			<!-- Default value -->
-			<div class="educare_data_field">
-				<div class="educareAllView_select_class"><?php echo educare_get_options('Class', $data);?></div>
-				<div class="educareAllView_select_exam"><?php echo educare_get_options('Exam', $data);?></div>
-				<div class="educareAllView_select_year"><?php echo educare_get_options('Year', $select_year);?></div>
+			<input class="my-3" type="text" name="search" value="<?php echo $search?>" placeholder="<?php _e('Type here for search', 'educare');?>">
 
-				<div class="educareAllView_sub_select_class"><?php echo educare_get_options('Class', $sub_term);?></div>
-				<div class="educareAllView_sub_select_exam"><?php echo educare_get_options('Exam', $sub_term);?></div>
+			<?php
+			$students_list_nonce = wp_create_nonce( 'students_list' );
+			$get_Group_nonce = wp_create_nonce( 'get_Group' );
+			$get_Class_nonce = wp_create_nonce( 'get_Class' );
+			
+			echo '<input type="hidden" name="students_list_nonce" value="'.esc_attr($students_list_nonce).'">';
+			echo '<input type="hidden" name="get_Group_nonce" value="'.esc_attr($get_Group_nonce).'">';
+			echo '<input type="hidden" name="get_Class_nonce" value="'.esc_attr($get_Class_nonce).'">';
+			?>
+
+			<div class="button-container flex">
+				<button id="students_list" type="submit" name="students_list" class="educare_button w-100" style="margin: 0;"><i class="dashicons dashicons-groups"></i> Show Students List</button>
 			</div>
 
 		</div>
 	</form>
 
+	<div id="msgs"></div>
 	<?php
-		// Record List
-		if (isset($_POST["educare_view_results"]) or isset($_POST['remove']) or isset($_POST['remove_result']) or isset($_POST['on_load'])) {
-			// Check user capability to manage options
-			if (!current_user_can('manage_options')) {
-				exit;
-			}
-			
-			// Check request
-			if (!isset($_POST['on_load'])) {
-				// Verify the nonce to ensure the request originated from the expected source
-				educare_verify_nonce('educare_view_results');
-			}
+	if (isset($_GET['students_list'])) {
+		educare_check_access('manage_options');
+		
+		// Verify the nonce to ensure the request originated from the expected source
+		educare_verify_nonce('students_list', 'students_list_nonce', true);
 
-			$table = sanitize_text_field($_POST['table']);
+		if (educare_is_empty($requred_fields)) {
+			echo educare_is_empty($requred_fields);
+		} else {
+			// Display data
+			// Proccess query to face data
+			// Count total data
+			// Define educare students table
+			$educare_students = $wpdb->prefix.EDUCARE_PREFIX.esc_sql($roles);
+			// Define educare marks table
+			$educare_marks = $wpdb->prefix.EDUCARE_PREFIX.esc_sql($db);
 
-			if (isset($_POST['remove_result'])) {
-				$id = sanitize_text_field($_POST['id']);
-				if ($wpdb->delete( $tablename, array( 'id' => $id ))) {
-					echo "<div class='notice notice-success is-dismissible'><p>Successfully deletet ".esc_html( $msgs )."</p></div>";
-				} else {
-					echo "<div class='notice notice-error is-dismissible'><p><span class='error'>Your selected ".esc_html( $msgs )." not found for delete.</span></p></div>";
+			if ($Subject) {
+				$over_all = 0;
+				$opset_data = $wpdb->get_results("SELECT * FROM $educare_students $search_students");
+
+				if ($opset_data) {
+					$over_all = count($opset_data);
+
+					foreach ($opset_data as $key => $student) {
+						$sub = json_decode($student->Subject);
+
+						if ($sub) {
+							if (!property_exists($sub, $Subject)) {
+								unset($opset_data[$key]);
+							}
+						} else {
+							unset($opset_data[$key]);
+						}
+					}
 				}
-			}
-
-			if ($table != 'All') {
-				$data = sanitize_text_field($_POST['data']);
-				$sub_term = sanitize_text_field($_POST['sub_term']);
-			}
-
-			if ($table == 'Class') {
-				$sub = 'Exam';
+				
+				// Count total data
+				$total_data = count($opset_data);
+				// Pagination data || Offset data
+				$opset_data = array_slice($opset_data, $offset, $per_page);
 			} else {
-				$sub = 'Class';
+				// count total data
+				$total_data = $wpdb->get_var("SELECT COUNT(*) FROM  $educare_students $search_students");
+				// Face || get main data baset on pagination
+				$opset_data = $wpdb->get_results("SELECT * FROM $educare_students $offset_students");
 			}
-			
-			$order = sanitize_text_field($_POST['order']);
-			$time = sanitize_text_field($_POST['time']);
 
-			// Fetch records
-		?>
-			
-			<div class="wrap-input">
-				<span class="input-for">Filter <?php echo esc_html( ucfirst($msgs) );?> For Specific <i>Students, Roll No, Regi No...</i></span>
-				<label for="searchBox" class="labels"></label>
-				<input type="search" id="searchBox" placeholder="Search <?php echo esc_attr( ucfirst($msgs) );?>" class="fields">
-				<span class="focus-input"></span>
-			</div>
-				
-			<table width='100%' border='1' style='border-collapse: collapse;' class='view_results all-results'>
-				<thead>
-				<tr>
-				<th>No</th>
+			$total_pages = ceil($total_data / $per_page);
+			$second_last = $total_pages - 1;
 
-				<?php 
-				$photos = educare_check_status('photos');
-				$default_data = educare_check_status('display');
-				$col = 0;
-
-				if ($photos == 'checked') {
-					$col++;
-					echo '<th>Photos</th>';
-				}
-
-				foreach ($default_data as $key => $value) {
-					if ($students != 'results') {
-						if ($key == 'Exam') {
-							continue;
-						}
-					}
-
-					$default_check = educare_check_status($key, true);
-					if ($default_check) {
-						$col++;
-						echo "<th>".esc_html($default_check)."</th>";
-					}
-				}
-				?>
-
-				<th>Action</th>
-				</tr>
-				</thead>
-
-				<tbody>
-				<?php
-				// Make sure $order is either 'ASC' or 'DESC' to prevent SQL injection
-				$order = strtoupper($order) === 'ASC' ? 'ASC' : 'DESC';
-				// Escaping the ORDER BY clause using esc_sql()
-				$order_by = esc_sql($time) . ' ' . $order;
-				
-
-				if (!empty($select_year)) {
-					if ($table == 'All' or empty($data)) {
-						// echo 'year';
-						$search = $wpdb->get_results(
-							$wpdb->prepare(
-								"SELECT * FROM {$tablename} WHERE Year = %d ORDER BY {$order_by}",
-								$select_year
-							)
-						);
-					} else {
-						// echo 'turm';
-						if ($sub_term != 'All') {
-							$search = $wpdb->get_results(
-								$wpdb->prepare(
-									"SELECT * FROM {$tablename} WHERE {$table} = %s AND {$sub} = %s AND Year = %d ORDER BY $order_by",
-									$data,
-									$sub_term,
-									$select_year
-								)
-							);
-						} else  {
-							$search = $wpdb->get_results(
-								$wpdb->prepare(
-									"SELECT * FROM {$tablename} WHERE {$table} = %s AND Year = %d ORDER BY $order_by",
-									$data,
-									$select_year
-								)
-							);			
-						}
-					}
+			if ($search) {
+				if ($total_data) {
+					$alert = 'success';
 				} else {
-					if ($table == 'All' or empty($data)) {
-						// echo 'time';
-						$search = $wpdb->get_results("SELECT * FROM {$tablename} ORDER BY {$order_by}");
+					$alert = 'danger';
+				}
+
+				echo '<div class="text-center p-4 my-4 alert alert-'.esc_attr($alert).' rounded-5">'.sprintf(__('Search results for: %s', 'educare'), '<b>'. esc_html($search) . '</b>').'</div>';
+			}
+
+			if ($total_data) {
+				// Show total data
+				echo '<b class="text-center d-block p-4 my-4 bg-white rounded-5">'.sprintf(__('Total %1$s %2$s found', 'educare'), esc_html($total_data), esc_html__($roles, 'educare')).'</b>';
+
+				if ($opset_data) {
+					// getting previousely saved data
+					$marks = new stdClass();
+					$marks_data = array();
+					
+					if ($search_marks) {
+						$marks = $wpdb->get_row("SELECT * FROM $educare_marks $search_marks");
 					} else {
-						// echo 'turm'; Class and Exan/Exam or Class
-						if ($sub_term != 'All') {
-							// echo $sub_term;
-							$search = $wpdb->get_results(
-								$wpdb->prepare(
-									"SELECT * FROM {$tablename} WHERE {$table}=%s AND {$sub}=%s ORDER BY $order_by",
-									$data,
-									$sub_term
-								)
-							);
+						$marks = 0;
+					}
+
+					// Store marks as $marks_data
+					if ($marks) {
+						$marks_data = $marks->Marks;
+						$marks_data = json_decode($marks_data, true);
+					} else {
+						$marks = new stdClass();
+						$marks_data = array();
+						$marks->Class = sanitize_text_field( $Class );
+						$marks->Group = sanitize_text_field( $Group );
+						$marks->Exam = sanitize_text_field( $Exam );
+						$marks->Year = sanitize_text_field( $Year );
+					}
+
+					$access_to_publish_marks = true;
+
+					if (isset($_POST['crud_marks']) && isset($_POST[$db])) {
+						$new = $updated = $success = $error = 0;
+						$process = '';
+
+						if (educare_table_exists($educare_marks)) {
+							// We use the array_replace_recursive() function to combine the two arrays while preserving our nested structure.
+							// Now resulting $marks_data will contain the combined values from database $marks_data and $_POST['marks'], with the values from $_POST['marks'] overwriting any matching keys in previeus $marks_data. Let's do it!
+							
+							$marks_data = array_replace_recursive($marks_data, $_POST[$db]);
+							$marks->Marks = json_encode($marks_data);
+							
+							// Save marks
+							// Check is data || marks already esxist or not
+							if (isset($marks->id)) {
+								$marks_id = sanitize_text_field( $marks->id );
+								// Data alreay esxist, update data
+								unset($marks->id);
+								$process = $wpdb->update($educare_marks, (array) $marks, array('ID' => $marks_id));
+								$status = 'update';
+								// $updated++;
+							} else {
+								// Data not esxist, insert data
+								$process = $wpdb->insert($educare_marks, (array) $marks);
+								$status = 'insert';
+							}
+
+							if (isset($_POST['publish_marks'])) {
+								if ($access_to_publish_marks) {
+									// Check requred fields
+									$results_sql = educare_requred_data($requred);
+									$ignore = array ('Name', 'Group', 'Exam', 'user_pin');
+									$results_sql = array_diff($results_sql, $ignore);
+
+									if ($marks_data) {
+										foreach ($marks_data as $student_id => $subject) {
+											$student_data = educare_get_users_data($student_id);
+
+											if ($student_data) {
+												$educare_results = $wpdb->prefix.EDUCARE_PREFIX.'results';
+												$student_results = educare_combineKeysAndProperties($results_sql, $student_data);
+												$student_results['Exam'] = sanitize_text_field( $Exam );
+
+												$student_results = educare_get_sql_new('results', $student_results);
+												$student_results = $wpdb->get_row("$student_results");
+
+												// Check if results already exist or not
+												if ($student_results) {
+													
+													$old_subject = $student_results->Subject;
+													$new_subject = json_encode($subject);
+													
+													if (strcmp($old_subject, $new_subject) !== 0) {
+														// echo "The JSON strings are not identical or equal.";
+														$updated++;
+														// Add new marks data
+														$student_results->Subject = $new_subject;
+
+														// Get results id where to update
+														$where = array (
+															// replace with the ID of the row to update
+															'id' => $student_results->id,
+														);
+														// Processing update
+														$process = $wpdb->update($educare_results, (array) $student_results, $where);
+														$status = 'update';
+													}
+
+												} else {
+													$new++;
+													// Results not exist, insert data
+													$student_data->Subject = json_encode($subject);
+													$student_data->Exam = sanitize_text_field( $Exam );
+
+													$insert_results = (array) $student_data;
+													$ignore_keys = array (
+														'id',
+														'user_id',
+														'user_pass',
+														'user_login',
+														'user_email',
+														'user_pin',
+														'Student_ID'
+													);
+
+													foreach ($ignore_keys as $key) {
+														if (isset($insert_results[$key])) {
+															unset($insert_results[$key]);
+														}
+													}
+
+													$process = $wpdb->insert($educare_results, $insert_results);
+													$status = 'insert';
+												}
+
+												// Check if the update was successful
+												if ( $process === false ) {
+													// handle error
+													// Error to porocess request
+													$error++;
+												} elseif ( $process == 0 ) {
+													// no rows were updated, handle accordingly
+													// echo educare_show_msg(__('No changes were found in this request.', 'educare'), 'info');
+												} else {
+													// update was successful, handle accordingly
+													$success++;
+												}
+											}
+										}
+									}
+								}
+							}
 						} else {
-							$search = $wpdb->get_results(
-								$wpdb->prepare(
-									"SELECT * FROM {$tablename} WHERE {$table}=%s ORDER BY $order_by",
-									$data
-								)
-							);
+							$process = false;
+						}
+
+						// Check if the update was successful
+						if ( $process === false ) {
+							// handle error
+							// Error to porocess request
+							echo educare_show_msg('There was an issue processing your request', false);
+						} elseif ( $process == 0 && $updated == 0 ) {
+							// no rows were updated, handle accordingly
+							echo educare_show_msg(__('No changes were found in this request.', 'educare'), 'info');
+						} else {
+							// update was successful, handle accordingly
+							// Perform the update
+							if (isset($_POST['delete'])) {
+								// Execute the DELETE query
+								// $_POST = array();
+								if ($success) {
+									echo educare_show_msg('Successfully deleted data');
+									// clean data
+									$_POST = array();
+								} else {
+									echo educare_show_msg('No data found for delete');
+								}
+							} else {
+								if (isset($status) && $status === 'insert') {
+									// The operation was a successful insert
+									// Show insert message
+									echo educare_show_msg('Data insert was successful');
+								} else {
+									// The operation was a successful update
+									// Show update message
+									echo educare_show_msg('Data update was successful');
+								}
+							}
+
+							// Show status
+							if ($access_to_publish_marks) {
+								if (isset($_POST['publish_marks'])) {
+									echo educare_show_msg(
+										'Success: <span class="success">' . esc_html($success) . '</span><br>' .
+										'Updated: ' . esc_html($updated) . '<br>' .
+										'New: ' . esc_html($new) . '<br>' .
+										'Error: <span class="error">' .esc_html($error) . '</span>', 
+										true, false
+									);
+								}
+							}
 						}
 					}
-				}
-				
-				if(count($search) > 0) {
+
+					$display_group = $Group ? $Group : 'All ' . $group_title;
+					$display_sub = $Subject ? $Subject : 'All Subject';
+					$display_class = $Group ? $group_title : $class_title;
 					
-					$count = 0;
-					foreach($search as $print) {
-						$id = $print->id;
-						if (isset($_POST['remove'])) {
-							$wpdb->delete( $tablename, array( 'id' => $id ));
-						} else {
-							$Details = $print->Details;
-							$Details = json_decode($Details);
-							$Photos = $Details->Photos;
+					if ($Subject) {
+						$over_all = 'Total '.$over_all.' students in this '.$display_class.'. '.$total_data.' students were found in this subject';
+					} else {
+						$over_all = 'Total '.$total_data.' students in this ' .$display_class;
+					}
 
-							echo '<tr>';
-								echo "<td>".esc_html(++$count)."</td>";
+					// Build a form for save marks data
+					echo'<form id="add-marks" method="post" action="">';
+						// Define necessary field
+						echo '<input type="hidden" name="crud_marks" value="true">';
+
+						if ($get_data) {
+							foreach ($get_data as $key => $value) {
+								echo '<input type="hidden" name="'.esc_attr( $key ).'" value="'.esc_attr( $value ).'">';
+							}
+						}
+
+						// for print marks data
+						echo '<div class="educare_print" data-value="'.esc_attr($db).'">';
+							echo '<div class="notice notice-success is-dismissible">
+								<p>';
 								
-								if ($photos == 'checked') {
-									if ($Photos == 'URL') {
-										$Photos = EDUCARE_STUDENTS_PHOTOS;
+									if (isset($requred_title['Class'])) {
+										echo '<b>'.esc_html__($class_title, 'educare').':</b> '.esc_html__($Class, 'educare').'<br>';
 									}
-									echo "<td><img src='".esc_url($Photos)."' class='student-img' alt='IMG'/></td>";
-								}
+									if (isset($requred_title['Group'])) {
+										echo '<b>'.esc_html__($group_title, 'educare').':</b> '.esc_html__($display_group, 'educare').'<br>';
+									}
+
+									if (isset($requred_title['Exam'])) {
+										if ($db == 'marks') {
+											echo '<b>'.esc_html__($exam_title, 'educare').':</b> '.esc_html__($Exam, 'educare').'<br>';
+										}
+									}
 									
-								$results_button = '';
-								$results_title = "View $msgs";
-								$results_value = '&#xf177';
+									echo '<b>Subject:</b> '.esc_html__($display_sub, 'educare').'<br>
+									<b>'.esc_html__($requred_title['Year'], 'educare').':</b> '.esc_html__($Year, 'educare').'<br>
+									<b>Students:</b> '.esc_html__($over_all, 'educare').'
+								</p>
+								<button class="notice-dismiss"></button>
+							</div>';
 
-								foreach ($default_data as $key => $value) {
-									if ($students != 'results') {
-										if ($key == 'Exam') {
-											continue;
-										}
-									}
-									$default_check = educare_check_status($key, true);
-									if ($default_check) {
-										if ($print->$key) {
-											echo "<td>".esc_html($print->$key)."</td>";
-										} else {
-											echo "<td class='error'>Empty</td>";
-											$results_button = 'error';
-											$results_value = '&#xf530';
-											$results_title = 'This '.esc_html( $msgs ).' is not visible for users. Because, some required field are empty. Fill all the required field carefully. Otherwise, users getting arror notice when someone find this '.esc_html( $msgs ).'. Click pen (Edit) button for fix this issue.';
-										}
-									}
-								}
+							// Getting all requered field key and title
+							$requred_title = educare_requred_data($requred, true);
+							$student_photos = educare_check_status('photos');
 
-								$link = admin_url();
-								$link .= 'admin.php?page=educare-all-'.$students.'';
-								
-								if ($students == 'results') {
-									$profiles = '/'.educare_check_status("results_page");
-								} else {
-									$profiles = $link . '&profiles=' . $id;
-								}
+							// Serialize data
+							$count = $offset + 1;
+							// Show data || marks fields for single oe specific subject
+							if ($Subject) {
+								$terms = educare_get_template_data('fields', false);
 
 								?>
+								<div class="table_container">
+									<table class="grade_sheet view_results bg-white my-3">
+										<thead>
+											<tr>
+												<th><?php _e('No.', 'educare')?></th>
+												<?php
 
-								<td>
-									<input name="id" value="<?php echo esc_attr($id);?>" hidden>
-									
-									<div class="action_menu">
-										<input type="submit" class="button action_button" value="&#xf349">
-										<menu class="action_link">
+												if ($student_photos == 'checked') {
+													echo '<th>'.__('Photos', 'educare').'</th>';
+												}
+
+												foreach ($requred_title as $field_key => $field_value) {
+													if ($field_key == 'Class' || $field_key == 'Exam' || $field_key == 'Year' || $field_key == 'user_pin' || $field_key == 'Staff_position') {
+														continue;
+													}
+
+													echo '<th>'.esc_html($field_value).'</th>';
+												}
+
+												// thead for marks
+												foreach ($terms as $term => $termInfo) {
+													if (key_exists('hide', $termInfo)) {
+														if ($termInfo['hide'] == 'on') {
+															continue;
+														}
+													}
+													
+													$title = $subtitle = '';
+
+													if (key_exists('title', $termInfo)) {
+														$title = $termInfo['title'];
+													}
+													
+													if (key_exists('subtitle', $termInfo)) {
+														$subtitle = $termInfo['subtitle'];
+														if ($subtitle) {
+															$subtitle = '<br><small>'.esc_html($subtitle).'</small>';
+														}
+													}
+													
+													echo '<th>'. esc_html($title) . $subtitle.'</th>';
+												}
+												?>
+
+												<th class="optional_sub">
+													<div class="action_menu"><i class="dashicons action_button dashicons-info"></i> <menu class="action_link msg text-black"><b>Optional Subject</b><hr>If the student or your result system includes an optional subject, please indicate it. Otherwise, you may disregard this field.</menu></div>
+												</th>
+												<?php
+												?>
+											</tr>
+										</thead>
+										
+										<tbody>
 											<?php
-											// Security nonce for form requests.
-											$nonce = wp_create_nonce( 'educare_form_nonce' );
-											$remove_nonce = wp_create_nonce( 'educare_view_results' );
+
+											foreach($opset_data as $student) {
+												$id = $student->id;
+												if (!key_exists($id, $marks_data)) {
+													// based students data
+													$marks_data[$id] = json_decode($student->Subject, true);
+												}
+											}
+
+											foreach($opset_data as $student) {
+												$id = $student->id;
+												$others = json_decode($student->Others);
+												
+												echo '<tr>';
+													echo '<td>'.esc_html( $count ).'</td>';
+
+													if ($student_photos == 'checked') {
+														$photos = isset($others->Photos) ? $others->Photos : '';
+														echo '<td><img src="'.esc_url(educare_get_attachment($photos)).'" class="user-img" alt="IMG"/></td>';
+													}
+
+													foreach ($requred_title as $field_key => $field_value) {
+														if ($field_key == 'Class' || $field_key == 'Exam' || $field_key == 'Year' || $field_key == 'user_pin' || $field_key == 'Staff_position') {
+															continue;
+														}
+
+														echo '<td>'.esc_html($student->$field_key).'</td>';
+													}
+
+													// tbody for marks
+													$_POST['marks'] = $marks_data;
+													educare_get_marks_input($terms, 'marks', $id, $Subject);
+
+												echo '</tr>';
+
+												$count++;
+											}
 											?>
-
-											<form class="educare-modify" method="post" id="educare_results" target="_blank">
-												<?php
-												echo '<input type="hidden" name="nonce" value="'.esc_attr($nonce).'">';
-												?>
-
-												<input name="id" value="<?php echo esc_attr($id);?>" hidden>
-												
-												<input class="button" type="submit" <?php echo esc_attr($results_button);?> name="educare_results_by_id" value="<?php echo wp_check_invalid_utf8($results_value);?>" title="<?php echo esc_attr( ucfirst($results_title) );?>" formaction="<?php echo esc_url($profiles);?>">
-
-												<input class="button" type="submit" name="edit_by_id" value="&#xf464" title="Edit <?php echo esc_attr( ucfirst($msgs) );?>" formaction="<?php echo esc_url($link);?>&update-data">
-											</form>
-
-											<form class="educare-modify" action="<?php echo esc_url($link); ?>" method="post">
-												<?php
-												echo '<input type="hidden" name="nonce" value="'.esc_attr($remove_nonce).'">';
-												?>
-												<input type='hidden' name='educare_view_results'>
-												<input type='hidden' name='id' value='<?php echo esc_attr($id);?>'>
-												<input type='hidden' name='table' value='<?php echo esc_attr($table);?>'>
-												<input type='hidden' name='data' value='<?php echo esc_attr($data);?>'>
-												<input type='hidden' name='sub_term' value='<?php echo esc_attr($sub_term);?>'>
-												<input type='hidden' name='select_year' value='<?php echo esc_attr($select_year);?>'>
-												<input type='hidden' name='year' value='<?php echo esc_attr($year);?>'>
-												<input type='hidden' name='order' value='<?php echo esc_attr($order);?>'>
-												<input type='hidden' name='time' value='<?php echo esc_attr($time);?>'>
-												<input type='hidden' name='results_per_page' value='<?php echo esc_attr($results_per_page);?>'>
-												
-												<input class="button error" type="submit" name="remove_result" value="&#xf182" title="Remove <?php echo esc_attr( ucfirst($msgs) );?>" onClick="<?php echo esc_js( 'return educareConfirmation()' )?>">
-											</form>
-										</menu>
-									</div>
-								</td>
+										</tbody>
+									</table>
+								</div>
 								<?php
-							echo '</tr>';
+							} else {
+								echo educare_get_advance_banner('The features you are requesting are supported in the Educare Premium version. It includes advanced functionalities like batch entry of multiple students and multiple subject marks at once. Please select a specific subject instead.', false);
+								die;
+							}
+
+						echo '</div>';
+
+						echo educare_show_msg("Don't forget to save data before exiting, go to new page or reload the page.", 'info');
+							
+						echo '<div class="d-flex gap-3 my-4">';
+							echo '<button type="submit" name="add_marks" class="btn btn-secondary py-2 w-100">'.sprintf(__('Save %s', 'educare'), esc_attr($db)).'</button>';
+
+							if ($db == 'attendance') {
+								echo "<button type='submit' name='delete' class='btn btn-danger text-center w-100' value='Delete'>".__('Delete', 'educare')."</button>";
+							} else {
+								if ($access_to_publish_marks) {
+									echo '<input type="submit" name="publish_marks" class="btn btn-success d-flex align-items-center w-100" value="Publish">';
+								}
+							}
+							
+							?>
+							<div class="btn-group d-block d-sm-flex align-items-center justify-content-end text-center">
+								<button type="button" class="btn d-flex align-items-center justify-content-center mx-auto d-block text-center rounded-pill" data-bs-toggle="dropdown" aria-expanded="false">
+									<i class="dashicons dashicons-menu" title="<?php echo __('Menu', 'educare');?>"></i>
+								</button>
+
+								<ul class="dropdown-menu p-0 overflow-hidden" style="width: 200px;">
+									<li class="m-0 border-bottom"><button type="reset" class="dropdown-item d-flex align-items-center py-2 px-2"><i class="dashicons dashicons-undo me-2"></i><?php echo __('Undo', 'educare');?></button></li>
+
+									<li class="m-0 border-bottom"><span class="dropdown-item d-flex align-items-center py-2 px-2" onclick="<?php echo esc_js('clearFormData("add-marks")');?>"><i class="dashicons dashicons-editor-removeformatting me-2"></i><?php echo __('Clear All', 'educare');?></span></li>
+
+									<li class="m-0 border-bottom"><span class="dropdown-item d-flex align-items-center py-2 px-2" data-bs-toggle="modal" data-bs-target="#jumpPage"><i class="dashicons dashicons-admin-page me-2"></i><?php echo __('Jump page', 'educare');?></span></li>
+
+									<li class="m-0 border-bottom "><span id="print" class="dropdown-item d-flex align-items-center py-2 px-2"><i class="dashicons dashicons-printer me-2"></i><?php echo __('Print Data', 'educare');?></span></li>
+								</ul>
+							</div>
+							<?php
+
+						echo '</div>';
+
+					echo '</form>';
+				} else {
+					echo educare_show_msg('No more students found in this page <b>('.esc_html($offset).')</b>');
+				}
+			} else {
+				echo educare_show_msg('No student found in this class <b>('.esc_html($Class).')</b>. <a href="/wp-admin/admin.php?page=educare-all-students&add-data" target="_blank">click add students</a>');
+			}
+
+			// Pagination
+			if ($total_data) {
+				?>
+				<div class='page_status center'>
+					<small>
+						<?php _e(sprintf(__('Page %d Of %d', 'educare'), esc_html($page_no), esc_html($total_pages))) ?>
+					</small>
+				</div>
+
+				<ul class="pagination">
+					<li <?php if ($page_no <= 1) { echo "class='disabled'"; } ?>>
+					<a <?php echo "data-id='".esc_attr($previous)."'";?> <?php if($page_no > 1) { echo "href='". esc_url($pageURL) ."page-no=".esc_attr($previous)."'"; } ?>>&laquo;</a>
+					</li>
+							
+					<?php
+					// Display first and second page
+					$first_page = "<li><a data-id='1' href='". esc_url($pageURL) ."page-no=1'>1</a></li>
+					<li><a data-id='2' href='". esc_url($pageURL) ."page-no=2'>2</a></li>
+					<li><span>...</span></li>";
+					// Display last and second-last page
+					$last_page = "<li><span>...</span></li>
+					<li><a data-id='".esc_attr($second_last)."' href='". esc_url($pageURL) ."page-no=".esc_attr($second_last)."'>".esc_html($second_last)."</a></li>
+					<li><a data-id='".esc_attr($total_pages)."' href='". esc_url($pageURL) ."page-no=".esc_attr($total_pages)."'>". esc_html($total_pages) ."</a></li>";
+					
+					function fixbd_get_page($counter, $page_no, $url = '?') {
+						if ($counter == $page_no) {
+							echo "<li><a class='current'>".esc_html($counter)."</a></li>";
+						} else {
+							echo "<li><a data-id='".esc_attr($counter)."' href='". esc_url($url) ."page-no=".esc_attr($counter)."'>".esc_html($counter)."</a></li>";
 						}
 					}
-				} else {
-					echo "<tr><td colspan='".esc_attr($col+2)."'><span class='error'>".esc_html( ucfirst($msgs) )." not found</span></td></tr>";
-				}
-			}
-			?>
-			</tbody>
-		</table>
+					
+					if ($total_pages <= 10) {
+						/**
+						* Display all (10) page if total page qual and less then 10
+						* Exp structure: 
+						
+						1.2.3.4.5.6.7.8.9.10
+						
+						*
+						*/
+						for ($counter = 1; $counter <= $total_pages; $counter++) {
+							fixbd_get_page($counter, $page_no, $pageURL);
+						}
+					}
+					
+					elseif ($total_pages > 10) {
+						if ($page_no <= 4) {
+							/**
+							* Display last 2 page and first 8 page (with ...)
+							* Exp structure: 
+							
+														($last_page)
+							1.2.3.4.5.6.7 ... 11.12
+							
+							*
+							*/
+							for ($counter = 1; $counter < 8; $counter++) {		 
+								fixbd_get_page($counter, $page_no, $pageURL);
+							}
+							
+							// Display last 2 page
+							echo wp_kses_post($last_page);
+						}
+					
+						elseif ($page_no > 4 && $page_no < $total_pages - 4) {
+							/**
+							* let's do -
+							* Begin display first 2 page
+							* Then center pagination with 2 page before and after
+							* Then display last 2 page
+							* Exp structure:
+							
+																		($center)
+							($first_page) 1.2 ... 3.4.5.6.7 ... 11.12 ($last_page)
+							
+							*
+							*/
+							// Display first 2 page
+							echo wp_kses_post($first_page);
+							
+							/**
+							* Display center with 2 page before and after
+							* Exp structure: 
+							
+											center
+							3 < 4 < =(5)= > 6 > 7
+							
+							*
+							*/
 
-		<br>
+							for ($counter = $page_no - $center; $counter <= $page_no + $center; $counter++) {			
+								fixbd_get_page($counter, $page_no, $pageURL);
+							}
+							
+							// Display last 2 page
+							echo wp_kses_post($last_page);
+						} else {
+							/**
+							* Display first 2 page and last 8 page (with ...)
+							* Exp structure: 
+							
+							($first_page)
+							1.2 ... 6.7.8.9.10.11.12
+							
+							*
+							*/
+								echo wp_kses_post($first_page);
+							
+							for ($counter = $total_pages - 6; $counter <= $total_pages; $counter++) {
+								fixbd_get_page($counter, $page_no, $pageURL);      
+							}
+						}
+					}
+					?>
+					
+					<li <?php if($page_no >= $total_pages){ echo "class='disabled'"; } ?>>
+					<a <?php echo "data-id='".esc_attr($next)."'";?> <?php if($page_no < $total_pages) { echo "href='". esc_url($pageURL) ."page-no=".esc_attr($next)."'"; } ?>>&raquo;</a>
+					</li>
 
-		<?php
-		if (isset($_POST["educare_view_results"])) {
-			$status = '';
-			$count = count($search);
-			
-			if (empty($search)) {
-				$msg = '';
+				</ul>
+
+				<!-- Vertically centered scrollable modal -->
+				<div class="modal fade" id="jumpPage" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="jumpPageLabel" aria-hidden="true">
+					<div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+						<div class="modal-content bg-white">
+							<form>
+								<div class="modal-header">
+									<h5 class="modal-title d-flex align-items-center" id="jumpPageLabel"><i class="dashicons dashicons-admin-page me-2"></i><?php echo __('Jump Page', 'educare');?></h5>
+									<button type="button" class="btn-close me-1" data-bs-dismiss="modal" aria-label="Close"></button>
+								</div>
+								<div class="modal-body">
+									<div class="educare-form">
+										<div class="content">
+											<?php
+											foreach ($_GET as $key => $value) {
+												echo '<input type="hidden" name="'.esc_attr( $key ).'" value="'.esc_attr( $value ).'">';
+											}
+											?>
+
+											<div class="row mb-3">
+												<label class="col-md-2 col-form-label d-flex align-items-center" for="page-no"><?php _e('Page No', 'educare');?></label>
+												<div class="col-md-10">
+													<input class="form-control" type="number" id="page-no" name="page-no" value="<?php echo esc_attr($page_no); ?>" placeholder="<?php echo esc_attr($page_no); ?>">
+												</div>
+											</div>
+											
+											<div class="row">
+												<label class="col-md-2 col-form-label d-flex align-items-center" for="per-page"><?php _e('Per Page', 'educare');?>:</label>
+												<div class="col-md-10">
+													<input class="form-control" type="number" id="per-page" name="per-page" value="<?php echo esc_attr($per_page); ?>" placeholder="<?php echo esc_attr($per_page); ?>">
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
+								<div class="modal-footer">
+									<button type="submit" name="filter" class="btn btn-success"><?php _e('Go', 'educare');?></button>
+								</div>
+							</form>
+						</div>
+					</div>
+				</div>
+				<?php
 			} else {
-				$msg = "<p>Tolal ".esc_html($count)." ".esc_html( $msgs )." found. if you click <b>Delete</b> button, It will remove all (<b>".esc_html($count)."</b>)  ".esc_html( $msgs ).".</p>";
-			}
-			
-			if (empty($search)) {
-				$status = 'disabled';
-			}
-			
-			echo wp_kses_post($msg);
-			?>
-			<form action="<?php echo esc_url($_SERVER['REQUEST_URI']); ?>" method="post">
-				<?php 
-				// Security nonce for form request.
-				$nonce = wp_create_nonce( 'educare_view_results' );
-				echo '<input type="hidden" name="nonce" value="'.esc_attr($nonce).'">';
 				?>
-
-				<input type='hidden' name='id' value='<?php echo esc_attr($id);?>'>
-				<input type='hidden' name='table' value='<?php echo esc_attr($table);?>'>
-				<input type='hidden' name='data' value='<?php echo esc_attr($data);?>'>
-				<input type='hidden' name='sub_term' value='<?php echo esc_attr($sub_term);?>'>
-				<input type='hidden' name='select_year' value='<?php echo esc_attr($select_year);?>'>
-				<input type='hidden' name='year' value='<?php echo esc_attr($year);?>'>
-				<input type='hidden' name='order' value='<?php echo esc_attr($order);?>'>
-				<input type='hidden' name='time' value='<?php echo esc_attr($time);?>'>
-				<input type='hidden' name='results_per_page' value='<?php echo esc_attr($results_per_page);?>'>
-				
-				<input type="submit" name="remove" class="educare_button" value="Delete <?php echo esc_attr( ucfirst($msgs) );?>" onClick="<?php echo esc_js( 'return educareConfirmation()' )?>">
-			</form>
-			<?php
+				<div class="modal fade" id="jumpPage" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="jumpPageLabel" aria-hidden="true">
+					<div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+						<div class="modal-content bg-white">
+							<div class="modal-header">
+								<h5 class="modal-title d-flex align-items-center" id="jumpPageLabel"><i class="dashicons dashicons-admin-page me-2"></i><?php echo __('Jump Page', 'educare');?></h5>
+								<button type="button" class="btn-close me-1" data-bs-dismiss="modal" aria-label="Close"></button>
+							</div>
+							<div class="modal-body">
+								<?php echo educare_show_msg( 'No page available to navigate.', false )?>
+							</div>
+							<div class="modal-footer">
+								<button type="button" class="btn btn-primary" data-bs-dismiss="modal"><?php echo __('Ok', 'educare');?></button>
+							</div>
+						</div>
+					</div>
+				</div>
+				<?php
+			}
 		}
-}
-
-
-
-/** 
- * Slice part of array
- * 
- * Usage example: educare_array_slice($class, 'b', 'd');
- * 
-	$class = array(
-		'a' => 'aa',
-		'b' => 'bb',
-		'c' => 'cc',
-		'd' => 'dd',
-		'e' => 'ee',
-	);
- *
- * Example:
- * 
-	$new_array = educare_array_slice($class, 'b', 'd');
-	echo '<pre>';	
-	print_r($new_array);	
-	echo '</pre>';
- *
- * @since 1.2.0
- * @last-update 1.2.0
- * 
- * @param array 			$array where to slice
- * @param str 				$offset slice start
- * @param str 				$length slice end
- * 
- * @return new array()
- */
-
-function educare_array_slice($array, $offset, $length = null) {
-  $offset = array_search($offset, array_keys($array));
-  $slice_array = array_slice($array, $offset);
-
-  $length = array_search($length, array_keys($slice_array));
-  $length = $length - 1;
-
-  $slice_array = array_slice($slice_array, 1, $length);
-
-  return $slice_array;
+	}
 }
 
 
@@ -3028,7 +3083,6 @@ function educare_array_slice($array, $offset, $length = null) {
  * 
  * @return mixed
  */
-
 function educare_demo_data($list) {
 	global $wpdb;
 	$table = $wpdb->prefix."educare_settings";
@@ -3036,6 +3090,7 @@ function educare_demo_data($list) {
 	$query = $wpdb->prepare( "SELECT * FROM $table WHERE list = %s", $list );
 	// Execute the prepared query and get the results
 	$search = $wpdb->get_results( $query );
+
 	$data = '';
 
 	foreach ( $search as $print ) {
@@ -3044,63 +3099,6 @@ function educare_demo_data($list) {
 
 	$data = json_decode($data);
 	return $data;
-}
-
-
-
-/**
- * For replace old key to new key. Also, change the value
- * 
- * Usage example: educare_replace_key_n_val($arr, $oldkey, $newkey);
- * 
- * @since 1.2.0
- * @last-update 1.2.0
- * 
- * @param array $arr   	where to replace key/value
- * @param string $oldkey  	old key to replace key/value
- * @param string $newkey 	 	replace key/value to new key
- * @param mixed $value 	replace specific key value
- * 
- * @return array
- */
-
-function educare_replace_key_n_val($arr, $oldkey, $newkey, $value = null) {
-	if(array_key_exists( $oldkey, $arr)) {
-
-    if ($value) {
-      $arr[$oldkey] = $value;
-    }
-
-		$keys = array_keys($arr);
-    $keys[array_search($oldkey, $keys)] = $newkey;
-    return array_combine($keys, $arr);	
-	}
-    return $arr;    
-}
-
-
-
-/**
- * remove specific value from array
- * 
- * Usage example: educare_remove_value($value, $array);
- * 
- * @since 1.2.0
- * @last-update 1.2.0
- * 
- * @param mixed $val 	remove specific value
- * @param array $arr   from array
- * 
- * @return array
- */
-
-function educare_remove_value($val, $arr) {
-	
-	if (($key = array_search($val, $arr)) !== false) {
-		unset($arr[$key]);
-	}
-
-	return array_values($arr);
 }
 
 
@@ -3119,12 +3117,11 @@ function educare_remove_value($val, $arr) {
  * 
  * @return array
  */
-
 function educare_replace_key($array, $old_key, $new_key) {
 	$keys = array_keys($array);
 
 	if (false === $index = array_search($old_key, $keys, true)) {
-		throw new Exception(sprintf('Key "%s" does not exist', $old_key));
+			throw new Exception(sprintf('Key "%s" does not exist', $old_key));
 	}
 
 	$keys[$index] = $new_key;
@@ -3140,529 +3137,39 @@ function educare_replace_key($array, $old_key, $new_key) {
 ===================( BEGIN AJAX FUNCTIONALITY )===================*/
 
 
-
-
 /**
- * AJAX callback function to retrieve and display subjects based on the selected class and group.
- *
- * The `educare_class` function is an AJAX callback function that handles the request to retrieve and display subjects based on the selected class and group.
- *
- * The function performs the following tasks:
- * - Checks the user's capability to manage options. If the user doesn't have the required capability, the function exits.
- * - Verifies the nonce to ensure the request is secure.
- * - Retrieves the selected class, group, ID, and additional data from the AJAX request.
- * - Calls the `educare_get_subject` function to get the subjects for the selected class and group.
- * - Sends the subjects data as a response to the AJAX request.
- *
- * Note: The `educare_get_subject` function, which is called within this AJAX callback, is not provided in the code snippet. It is assumed that this function exists and handles the retrieval of subjects based on the class and group parameters.
+ * Get/show specific class subject wehen user select any subject
  * 
  * @since 1.2.0
  * @last-update 1.2.0
+ * 
+ * @return mised/HTML
  */
 function educare_class() {
-	// Check user capability to manage options
-	if (!current_user_can('manage_options')) {
-		exit;
-	}
-
 	// Remove the backslash
 	$_POST['form_data'] = stripslashes($_POST['form_data']);
-	
-	// Get data from the AJAX request
-	$class = sanitize_text_field($_POST['class']);
-	$add_students = sanitize_text_field($_POST['add_students']);
-	$id = sanitize_text_field($_POST['id']);
 	// parses query strings and sets the parsed values into the $_POST array.
 	wp_parse_str($_POST['form_data'], $_POST);
 
-	// Verify nonce to ensure the request is secure
-	educare_verify_nonce('educare_crud_data');
-
-	// Check if the 'Group' field exists in the POST data
-	if (key_exists('Group', $_POST)) {
-		$Group = sanitize_text_field($_POST['Group']);
-	} else {
-		$Group = '';
-	}
-
-	// Call the function to get subjects based on the selected class and group
-	educare_get_subject($class, $Group, $id, $add_students);
-
-	// Terminate the script execution and send the response as JSON
+	// Verify the nonce to ensure the request originated from the expected source
+	educare_verify_nonce('educare_crud_data', 'crud_data_nonce');
+	
+	unset($_POST['default']['id']);
+	educare_get_subject_field();
 	die;
 }
 
-// Add the 'educare_class' function as an AJAX action
 add_action('wp_ajax_educare_class', 'educare_class');
 
 
 
-
-
 /**
- * Generates a demo CSV file based on the current settings for importing data (results or students) into the database.
- *
- * The `educare_demo` function generates a demo CSV file based on the current settings in the Educare theme or plugin.
- * The generated demo file can be used for importing data (results or students) into the database.
- *
- * The function performs the following tasks:
- * - Checks the selected class and retrieves the associated subjects.
- * - Creates default data for the CSV file based on the required fields and additional fields from the user's settings.
- * - Saves the generated data into a CSV file named "import_demo_results.csv" for results or "import_demo_students.csv" for students.
- * - Provides feedback to the user about the success of the file generation and instructions for downloading the file.
- *
- * The function also checks if the "copy_demo" setting is enabled in the Educare settings. If it is enabled, it displays the generated data that can be copied directly. Otherwise, it instructs the user to download the CSV file manually.
- *
- * Note: The generated demo file is based on the current settings, so if the user changes the settings, the demo file may not work, and a new one needs to be generated.
- *
- * @param bool|null $demo_key Whether to return the demo fields (array keys) or not. Default is null.
- *
- * @since 1.2.0
- * @last-update 1.2.2
+ * Check educare default settings
  * 
- * @example
- * To generate a demo file for results, call the function as follows:
- * educare_demo('results');
- *
- * To generate a demo file for students, call the function as follows:
- * educare_demo('students');
- */
-function educare_demo($demo_key = null) {
-	// Check user capability to manage options
-	if (!current_user_can('manage_options')) {
-		exit;
-	}
-	
-	// Verify the nonce to ensure the request originated from the expected source
-	if (!$demo_key) {
-		// because, this is for import proccess, we have allready define nonce there
-		educare_verify_nonce('educare_demo_nonce');
-	}
-	
-
-	$Class = educare_demo_data('Class');
-
-	// If we can not check exam, php will show an error msg. Because, array_rand(): Argument #1 ($array) cannot be empty
-	if (empty(educare_demo_data('Exam'))) {
-    $Exam = 'Exam Name';
-  } else {
-    $Exam = array_rand(educare_demo_data('Exam'), 1);
-    $Exam = educare_demo_data('Exam')[$Exam];
-  }
-
-	$selected_class = sanitize_text_field($_POST['Class']);
-	$Subject = $Class->$selected_class;
-
-	if (isset($_POST['data_for'])) {
-		$data_for = sanitize_text_field($_POST['data_for']);
-	} else {
-		$data_for = '';
-	}
-	
-	// Save data as a file (import_demo.csv)
-	$download_files = "assets/files/import_demo_".$data_for.".csv";
-	 
-	if ($data_for == 'results') {
-		$search = $Subject;
-	} else {
-		$search = $Class;
-	}
-
-	$files_name = EDUCARE_DIR.$download_files;
-
-	if ($search) {
-		$Name = $Roll_No = $Regi_No = '';
-		$Class = $selected_class;
-		$GPA = rand(2, 5);
-		$Extra_field = educare_demo_data('Extra_field');
-		// $Year = educare_demo_data('Year');
-		$Year = date("Y");
-		$Photos = 'URL';
-
-		if ($data_for == 'results' or isset($_POST['results'])) {
-			$ignore = array();
-		} else {
-			$ignore = array(
-				'Exam'
-			);
-		}
-
-		$requred = educare_check_status('display');
-		$requred_fields = educare_combine_fields($requred, $ignore);
-
-		foreach ($requred_fields as $key => $value) {
-			$data[$key] = $$key;
-		}
-
-		foreach ($Extra_field as $value) {
-			// get type
-			$type = strtok($value, ' ');
-			// remove field type
-			$value = substr(strstr($value, ' '), 1);
-
-			if ($type == 'number') {
-				$data[$value] = rand(10000000, 90000000);
-			}
-			elseif ($type == 'date') {
-				$data[$value] = date("Y-m-d");
-			}
-			elseif ($type == 'email') {
-				$data[$value] = 'youremail@gmail.com';
-			} else {
-				$data[$value] = $value;
-			}
-		}
-
-		if ($data_for == 'results' or isset($_POST['results'])) {
-			$data['Result'] = 'Passed';
-			$data['GPA'] = number_format((float)$GPA, 1, '.', '');
-		}
-		
-		$data['Group'] = 'Group Name';
-
-		foreach ($Subject as $value) {
-			// remove field type
-			$data[$value] = rand(33, 99);
-		}
-		
-		$data['Photos'] = $Photos;
-
-		if ($demo_key) {
-			return array_keys($data);
-		}
-		
-		// .csv (exel) head
-		$head = implode(',',array_keys($data));
-		
-		// students data
-		if (isset($_POST['total_demo'])) {
-			$total_demo = sanitize_text_field($_POST['total_demo']);
-		} else {
-			$total_demo = 1;
-		}
-
-		ob_start();
-
-		for ($i=0; $i < $total_demo; $i++) {
-
-			foreach ($data as $field_name => $value) {
-				if ($field_name == 'Name') {
-					$data[$field_name] = 'Student name' . $i;
-				}
-				if ($field_name == 'Roll_No') {
-					$data[$field_name] = rand(10000, 90000);
-				}
-				if ($field_name == 'Regi_No') {
-					$data[$field_name] = rand(10000000, 90000000);
-				}
-			}
-
-			echo "\n" . esc_html(implode(',', $data));
-    }
-
-		$content = ob_get_clean();
-		$data = $head . $content;
-		
-		// Save functionality
-		$demo_file = file_get_contents($files_name);
-		// for store (save) database status to a files
-		$file_dir = $files_name;
-		
-		// check if data is already exist/same or not. if data not exist or old, then update data. otherwise ignore it.
-		if (!($data == $demo_file)) {
-			// process to update data
-			if ( !file_exists("data") );
-			// update data if any changed found
-			$update_data = fopen($file_dir, 'w'); 
-			fwrite($update_data, $data);
-			fclose($update_data);
-		}
-
-		echo "<br><div class='notice notice-success is-dismissible'><p>Successfully generated demo files for your selected class (<b>".esc_html( $selected_class )."</b>)</p></div>";
-
-		$enable_copy = '';
-		
-		if(educare_check_status('copy_demo') == 'checked') {
-			echo '<pre><textarea style="width: 100%; height: 100px;">';
-			print_r($data);
-			echo '</textarea></pre>';
-		} else {
-			$enable_copy = 'enable <a href="'.esc_url( admin_url() ).'/admin.php?page=educare-settings&menu=Others" target="_blank">Copy Demo Data</a> from educare settings or';
-		}
-
-		echo "<p><strong>Notes:</strong> This is an example of importing a demo.csv file, based on your current settings (Class, Subject, Additional fields...). If you make any changes to educare (plugin) settings, this demo file may not work. For this you need to create this file again! And if you get error or face any problem while downloading the file &#9785;, you can ".wp_kses_post( $enable_copy )." manually get this file in dir: <p>".esc_html( $file_dir )."</p><br>";
-
-		echo "<p><a class='educare_button' href='".esc_url(EDUCARE_URL.$download_files)."' title='Download Import Demo'><i class='dashicons dashicons-download'></i> Download Demo</a></p>";
-	} else {
-		$file_dir = $files_name;
-		
-		$update_data = fopen($file_dir, 'w'); 
-		fwrite($update_data, '');
-		fclose($update_data);
-
-		$url = admin_url().'/admin.php?page=educare-management&menu='.$selected_class;
-
-		if (!$selected_class) {
-			echo "<br><div class='notice notice-error is-dismissible'><p>Please select a valid class</p></div>";
-		} else {
-			echo "<br><div class='notice notice-error is-dismissible'><p>Currently, you don't have added any subject in this class (<b>".esc_html( $selected_class )."</b>). Please add some subject by <a href='".esc_url( $url)."' target='_blank'>Click Here</a>. Thanks </p></div>";
-		}
-
-		echo "<br><p><a class='educare_button disabled' title='Download Import Demo.csv Error'><i class='dashicons dashicons-download'></i> Download Demo</a></p>";
-	}
-
-	die;
-}
-
-// Hook the AJAX action to the 'educare_demo' function
-add_action('wp_ajax_educare_demo', 'educare_demo');
-
-
-
-
-/**
- * Imports data (results or students) from a CSV file into the Educare theme or plugin database.
- *
- * The `educare_import_result` function is responsible for importing data (results or students) from a CSV file
- * into the Educare theme or plugin database. The function handles the process of importing the data and performs
- * various checks to ensure the data is imported correctly.
- *
- * The function performs the following tasks:
- * - Reads the CSV file and extracts data row by row.
- * - Validates the data length based on the CSV header and the user's settings.
- * - Assigns default values to the data fields.
- * - Processes the data and combines it with other required fields.
- * - Checks if the results or students data already exists in the database and ignores duplicates.
- * - Imports the data into the respective database table using the WordPress `$wpdb` object.
- * - Provides feedback to the user about the import process, including the number of records inserted, existing records, and any errors.
- *
- * The function also checks for the file extension and validates that the uploaded file is a CSV file. If the file is not a CSV,
- * or if no file is chosen, it displays an error message to the user.
- *
- * @param string|null $data_for The type of data to import: 'results' or 'students'.
- *
- * @since 1.0.0
- * @last-update 1.3.0
- * 
- * @example
- * To import results data, call the function as follows:
- * educare_import_result('results');
- *
- * To import students data, call the function as follows:
- * educare_import_result('students');
- */
-function educare_import_result($data_for = null) {
-	// Display a guide with required fields and instructions for importing
-	echo educare_guide_for("Notes: Please carefully fill out all the details of your import (<b>.csv</b>) files. If you miss one, you may have problems to import the data. So, verify the student's admission form well and then give all the details in your import files. So, don't miss all of this required field!<br><br>Notes: If you don't know, how to create a import files. Please download the demo files given below.");
-
-	// Import CSV if the "educare_import_data" form is submitted
-	if(isset($_POST['educare_import_data'])) {
-		// Check user capability to manage options
-		if (!current_user_can('manage_options')) {
-			exit;
-		}
-
-		// Verify the nonce to ensure the request originated from the expected source
-		educare_verify_nonce('educare_import_data');
-
-		// Begin import results function
-		global $wpdb;
-
-		// Table name, where to import the results
-		$table = $wpdb->prefix."educare_$data_for";
-		
-		if ($data_for == 'results') {
-			$ignore = array();
-			$ignore_key = array(
-				'Name'
-			);
-		} else {
-			$ignore = array(
-				'Exam'
-			);
-			
-			$ignore_key = array(
-				'Name',
-				'Exam'
-			);
-		}
-
-		// Get the required fields based on the educare settings
-		$requred = educare_check_status('display');
-		$requred_fields = educare_requred_data($requred, true);
-
-		
-		// Proccess Import Data
-		// File extension
-		$extension = pathinfo($_FILES['import_file']['name'], PATHINFO_EXTENSION);
-
-		// If file extension is 'csv'
-		if(!empty($_FILES['import_file']['name']) && $extension == 'csv') {
-
-			$totalInserted = $total = $exist = $error = $empty_fields = 0;
-			
-			// Open file in read mode
-			$csvFile = fopen($_FILES['import_file']['tmp_name'], 'r');
-			$keys = educare_demo(true);
-
-			// Skipping header row
-			fgetcsv($csvFile);
-
-			// Read file
-			while(($csvData = fgetcsv($csvFile)) !== FALSE) {
-				$csvData = array_map("utf8_encode", $csvData);
-				// Count total data
-				$total ++;
-				// CSV row column length (based on import files)
-				$dataLen = count($csvData);
-				// $table row column length (based on the users settings)
-				$content_len = count($keys);
-
-				// display error msg if $dataLen & $content_len are not same
-
-				if( $dataLen != $content_len ) $error++;
-				// process to import the results/data if everything ok
-				if( !($dataLen == $content_len) ) continue;
-				// Assign default value/field as a variables
-				$keys = str_replace(' ' , '_', array_values($keys));
-				$data = array_combine($keys, $csvData);
-
-  			$requred_fields = educare_combine_fields($requred, $ignore_key, $data);
-				$sql = educare_get_sql($requred_fields);
-
-				// Check results already exists or not
-				$search = "SELECT count(*) as count FROM {$table} WHERE {$sql}";
-				$results = $wpdb->get_results( $search );
-
-				
-				// ignore old results if all ready exist
-				if($results[0]->count==0) {
-			
-					// Check default data/field is empty or not
-					if(!educare_is_empty($requred_fields)) {
-						$requred_fields = educare_combine_fields($requred, $ignore, $data);
-					
-						if ($data_for == 'students') {
-							$Details = educare_array_slice($data, 'Year', '');
-							$Photos = sanitize_text_field($data['Photos']);
-							$Details['Photos'] = $Photos;
-							$Details = json_encode($Details);
-							$Subject = educare_array_slice($data, 'Group', 'Photos');
-							$Subject = json_encode($Subject);
-							$Group = sanitize_text_field($data['Group']);
-
-							$data = $requred_fields;
-							$data['Details'] = $Details;
-							$data['Group'] = $Group;
-							$data['Subject'] = $Subject;
-						} else {
-							$Photos = sanitize_text_field($data['Photos']);
-							$Details = educare_array_slice($data, 'Year', 'Result');
-							$Details['Photos'] = $Photos;
-							$Details = json_encode($Details);
-
-							$Subject = educare_array_slice($data, 'Group', 'Photos');
-							$Subject = json_encode($Subject);
-
-							$Result = sanitize_text_field($data['Result']);
-							$GPA = sanitize_text_field($data['GPA']);
-							$Group = sanitize_text_field($data['Group']);
-
-							$data = $requred_fields;
-							$data['Details'] = $Details;
-							$data['Group'] = $Group;
-							$data['Subject'] = $Subject;
-							$data['Result'] = $Result;
-							$data['GPA'] = $GPA;
-						}
-
-						// Insert data/results into database table
-						$wpdb->insert($table, $data);
-						// display how many data is imported
-						if ($wpdb->insert_id > 0) {
-							$totalInserted++;
-						}
-					} else {
-						// requred fields are empty
-						$empty_fields++;
-						$error++;
-					}
-				} else {
-					// display how many data is already exists
-					$exist++;
-				}
-			}
-			// print import process details
-			echo "<div class='notice notice-success is-dismissible'><p>Total ".esc_html($data_for)." inserted: <b style='color: green;'>".esc_html($totalInserted)."</b> results<br>Allredy exist: <b>".esc_html($exist)."</b> ".esc_html($data_for)."<br>Error to import: <b style='color: red;'>".esc_html($error)."</b> ".esc_html($data_for)."<br>Successfully imported: ".esc_html($totalInserted)." of ".esc_html($total)."</p></div>";
-			
-			if ($error) {
-				$missing = $error - $empty_fields;
-				echo educare_guide_for("<b>Logs</b>: It's not possible to import <b style='color: red;'>".esc_html($error)."</b> ".esc_html($data_for)." while during this process. Maybe, some field or data is missing.<br>Missing fields: <b>".esc_html($missing)."</b><br>Empty requred value: <b>".esc_html($empty_fields)."</b><p>Notes: If you make any changes on educare (plugin) settings, sometimes this demo file may not work. For this you need to create this file again!</p>", '', false);
-			}
-		} else {
-			// notify users if empty files or invalid extension
-			echo "<div class='notice notice-error is-dismissible'><p>";
-			if(empty($_FILES['import_file']['name'])) {
-				echo "No file chosen! Please select a files";
-			} else {
-				echo "Invalid extension. Files must be an <b>.csv</b> extension for import the ".esc_html($data_for).". Please choose a .csv files";
-			}
-			echo "</p></div>";
-		}
-	}
-	
-	?>
-	<!-- Import Form -->
-	<form  class="add_results" method="post" action="<?php esc_url($_SERVER['REQUEST_URI']); ?>" enctype="multipart/form-data" id="upload_csv">
-		<?php
-		// Define educare nonce for secure request
-		$nonce = wp_create_nonce( 'educare_import_data' );
-		echo '<input type="hidden" name="nonce" value="'.esc_attr($nonce).'">';
-		?>
-
-		<div class="content">
-			<p>Files must be an <b>.csv</b> extension for import the results.</p>
-			<input type="hidden" name="<?php echo esc_attr( $data_for );?>" value="<?php echo esc_attr( $data_for );?>">
-			<input type="file" name="import_file">
-			<select name="Class" class="form-control">
-				<?php educare_get_options('Class', '');?>
-			</select><br>
-			<button class="educare_button" type="submit" name="educare_import_data"><i class="dashicons dashicons-database-import"></i> Import</button>
-		</div>
-	</form>
-	<br>
-	<?php
-}
-
-
-
-
-/**
- * Fixes and updates settings for the Educare theme or plugin.
- *
- * The `educare_ai_fix` function is responsible for fixing and updating settings related to the Educare theme or plugin.
- * This function is part of the problem detection mechanism and is triggered to resolve issues that may arise during updates
- * or if the settings data is inconsistent with the default settings.
- *
- * The function performs the following tasks:
- * - Retrieves the current settings and default settings data using the `educare_check_status` and `educare_add_default_settings` functions.
- * - Compares the current settings with the default settings and adds any missing or new settings to the current settings.
- * - Checks if the `Group` setting exists and adds it if not present.
- * - Updates the database settings with the fixed data.
- *
- * The function also checks if the "AI Problem Detection" option is enabled in the settings. If it's enabled, the function performs the updates
- * and returns a success message. If the option is disabled, the function informs the user to enable the "AI Problem Detection" option
- * to fix the issues.
- *
- * @return string The function returns a success message if the issues are fixed, or an informational message if the "AI Problem Detection" option is disabled.
- *
  * @since 1.2.4
  * @last-update 1.3.0
  * 
- * @example
- * Trigger the AI fix mechanism to resolve issues and update settings.
- * $fix_status = educare_ai_fix();
- * echo $fix_status;
+ * @return void
  */
 function educare_ai_fix() {
 	$current_settings = educare_check_status();
@@ -3684,20 +3191,31 @@ function educare_ai_fix() {
 		}
 	}
 
-	$error_key = array_diff_key($current_data,$default_data);
+	// $error_key = array_diff_key($current_data, $default_data);
+	$error_key = array();
+	if (is_array($current_data) && is_array($default_data)) {
+    $error_key = array_diff_key($current_data, $default_data);
+	}
 
 	// remove unkhown key from data
-	foreach ($error_key as $key => $value) {
-		unset($current_data[$key]);
+
+	if ($error_key) {
+		foreach ($error_key as $key => $value) {
+			unset($current_data[$key]);
+		}
 	}
 
 	// insert educare new data in database settings
 	foreach ($default_data as $key => $data) {
-		// keep user old settings
-		if (!key_exists($key, $current_data)) {
-			$current_data[$key] = $data;
-			$msgs = true;
-			$update_current_data = true;
+		if (is_array($current_data)) {
+			// keep user old settings
+			if (!key_exists($key, $current_data)) {
+				$current_data[$key] = $data;
+				$msgs = true;
+				$update_current_data = true;
+			}
+		} else {
+			return educare_show_msg('There are some issues found and you will get an error while proccessing some options. Go to Educare <code>Settings > Reset Settings > <b>Restore Default Settings</b></code> and click on it to fix (remove) this messege.', false, false);
 		}
 	}
 
@@ -3726,38 +3244,16 @@ function educare_ai_fix() {
 				// Add Group list
 				educare_add_default_settings('Group');
 				// Add group head/structure in table
-				$wpdb->query(
-					$wpdb->prepare(
-						"ALTER TABLE `%s` ADD `%s` VARCHAR(80) NOT NULL AFTER `%s`;",
-						$results_table,
-						'Group',
-						'Details'
-					)
-				);
+				$wpdb->query("ALTER TABLE `$results_table` ADD `Group` VARCHAR(80) NOT NULL AFTER `Details`;");
 
-				$wpdb->query(
-					$wpdb->prepare(
-						"ALTER TABLE `%s` ADD `%s` VARCHAR(80) NOT NULL AFTER `%s`;",
-						$students_table,
-						'Group',
-						'Details'
-					)
-				);
+				$wpdb->query("ALTER TABLE `$students_table` ADD `Group` VARCHAR(80) NOT NULL AFTER `Details`;");
 
-				$wpdb->query(
-					$wpdb->prepare(
-						"ALTER TABLE `%s` ADD `%s` mediumint(11) NOT NULL AFTER `%s`;",
-						$students_table,
-						'Student_ID',
-						'Others'
-					)
-				);
-			
+				$wpdb->query("ALTER TABLE `$students_table` ADD `Student_ID` mediumint(11) NOT NULL AFTER `Others`;");
 			}
 			
-			$msgs = '<div class="educare_post">'.educare_guide_for("<strong>Educare (AI) Detection:</strong> Successfully complete update process and fixed all bugs and error").'</div>';
+			$msgs = '<div class="educare-container"><div class="educare_post">'.educare_show_msg("<strong>Educare (AI) Detection:</strong> Successfully complete update process.", 'info', false).'</div></div>';
 		} else {
-			$msgs = educare_guide_for('There are some issues found and you will get an error while proccessing some options. Because, Your current settings are disabled educare AI Problem Detection options. Please, Go to educare <code>Settings > Advance Settings > <b>(AI) Problem Detection</b></code> enable it to fix (remove) this messege. Note: To show advanced settings you must enable advanced settings in Settings > Other > Advanced settings.', '', false);
+			$msgs = educare_show_msg('There are some issues found and you will get an error while proccessing some options. Because, Your current settings are disabled educare AI Problem Detection options. Please, Go to educare <code>Settings > Advance Settings > <b>(AI) Problem Detection</b></code> enable it to fix (remove) this messege. Note: To show advanced settings you must enable advanced settings in Settings > Other > Advanced settings.', false, false);
 		}
 	}
 	
@@ -3766,9 +3262,21 @@ function educare_ai_fix() {
 }
 
 
+function educare_sanitize_array($data) {
+	// Before using array_map on $_POST['for'], you should ensure that $_POST['for'] is set to avoid potential warnings or errors. 
+	if (isset($data) && is_array($data)) {
+		$sanitize_data = array_filter($data, 'sanitize_text_field');
+	} else {
+		$sanitize_data = sanitize_text_field($data);
+	}
+
+	return $sanitize_data;
+}
+
+
 
 /**
- * ### Add, Updata or Remove Data
+ * Add, Updata or Remove Data
  * 
  * Usage example: educare_settings('Settings');
  * 
@@ -3788,10 +3296,15 @@ function educare_ai_fix() {
  * @param string $list	Select database
  * @return null|HTML 
  */
-
 function educare_process_settings($list) {
 	global $wpdb;
 	$table = $wpdb->prefix."educare_settings";
+	$list_column = $list;
+
+	if ($list == 'Extra_field') {
+		$list_column = 'Details';
+	}
+   
 	// Prepare the query with placeholders
 	$query = $wpdb->prepare( "SELECT * FROM $table WHERE list = %s", $list );
 	// Execute the prepared query and get the results
@@ -3803,30 +3316,40 @@ function educare_process_settings($list) {
 			$id = $print->id;
 		}
 		
-		$data = json_decode($data);
+		$data = json_decode($data, true);
 		
 		/* Convert index to associative array (number to name)
 		and ignore Settings data, because our settings data is not array, it's an object. so, its not possible to combination [with: array_combine() func] between array and object. so, ignore Settings {object} to combine array. Otherwise, it's will give an error!
 		*/
-		$display_data = '';
-		if ($list != 'Settings') {
-			$display_data = array_combine($data, $data);
-		}
 	
 		// for add list items
 		if (isset($_POST['educare_add_'.$list.''])) {
+			// check if user access this request
+			educare_check_access('management');
+			
 			$in_list = $list;
 			// remove all _ characters from the list (normalize the $list)
 			$list = str_replace('_', ' ', $in_list);
 			
-			$target = sanitize_text_field($_POST[$in_list]);
-			// $target = str_replace('_', ' ', $target);
+			if (isset($_POST["educare_add_Extra_field"])) {
+				$target = sanitize_text_field($_POST['field']);
+			} else {
+				$target = sanitize_text_field($_POST[$in_list]);
+			}
 			
 			if (empty($target)) {
 				?>
 				<div class="sticky_msg">
 					<div class="notice notice-error is-dismissible"> 
-						<p>You must fill the form for add the <b><?php echo esc_html($list);?></b>. thanks</p>
+						<p><?php
+							echo sprintf(
+								__(
+									'You must fill the form for add the <b>%s</b>.',
+									'educare'
+								),
+								esc_html__($list, 'educare')
+							)
+							?></p>
 						<button class='notice-dismiss'></button>
 					</div>
 				</div>
@@ -3834,32 +3357,53 @@ function educare_process_settings($list) {
 			
 			} else {
 				
+				$unique_target = strtolower($target);
 				$y = array();
-				if (isset($_POST["educare_add_Extra_field"])) {
-					$unique_target = strtolower(substr(strstr($target, ' '), 1));
 
-					for ($i = 0; $i < count($data); $i++) {
-						$x = strtolower(substr(strstr($data[$i], ' '), 1));
-						$y[] = $x;
+				if (isset($_POST["educare_add_Extra_field"])) {
+					$unique_target = strtolower(sanitize_text_field($_POST['field']));
+
+					if ($data) {
+						// log_it($data);
+						foreach ($data as $value) {
+							$y[] = strtolower($value['title']);
+						}
 					}
 
 				} else {
-					$unique_target = strtolower($target);
-
 					for ($i = 0; $i < count($data); $i++) {
 						$x = strtolower($data[$i]);
 						$y[] = $x;
 					}
-
 				}
 
 				$unique_data = $y;
 				
 				if (in_array($unique_target, $unique_data)) {
-					echo '<div class="sticky_msg"><div class="notice notice-error is-dismissible"><p>'.esc_html($list).' <b>'.esc_html($target).'</b> is allready exist!</p><button class="notice-dismiss"></button></div></div>';
+					echo '<div class="sticky_msg"><div class="notice notice-error is-dismissible"><p>'.
+					sprintf(
+						__(
+							'<b>%1$s</b> is allready exist!',
+							'educare'
+						),
+						// esc_html__($new, 'educare'),
+						esc_html__($target, 'educare')
+					)
+					.'</p><button class="notice-dismiss"></button></div></div>';
 				} else {
+					if (!$data) {
+						$data = array();
+					}
 					
-					$data = array_unique($data);
+					if (isset($_POST['Extra_field'])) {
+						$target = array(
+							'title' => sanitize_text_field($_POST['field']),
+							'type' => sanitize_text_field($_POST['type']),
+							'for' => isset($_POST['for']) ? educare_sanitize_array(($_POST['for'])) : array()
+						);
+					}
+					
+					// Add new data
 					array_push($data, $target);
 					
 					$wpdb->update(
@@ -3876,15 +3420,27 @@ function educare_process_settings($list) {
 					// for hide extra field type
 					if (isset($_POST["educare_add_Extra_field"])) {
 						// $type = strtok($target, ' ');
-						$target = substr(strstr($target, ' '), 1);
+						$target = $target['title'];
 					}
 
-					echo '<div class="sticky_msg"><div class="notice notice-success is-dismissible"><p>Successfully Added <b>'.esc_html($target).'</b> at the '.esc_html($list).' list<br>Total: <b>'.esc_html(count($data)).'</b> '.esc_html($list).' added</p><button class="notice-dismiss"></button></div></div>';
+					echo '<div class="sticky_msg"><div class="notice notice-success is-dismissible"><p>'.
+					sprintf(
+						__(
+							'Successfully Added <b>%1$s</b> at the %2$s list <br>Total: <b>%3$d</b> %2$s added.',
+							'educare'
+						),
+						esc_html__($target, 'educare'),
+						esc_html__($list, 'educare'),
+						esc_html__(count($data), 'educare'),
+					)
+					.'</p><button class="notice-dismiss"></button></div></div>';
 				}
 			}
 		}
 		
 		if (isset($_POST['educare_edit_'.$list.''])) {
+			// check if user access this request
+			educare_check_access('management');
 			
 			$in_list = $list;
 			// remove all _ characters from the list (normalize the $list)
@@ -3895,60 +3451,99 @@ function educare_process_settings($list) {
 			
 			$check = strtolower($target);
 			
-			if ($in_list == 'Extra_field') {
-				$check = strtolower(substr(strstr($check, ' '), 1));
-			}
-			
 			// Create nonce for update or remove forms
 			$update_nonce = wp_create_nonce( 'educare_update_'.esc_attr($in_list) );
 			$remove_nonce = wp_create_nonce( 'remove_'.esc_attr($in_list) );
-
+						
 			if ($in_list == 'Extra_field') {
-				$data_type = strtok($target, ' ');
-				$Target = substr(strstr($target, ' '), 1);
+				$data_type = $Target = '';
+
+				if ($data) {
+					foreach ($data as $value) {
+						if ($value['title'] == $target) {
+							$data_type = $value['type'];
+							$data_for = $value['for'];
+							// $Target = $value['title'];
+						}
+					}
+				}
 				
 				?>
 				<div class="sticky_msg">
 					<div class="notice notice-success is-dismissible">
 						<p>
-						<center><h2>Edit <?php echo esc_html($list);?></h2></center>
-						
-						<form action="<?php echo esc_url($_SERVER['REQUEST_URI']); ?>" method="post" class="educare_update_data">
+							<form action="<?php echo esc_url($_SERVER['REQUEST_URI']); ?>" method="post" class="py-0 px-3 add_results bg-transparent shadow-none educare_update_data">
+								<div class="d-block fw-bold mb-3"><?php echo __('Edit:', 'educare') .' '. esc_html__($target, 'educare');?></div>
 
-							<input type="hidden" name="remove" value="<?php echo esc_attr($target);?>"/>
-							<input type="hidden" name="old_data" value="<?php echo esc_attr($target);?>"/>
-							Edit - <b><?php echo esc_html($Target);?></b>:
-							
-							<div class="select add-subject">
-								<div>
-									<p>Name:</p>
-									<input type="text" name="field" class="fields" value="<?php echo esc_attr($Target);?>" placeholder="<?php echo esc_attr($Target);?>">
+								<?php
+								echo '<input type="hidden" name="educare_update_'.esc_attr($in_list).'_nonce" value="'.esc_attr($update_nonce).'">';
+								echo '<input type="hidden" name="remove_'.esc_attr($in_list).'_nonce" value="'.esc_attr($remove_nonce).'">';
+								echo '<input type="hidden" name="'.esc_attr($in_list).'">';
+								?>
+
+								<input type="hidden" name="old_data" value="<?php echo esc_attr($target);?>"/>
+								<input type="hidden" name="old_type" value="<?php echo esc_attr($data_type);?>"/>
+
+								<?php
+								// Before using array_map on $_POST['for'], you should ensure that $_POST['for'] is set to avoid potential warnings or errors. 
+								if (isset($data_for) && is_array($data_for)) {
+									foreach ($data_for as $value) {
+										echo '<input type="hidden" name="old_for[]" value="'.esc_attr($value).'"/>';
+									}
+								} else {
+									echo '<input type="hidden" name="old_for[]" value="'.esc_attr($data_for).'"/>';
+								}
+								?>
+
+								<div class="mb-3 row">
+									<label for="editFieldName" class="col-sm-2 col-form-label"><?php _e('Field Name', 'educare');?></label>
+									<div class="col-sm-10">
+										<input id="editFieldName" type="text" name="field" class="form-control-plaintext" value="<?php echo esc_attr($target);?>" placeholder="<?php echo esc_attr($target);?>">
+									</div>
 								</div>
 
-								<div>
-									<p>Select type:</p>
-									<select name="type">
-										<option value="text" <?php if ( $data_type == "text") { echo "selected";}?>>Text</option>
-										<option value="number" <?php if ( $data_type == "number") { echo "selected";}?>>Number</option>
-										<option value="date" <?php if ( $data_type == "date") { echo "selected";}?>>Date</option>
-										<option value="email" <?php if ( $data_type == "email") { echo "selected";}?>>Email</option>
-									<select>
+								<div class="mb-3 row">
+									<label for="editFielType" class="col-sm-2 col-form-label"><?php _e('Select type', 'educare');?></label>
+									<div class="col-sm-10">
+										<select id="editFielType" class="m-0" name="type">
+											<option value="text" <?php esc_attr(selected( 'text', $data_type ));?>><?php _e('Text', 'educare');?></option>
+											<option value="number" <?php esc_attr(selected( 'number', $data_type ));?>><?php _e('Number', 'educare');?></option>
+											<option value="date" <?php esc_attr(selected( 'date', $data_type ));?>><?php _e('Date', 'educare');?></option>
+											<option value="email" <?php esc_attr(selected( 'email', $data_type ));?>><?php _e('Email', 'educare');?></option>
+										</select>
+									</div>
 								</div>
-							</div>
-									
-							<input type="hidden" name="<?php echo esc_attr($in_list);?>">
-					
-							<input type="submit" name="educare_update_<?php echo esc_attr($list);?>" class="educare_button update<?php echo esc_attr(str_replace(' ', '', $list));?>" onClick="<?php echo esc_js('add(this.form)');?>" value="&#xf464 Edit">
-					
-							<input type="submit" name="<?php echo esc_attr("remove_$list");?>" class="educare_button remove<?php echo esc_attr(str_replace(' ', '', $list));?>" value="&#xf182">
 
-							<?php
-							echo '<input type="hidden" name="educare_update_'.esc_attr($in_list).'_nonce" value="'.esc_attr($update_nonce).'">';
-							echo '<input type="hidden" name="remove_'.esc_attr($in_list).'_nonce" value="'.esc_attr($remove_nonce).'">';
-							?>
+								<div class="mb-3 row">
+									<label for="editFielFor" class="col-sm-2 col-form-label"><?php _e('Field For', 'educare');?></label>
+									<div class="col-sm-10">
+										<select id="editFielFor" class="m-0" name="for[]" multiple>
+											<option value="students" <?php esc_attr( selected( is_array($data_for) ? in_array('students', $data_for) : ('students' === $data_for), true ) ); ?>><?php _e('Students', 'educare');?></option>
+											
+											<option value="teachers" <?php esc_attr( selected( is_array($data_for) ? in_array('teachers', $data_for) : ('teachers' === $data_for), true ) ); ?>><?php _e('Teachers/Staff', 'educare');?></option>
 
-						</form>
+											<option value="results" <?php esc_attr( selected( is_array($data_for) ? in_array('results', $data_for) : ('results' === $data_for), true ) ); ?>><?php _e('Results', 'educare');?></option>
+										<select>
+									</div>
+								</div>
+
+								<?php educare_update_anywhere_options();?>
+
+								<div class="mb-3 row">
+									<div class="col-sm-2"></div>
+									<div class="col-sm-10">
+										<input type="hidden" name="remove" value="<?php echo esc_attr($target);?>"/>
+
+										<div class="d-flex gap-2">
+											<button type="submit" name="educare_update_<?php echo esc_attr($list);?>" class="d-inline-flex gap-1 align-items-center justify-content-center btn btn-success p-2 pe-3 update<?php echo esc_attr(str_replace(' ', '', $list));?>" onClick="<?php echo esc_js('add(this.form)');?>"><i class="dashicons dashicons-update"></i> <?php echo __('Update', 'educare');?></button>
+
+											<button type="submit" name="<?php echo esc_attr("remove_$list");?>" class="d-inline-flex gap-1 align-items-center justify-content-center btn btn-danger p-2 pe-3 remove<?php echo esc_attr(str_replace(' ', '', $list));?>"><i class="dashicons dashicons-trash"></i> Delete</button>
+										</div>
+									</div>
+								</div>
+							</form>
 						</p>
+
 						<button class="notice-dismiss"></button>
 					</div>
 				</div>
@@ -3958,29 +3553,40 @@ function educare_process_settings($list) {
 				<div class="sticky_msg">
 					<div class="notice notice-success is-dismissible">
 						<p>
-						<center><h2>Edit <?php echo esc_html($list);?></h2></center>
+							<form action="<?php echo esc_url($_SERVER['REQUEST_URI']); ?>" method="post" class="py-0 px-3 add_results bg-transparent shadow-none">
+								<div class="d-block fw-bold mb-3"><?php echo __('Edit', 'educare') .': '. esc_html__($target, 'educare');?></div>
 
-						<form action="<?php echo esc_url($_SERVER['REQUEST_URI']); ?>" method="post">
+								<?php
+								echo '<input type="hidden" name="educare_update_'.esc_attr($in_list).'_nonce" value="'.esc_attr($update_nonce).'">';
+								echo '<input type="hidden" name="remove_'.esc_attr($in_list).'_nonce" value="'.esc_attr($remove_nonce).'">';
+								?>
 
-							<input type="hidden" name="remove" value="<?php echo esc_attr($target);?>"/>
-							
-							<input type="hidden" name="old_data" value="<?php echo esc_attr($target);?>"/>
+								<input type="hidden" name="old_data" value="<?php echo esc_attr($target);?>"/>
 
-							Edit - <b><?php echo esc_html($target);?></b>:<br>
-							<label for="Name" class="labels" id="name"></label>
-							<input type="text" name="<?php echo esc_attr($list);?>" value="<?php echo esc_attr($target);?>" placeholder="<?php echo esc_attr($list);?> Name">
-						
-							<input type="submit" name="educare_update_<?php echo esc_attr($list);?>" class="educare_button update<?php echo esc_attr(str_replace(' ', '', $list));?>" value="&#xf464 Edit">
+								<div class="mb-3 row">
+									<label for="fieldName" class="col-sm-2 col-form-label"><?php esc_html_e($list, 'educare');?></label>
+									<div class="col-sm-10">
+										<input id="fieldName" type="text" name="<?php echo esc_attr($list);?>" value="<?php echo esc_attr($target);?>" placeholder="<?php echo esc_attr($target);?>" class="form-control-plaintext">
+									</div>
+								</div>
+
+								<?php educare_update_anywhere_options();?>
 								
-							<input type="submit" name="<?php echo esc_attr("remove_$list");?>" class="educare_button remove<?php echo esc_attr(str_replace(' ', '', $list));?>" value="&#xf182">
+								<div class="mb-3 row">
+									<div class="col-sm-2 col-form-label"></div>
+									<div class="col-sm-10">
+										<input type="hidden" name="remove" value="<?php echo esc_attr($target);?>"/>
 
-							<?php
-							echo '<input type="hidden" name="educare_update_'.esc_attr($in_list).'_nonce" value="'.esc_attr($update_nonce).'">';
-							echo '<input type="hidden" name="remove_'.esc_attr($in_list).'_nonce" value="'.esc_attr($remove_nonce).'">';
-							?>
-														
-						</form>
+										<div class="d-flex gap-2">
+											<button type="submit" name="educare_update_<?php echo esc_attr($list);?>" class="d-inline-flex gap-1 align-items-center justify-content-center btn btn-success p-2 pe-3 update<?php echo esc_attr(str_replace(' ', '', $list));?>" onClick="<?php echo esc_js('add(this.form)');?>"><i class="dashicons dashicons-update"></i> <?php echo __('Update', 'educare');?></button>
+
+											<button type="submit" name="<?php echo esc_attr("remove_$list");?>" class="d-inline-flex gap-1 align-items-center justify-content-center btn btn-danger p-2 pe-3 remove<?php echo esc_attr(str_replace(' ', '', $list));?>"><i class="dashicons dashicons-trash"></i> Delete</button>
+										</div>
+									</div>
+								</div>			
+							</form>
 						</p>
+
 						<button class="notice-dismiss"></button>
 					</div>
 				</div>
@@ -3990,47 +3596,60 @@ function educare_process_settings($list) {
 		
 		// for update list content
 		if (isset($_POST['educare_update_'.$list.''])) {
+			// check if user access this request
+			educare_check_access('management');
 			
 			$in_list = $list;
 			// remove all _ characters from the list (normalize the $list)
 			$list = str_replace('_', ' ', $in_list);
 			
 			$old_data = sanitize_text_field($_POST['old_data']);
-			$target = sanitize_text_field($_POST[$in_list]);
+			
+			if (isset($_POST["educare_update_Extra_field"])) {
+				$target = sanitize_text_field($_POST['field']);
+			} else {
+				$target = sanitize_text_field($_POST[$in_list]);
+			}
+
 			$target = str_replace('_', ' ', $target);
 			
 			if (empty($target)) {
-				echo '<div class="notice notice-error is-dismissible"><p>Sorry, its not possible to update empty field. You must fill the form for update the <b>'.esc_html($list).'</b>. thanks</p><button class="notice-dismiss"></button></div>';
+				echo '<div class="sticky_msg"><div class="notice notice-error is-dismissible"><p>'.
+				sprintf(
+					__(
+						'Sorry, its not possible to update empty field. You must fill the form for update the <b>%s</b>.',
+						'educare'
+					),
+					esc_html__($list, 'educare')
+				)
+				.'</p><button class="notice-dismiss"></button></div></div>';
 			} else {
-				
+				$unique_target = strtolower($target);
+
 				if (isset($_POST["educare_update_Extra_field"])) {
-					$old_type = strtok($old_data, ' ');
-					$old_content = strtolower(substr(strstr($old_data, ' '), 1));
-					
-					$target_type = strtok($target, ' ');
-					$target_content = strtolower(substr(strstr($target, ' '), 1));
-					
-					$old = substr(strstr($old_data, ' '), 1);
-					$new = substr(strstr($target, ' '), 1);
-					
-					$unique_target = strtolower(substr(strstr($target, ' '), 1));
-					for ($i = 0; $i < count($data); $i++) {
-						$x = strtolower(substr(strstr($data[$i], ' '), 1));
-						$y[] = $x;
-					}
-
-				} else {
-
-					$old_type = false;
 					$old_content = strtolower($old_data);
+					$old_type = sanitize_text_field($_POST['old_type']);
+					$old_for = isset($_POST['old_for']) ? educare_sanitize_array(($_POST['old_for'])) : array();
 					
-					$target_type = false;
-					$target_content = strtolower($target);
+					$target_type = sanitize_text_field($_POST['type']);
+					$target_for = isset($_POST['for']) ? educare_sanitize_array(($_POST['for'])) : array();
 					
 					$old = $old_data;
 					$new = $target;
-						
-					$unique_target = strtolower($target);
+
+					if ($data) {
+						foreach ($data as $value) {
+							$y[] = strtolower($value['title']);
+						}
+					}
+				} else {
+					$old_type = $old_for = $target_for = false;
+					$old_content = strtolower($old_data);
+					$target_type = false;
+					
+					$old = $old_data;
+					$new = $target;
+
 					for ($i = 0; $i < count($data); $i++) {
 						$x = strtolower($data[$i]);
 						$y[] = $x;
@@ -4039,19 +3658,38 @@ function educare_process_settings($list) {
 				}
 				
 				$unique_data = $y;
+				$exist = '<div class="sticky_msg"><div class="notice notice-error is-dismissible"><p>'.
+				sprintf(
+					__(
+						'Update failed. Because, <b>%1$s</b> is already exist in your selected %2$s list. Please try a different <i>(unique)</i> one!',
+						'educare'
+					),
+					esc_html__($new, 'educare'),
+					esc_html__($list, 'educare')
+				)
+				.'</p><button class="notice-dismiss"></button></div></div>';
 				
-				/* for test
-				echo "old_type : ".esc_html($old_type)."<br>old_content : ".esc_html($old_content)."<br>target_type : ".esc_html($target_type)."<br>target_content : ".esc_html($target_content)."<br>";
-				*/
+
+				if (isset($_POST["educare_update_Extra_field"])) {
+					if ($data) {
+						foreach ($data as $key => $value) {
+							if ( strtolower($value['title']) == $old_content) {
+								$data[$key] = array(
+									'title' => $target,
+									'type' => $target_type,
+									'for' => $target_for
+								);
+							}
+						}
+					}
+				} else {
+					// getting the key where we need to update data
+					$update_key = array_search($old_data, $data);
+					$data[$update_key] = $target;
+				}
 				
-				$exist = "<div class='sticky_msg'><div class='notice notice-error is-dismissible'><p>Update failed. Because,  <b>".esc_html($new)."</b> is allready exist in your selected ".esc_html($list)." list. Please try a different <i>(unique)</i> one!</p><button class='notice-dismiss'></button></div></div>";
-				
-				
-				// getting the key where we need to update data
-				$update_key = array_search($old_data, $data);
-				$data[$update_key] = $target;
 				// make it unique
-				$data = array_unique($data);
+				// $data = array_unique($data);
 				
 				function update_data($wpdb, $table, $old, $new, $data, $id, $msgs) {
 					echo wp_kses_post($msgs);
@@ -4068,25 +3706,64 @@ function educare_process_settings($list) {
 					);
 				}
 				
-				$target_content = strtolower($target_content);
+				$target_content = $unique_target;
 				
-				if ( $old_type == $target_type or $old_content == $target_content) {
-					$msg = "<div class='sticky_msg'><div class='notice notice-error is-dismissible'><p>There are no changes for updates</p><button class='notice-dismiss'></button></div></div>";
+				if ( $old_type == $target_type and $old_for == $target_for and $old_content == $target_content) {
+					$msg = educare_show_msg(__('No changes were found in this request.', 'educare'), 'info');
 				}
 				
 				if ( $old_type != $target_type and $old_content == $target_content) {
-					// $msgs = "Change $old_type to $target_type";
-					$msgs = "<div class='notice notice-success is-dismissible'><p>Succesfully update ".esc_html($list)." ".esc_html($new)." type <b class='error'>".esc_html($old_type)."</b> to <b class='success'>".esc_html($target_type)."</b>.</p><button class='notice-dismiss'></button></div>";
+					$msgs = '<div class="sticky_msg"><div class="notice notice-success is-dismissible"><p>'.
+					sprintf(
+						__(
+							'Successfully update %1$s %2$s type <b class="error">%3$s</b> to <b class="success">%4$s</b>.',
+							'educare'
+						),
+						esc_html__($list, 'educare'),
+						esc_html__($new, 'educare'),
+						esc_html__($old_type, 'educare'),
+						esc_html__($target_type, 'educare')
+					)
+					.'</p><button class="notice-dismiss"></button></div></div>';
 					$msg = update_data($wpdb, $table, $old, $new, $data, $id, $msgs);
+					educare_update_anywhere($list_column, $old, $new);
 				}
-				
+
+				if ( $old_for != $target_for and $old_content == $target_content) {
+					$msgs = '<div class="sticky_msg"><div class="notice notice-success is-dismissible"><p>'.
+					sprintf(
+						__(
+							'Successfully update %1$s %2$s data for <b class="error">%3$s</b> to <b class="success">%4$s</b>.',
+							'educare'
+						),
+						esc_html__($list, 'educare'),
+						esc_html__($new, 'educare'),
+						esc_html__(implode(', ', $old_for), 'educare'),
+						esc_html__(implode(', ', $target_for), 'educare')
+					)
+					.'</p><button class="notice-dismiss"></button></div></div>';
+					$msg = update_data($wpdb, $table, $old, $new, $data, $id, $msgs);
+					educare_update_anywhere($list_column, $old, $new);
+				}
+
 				if ( $old_type == $target_type and $old_content != $target_content) {
 					if (in_array($target_content, $unique_data)) {
 						return $exist;
 					} else {
-						// $msgs = "Change $old_content to $target_content";
-						$msgs = "<div class='notice notice-success is-dismissible'><p>Succesfully update ".esc_html($list)." <b class='error'>".esc_html($old)."</b> to <b class='success'>".esc_html($new)."</b>.</p><button class='notice-dismiss'></button></div>";
+						$msgs = '<div class="sticky_msg"><div class="notice notice-success is-dismissible"><p>'.
+						sprintf(
+							__(
+								'Successfully update %1$s <b class="error">%2$s</b> to <b class="success">%3$s</b>.',
+								'educare'
+							),
+							esc_html__($list, 'educare'),
+							esc_html__($old, 'educare'),
+							esc_html__($new, 'educare'),
+						)
+						.'</p><button class="notice-dismiss"></button></div></div>';
+
 						$msg = update_data($wpdb, $table, $old, $new, $data, $id, $msgs);
+						educare_update_anywhere($list_column, $old, $new);
 					}
 				}
 				
@@ -4094,9 +3771,22 @@ function educare_process_settings($list) {
 					if (in_array($target_content, $unique_data)) {
 						return $exist;
 					} else {
-						// $msgs = "Full Update: Change $old_content to $target_content and also Change old type $old_type to $target_type ";
-						$msgs = "<div class='notice notice-success is-dismissible'><p>Succesfully update ".esc_html($list)." <b class='error'>".esc_html($old)."</b> to <b class='success'>".esc_html($new)."</b>. also changed type <b class='error'>".esc_html($old_type)."</b> to <b class='success'>".esc_html($target_type)."</b>.</p><button class='notice-dismiss'></button></div>";
+						$msgs = '<div class="sticky_msg"><div class="notice notice-success is-dismissible"><p>'.
+						sprintf(
+							__(
+								'Successfully update %1$s <b class="error">%2$s</b> to <b class="success">%3$s</b>. also changed type <b class="error">%4$s</b> to <b class="success">%5$s</b>.',
+								'educare'
+							),
+							esc_html__($list, 'educare'),
+							esc_html__($old, 'educare'),
+							esc_html__($new, 'educare'),
+							esc_html__($old_type, 'educare'),
+							esc_html__($target_type, 'educare')
+						)
+						.'</p><button class="notice-dismiss"></button></div></div>';
+
 						$msg = update_data($wpdb, $table, $old, $new, $data, $id, $msgs);
+						educare_update_anywhere($list_column, $old, $new);
 					}
 				}
 				
@@ -4104,30 +3794,31 @@ function educare_process_settings($list) {
 			}
 		}
 		
-		
 		// for remove list items
 		if (isset($_POST["remove_$list"])) {
+			// check if user access this request
+			educare_check_access('management');
 			
 			$in_list = $list;
 			// remove all _ characters from the list (normalize the $list)
 			$list = str_replace('_', ' ', $in_list);
-			
 			$target = sanitize_text_field($_POST["remove"]);
+
 			$target = str_replace('_', ' ', $target);
-			$check = strtolower(str_replace('_', ' ', $target));
 			
 			if (isset($_POST["remove_Extra_field"])) {
-				$check = substr(strstr($check, ' '), 1);
+				$remove_data = educare_removeElementsByKeyValue($data, $target, 'title');
+			} else {
+				$remove_data = educare_removeElementsByKeyValue($data, $target);
 			}
-					
-			if (in_array($target, $display_data)) {
-					unset($display_data[$target]);
-					$display_data = array_values($display_data);
-				
+			
+
+			// Check if the key was found
+			if ($remove_data !== false) {
 				$wpdb->update(
 					$table, 				//table
 					array( 					// data
-						"data" => json_encode($display_data)
+						"data" => json_encode($remove_data)
 					),
 				
 					array( 					//where
@@ -4137,47 +3828,164 @@ function educare_process_settings($list) {
 				
 				// for hide extra field type
 				if (isset($_POST["remove_Extra_field"])) {
-					$target = substr(strstr($target, ' '), 1);
 					$status = educare_check_status('clear_field');
 				}
 				if (isset($_POST["remove_Subject"])) {
 					$status = educare_check_status('delete_subject');
 				}
 				
-				echo '<div class="sticky_msg"><div class="notice notice-success is-dismissible"><p>Successfully removed <b>'.esc_html($target).'</b> from the '.esc_html($list).' list.</p><button class="notice-dismiss"></button></div></div>';
+				echo '<div class="sticky_msg"><div class="notice notice-success is-dismissible"><p>'.
+				sprintf(
+					__(
+						'Successfully removed <b>%1$s</b> from the %2$s list.',
+						'educare'
+					),
+					esc_html__($target, 'educare'),
+					esc_html__($list, 'educare')
+				)
+				.'</p><button class="notice-dismiss"></button></div></div>';
 			} else {
-				echo '<div class="notice notice-error is-dismissible"><p>Sorry, '.esc_html($list).' <b>'.esc_html($target).'</b> is not found!</p><button class="notice-dismiss"></button></div>';
+				echo '<div class="sticky_msg"><div class="notice notice-error is-dismissible"><p>'.
+				sprintf(
+					__(
+						'Sorry, %1$s <b>%2$s</b> is not found!',
+						'educare'
+					),
+					esc_html__($list, 'educare'),
+					esc_html__($target, 'educare')
+				)
+				.'</p><button class="notice-dismiss"></button></div></div>';
 			}
 		}
 		
 		if ($list == 'Settings') {
+			// check if user access this request
+			educare_check_access('settings');
+
 			if (isset($_POST['educare_reset_default_settings'])) {
-				$wpdb->query(
-					$wpdb->prepare(
-						"DELETE FROM $table WHERE id = %d",
-						$id
-					)
-				);
-				
+				$wpdb->query("DELETE FROM $table WHERE id = $id");
 				educare_add_default_settings('Settings');
+				educare_clear_dismissed_notices();
 				
-				echo "<div class='sticky_msg'><div class='notice notice-success is-dismissible'> <p>Successfully reset default <b>settings</b></p><button class='notice-dismiss'></button></div></div>";
+				echo "<div class='sticky_msg'><div class='notice notice-success is-dismissible'> <p>".__('Default settings restore successfully', 'educare')."</p><button class='notice-dismiss'></button></div></div>";
+			}
+
+			if (isset($_POST['educare_reset_everything'])) {
+				// Reset everything!
+				educare_uninstall_action(true);
+				// Get default settings and data
+				educare_database_table();
+				
+				echo "<div class='sticky_msg'><div class='notice notice-success is-dismissible'> <p>".__('Reset everything successfully', 'educare')."</p><button class='notice-dismiss'></button></div></div>";
 			}
 			
 			if (isset($_POST['educare_update_settings_status'])) {
-				echo "<div class='sticky_msg'><div class='notice notice-success is-dismissible'><p>Successfully updated Settings</p><button class='notice-dismiss'></button></div></div>";
+				echo "<div class='sticky_msg'><div class='notice notice-success is-dismissible'><p>".__('Settings update was successful', 'educare')."</p><button class='notice-dismiss'></button></div></div>";
 			}
 			
 			if ( isset( $_POST['educare_default_photos'] ) && isset( $_POST['educare_attachment_id'] ) ) {
-					echo "<div class='notice notice-success is-dismissible'><p>Successfully updated default students photos</p><button class='notice-dismiss'></button></div>";
+				echo "<div class='notice notice-success is-dismissible'><p>".__('Successfully updated default student photos', 'educare')."</p><button class='notice-dismiss'></button></div>";
 			}
 		}
 	}
 }
 
 
+
+function educare_advance_fields() {
+	return 'educare-advance-fields';
+}
+
+
+function educare_advance_fields_badge($bg = true) {
+	if ($bg) {
+		$bg = sanitize_text_field($bg);
+	} else {
+		$bg = '';
+	}
+
+	return '<div class="educare-badge lock p-1 rounded-circle '.esc_attr($bg).'" title="'.__('Unlock To Premium', 'educare').'"><i class="dashicons dashicons-lock"></i></div>';
+}
+
+
+
+function educare_update_anywhere($column, $old, $new) {
+	$update_anywhere = educare_check_status('update_anywhere');
+	if ($update_anywhere == 'unchecked') {
+		if (!isset($_POST['update_anywhere']) && $_POST['update_anywhere'] != 'on') {
+			return;
+		}
+	}
+
+	global $wpdb;
+
+	$all_table = array(
+		'students',
+		'results',
+		'teachers',
+		'marks',
+		'attendance'
+	);
+
+	foreach ($all_table as $table) {
+		$table = $wpdb->prefix."educare_".$table;
+
+		// Query to check column existence
+		$column_exists = $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT COUNT(*) FROM information_schema.columns WHERE table_name = %s AND column_name = %s",
+				$table,
+				$column
+			)
+		);
+
+		if ($column_exists) {
+			if ($column == 'Details' or $column == 'Subject') {
+				
+				// Construct the UPDATE query to replace a specific part in the 'Name' column
+				$update_query = $wpdb->prepare(
+					"UPDATE $table SET `$column` = REPLACE(`$column`, %s, %s) WHERE `$column` LIKE %s",
+					'"'.$old.'"',
+					'"'.$new.'"',
+					'%"'.$old.'"%'
+				);
+
+			} else {
+				// Construct the UPDATE query
+				$update_query = $wpdb->prepare(
+					"UPDATE $table SET `$column` = %s WHERE `$column` = %s",
+					$new,
+					$old
+				);
+			}
+
+			// Execute the UPDATE query
+			$wpdb->query($update_query);
+		}
+		
+	}
+}
+
+
+
+function educare_update_anywhere_options() {
+	$update_anywhere = educare_check_status('update_anywhere');
+	if ($update_anywhere == 'unchecked') {
+		?>
+		<div class="mb-3 row">
+			<label class="col-sm-2 form-check-label" for="update_anywhere"><?php _e('Update Anywhere', 'educare')?> <div class="action_menu"><i class="dashicons action_button dashicons-info"></i> <menu class="action_link info"><?php _e('Make sure any existing data, like student records, results, and marks, stays up-to-date.', 'educare')?></menu></div></label>
+			<div class="col-sm-10">
+				<input type="checkbox" id="update_anywhere" name="update_anywhere" checked>
+			</div>
+		</div>
+		<?php
+	}
+}
+
+
+
 /**
- * ### Settings Status
+ * Settings Status
  * 
  * Usage example: educare_settings_status($target, $title, $comments);
  * 
@@ -4199,17 +4007,17 @@ function educare_process_settings($list) {
 	</form>
  *
  * @since 1.0.0
- * @last-update 1.4.1
+ * @last-update 1.6.0
  * 
  * @param string $target				Select settings status
  * @param string $title					Display settings title
  * @param string $comments			Settings informations
  * @param bool $input						for input fields
+ * @param bool $advance 				premium features badge
  * 
  * @return void|HTML
  */
-
-function educare_settings_status($target, $title, $comments, $input = null) {
+function educare_settings_status($target, $title, $comments, $input = null, $advance = false) {
 	global $wpdb;
 	$table = $wpdb->prefix."educare_settings";
 	// Prepare the query with placeholders
@@ -4220,130 +4028,514 @@ function educare_settings_status($target, $title, $comments, $input = null) {
 	if ($search) {
 
 		foreach ( $search as $print ) {
-			$data = $print->data;
-			$data = json_decode($data);
 			$id = $print->id;
-		}
-
-		// for update settings status
-		if (isset($_POST['educare_update_settings_status'])) {
-			$status = 'unchecked';
-			if (property_exists($data, $target)) {
-				$status = $data->$target;
-			}
-
-			if ($target != 'display') {
-				$update_data = sanitize_text_field($_POST[$target]);
-			}
-
-			if ($target == 'display') {
-				$no = 0;
-				
-				foreach ($status as $key => $value) {
-					$status->$key[0] = array_map( 'sanitize_text_field', $_POST['display_input'] )[$no++];
-					$status->$key[1] = sanitize_text_field($_POST[$key]);
-				}
-				
-				$update_data = $status;
-			}
-
-			$data->$target = $update_data;
-			// now update desired data
-			$wpdb->update(
-	      $table, 				//table
-				array( 					// data - we need to encode our data for store array/object into database
-					"data" => json_encode($data)
-			  ),
-	      array( 					//where
-					'ID' => $id
-				)
-			);
+			$data = educare_decrypt_data($print->data);
 		}
 	
+		// Get updated data
 		$status = 'unchecked';
+		
 		if (property_exists($data, $target)) {
 			$status = $data->$target;
 		}
-		// $clear_field = $data->clear_field;
-		// for input field
+
+		$advance_feature = $advance_badge = '';
+		$target_name = $target;
+		
+		if ($advance) {
+			$advance_feature = educare_advance_fields();
+			$advance_badge = educare_advance_fields_badge();
+			$target_name = '';
+		}
 
 		if ($input) {
-			echo "<div class='educare-settings'>";
-			echo "<div class='title'>
-			<h3>".esc_html($title)."<h3>
-			<p class='comments'>".wp_kses_post($comments)."</p>
-			<input type='text' id='".esc_attr($target)."' name='".esc_attr($target)."' value='".esc_attr(educare_check_status($target))."' placeholder='".esc_attr(educare_check_status($target))."'>
-			</div></div>";
-		} else {
-			if ($target == 'display') {
+			if ($input === 'files') {
+				$attachmentPreview = educare_get_attachment(educare_check_status($target), true);
 
-				$display = $status;
+				echo "<div class='educare-settings ".esc_attr($advance_feature)."'>";
+				echo "<div class='title'>
+				<h3>".esc_html__($title, 'educare')." ".wp_kses_post($advance_badge)."</h3>
+				<p class='comments mt-1 mb-2'>".wp_kses_post(__($comments, 'educare'))."</p>";
 
-				foreach ($display as $key => $value) {
-					$target = $key;
-					$field_name = $value[0];
-					$status = $value[1];
-					if ($key == 'Class' or $key == 'Exam' or $key == 'Year') {
-						$info = '<div class="action_menu"><i class="dashicons action_button dashicons-info"></i> <menu class="action_link info">';
-						if ($key == 'Class') {
-							$info .= 'If you want to disable the class from <b>View Results</b> and <b>Front-End</b> search form, you can disable it. But you need to fill in the class while adding or importing results.';
+				echo '<div class="getAttachment users-attachment w-100 max-width-100 text-center">';
+					echo '<div class="attachmentPreview attachmentInput w-100 bg-white">';
+						if ($attachmentPreview) {
+							echo '<div class="attachmentImg"><img class="educare-attachment attachment-id-'.esc_attr(educare_check_status($target)).'" src="'.esc_url($attachmentPreview).'"></div>';
 						}
-						if ($key == 'Exam') {
-							$info .= 'If you want to disable the exam from <b>View Results</b> and <b>Front-End</b> search form, you can disable it. But you need to fill in the exam while adding or importing results.';
-						}
-						if ($key == 'Year') {
-							$info .= "<span class='error'>You can't disable year.</span> But, you can rename it. like - Passing Year, Exam Year...";
-						}
-						$info .= '</menu></div>';
+					echo '</div>';
+
+					if ($attachmentPreview) {
+						echo '<span class="btn btn-danger d-inline-flex align-items-center gap-1 attachmentControl attachmentRemove"><span class="dashicons dashicons-remove"></span> '.__('Remove', 'educare').'</span>';
 					} else {
-						$info = '';
+						echo '<span class="btn btn-success d-inline-flex align-items-center gap-1 attachmentControl attachmentInput"><span class="dashicons dashicons-cloud-upload"></span> '.__('Upload Now', 'educare').'</span>';
 					}
 
-					?>
-					<div class="educare-settings">
+					echo '<input type="hidden" id="'.esc_attr($target).'" name="'.esc_attr($target_name).'" value="'.esc_attr(educare_check_status($target)).'" placeholder="'.esc_attr(educare_check_status($target)).'">';
+				echo '</div>';
+
+				echo "</div></div>";
+			} else {
+				echo "<div class='educare-settings ".esc_attr($advance_feature)."'>";
+				echo "<div class='title'>
+				<h3>".esc_html__($title, 'educare')." ".wp_kses_post($advance_badge)."</h3>
+				<p class='comments mt-1 mb-2'>".wp_kses_post(__($comments, 'educare'))."</p>
+				<input type='text' id='".esc_attr($target)."' name='".esc_attr($target_name)."' value='".esc_attr(educare_check_status($target))."' placeholder='".esc_attr(educare_check_status($target))."'>
+				</div></div>";
+			}
+		} else {
+			if ($target == 'display') {
+				$display = $status;
+
+				if ($display) {
+					$advance_fields = array(
+						'Term',
+						'user_pin',
+						'Staff_position',
+						'School'
+					);
+
+					foreach ($display as $key => $value) {
+						// $target = $key;
+						$field_name = isset($value->title) ? sanitize_text_field($value->title) : '';
+						$status = isset($value->status) ? sanitize_text_field($value->status) : 'unchecked';
+
+						if ($key == 'Class' or $key == 'Exam' or $key == 'Year' or $key == 'user_pin' or $key == 'School') {
+							$info = '<div class="action_menu"><i class="dashicons action_button dashicons-info"></i> <menu class="action_link info">';
+							
+							if ($key == 'Class') {
+								$info .= 'If you want to disable the class from <b>View Results</b> and <b>Front-End</b> search form, you can disable it. But you need to fill in the class while adding or importing results.';
+							}
+							if ($key == 'Exam') {
+								$info .= 'If you want to disable the exam from <b>View Results</b> and <b>Front-End</b> search form, you can disable it. But you need to fill in the exam while adding or importing results.';
+							}
+							if ($key == 'Year') {
+								$info .= "The <b>Year</b> field cannot be disabled as it is essential for accurately specifying data. However, you can rename it to suit your needs, such as Passing Year or Exam Year.";
+							}
+							if ($key == 'user_pin') {
+								$info .= "<b>Protected Results</b><hr>Enable students to access their results securely using a password or PIN. This feature allows you to restrict result access for specific students, such as those with outstanding payments or other conditions.";
+							}
+							if ($key == 'School') {
+								$info .= "<b>Manage Multiple School</b><hr>Use this feature to manage multiple schools or departments. This feature requires the Educare Multiple School add-on.";
+							}
+
+							$info .= '</menu></div>';
+						} else {
+							$info = '';
+						}
+
+						$advance_feature = $advance_badge = '';
+						$target_name = $key;
+
+						if (in_array($key, $advance_fields)) {
+							$advance_feature = educare_advance_fields();
+							$advance_badge = educare_advance_fields_badge();
+							$target_name = '';
+						}
+
+						?>
+						<div class="educare-settings <?php echo esc_attr($advance_feature);?>">
+							<div class="title">
+								<div class="row">
+									<div class="col-md-3 d-flex align-items-center">
+										<h3 class="my-2"><?php echo esc_html(ucwords(str_replace('_', ' ', __($key, 'educare')))) . ' ' . wp_kses_post( __($info, 'educare') );?> <?php echo wp_kses_post($advance_badge);?></h3>
+									</div>
+									
+									<div class="col-md-9 d-flex align-items-center comments">
+										<input type='text' id='<?php echo esc_attr($key);?>' name='<?php echo esc_attr( $target . '[' . $key . ']');?>[title]' value='<?php echo esc_attr($field_name);?>' placeholder='<?php echo sprintf(esc_attr__('Type here to modify (%s)'), __($field_name, 'educare'));?>'>
+									</div>
+								</div>
+							</div>
+							
+							<div class="status-button">
+								<div class="switch-radio">
+									<?php if ($key != 'Year') {
+										?>
+										<input type="radio" id="<?php echo esc_attr($target.'_'.$key);?>_no" name="<?php echo esc_attr( $target . '[' . $key . ']');?>[status]" value="unchecked" <?php checked( esc_attr($status), 'unchecked' );?>>
+										<label for="<?php echo esc_attr($target.'_'.$key);?>_no"><?php _e('Off', 'educare')?></label>
+										<?php
+									}
+									
+									if ($target_name) {
+										?>
+										<input type="radio" id="<?php echo esc_attr($target.'_'.$key);?>_yes" name="<?php echo esc_attr( $target . '[' . $key . ']');?>[status]" value="checked" <?php checked( esc_attr($status), 'checked' );?>>
+										<label for="<?php echo esc_attr($target.'_'.$key);?>_yes"><?php _e('On', 'educare')?></label>
+										<?php
+									} else {
+										echo '<input type="hidden" name="'.esc_attr( $target . '[' . $key . ']').'[title]" value="'.esc_attr($field_name).'">';
+										echo "<input type='hidden' name='".esc_attr( $target . '[' . $key . ']')."[status]' value='unchecked'>";
+									}
+									?>
+								</div>
+							</div>
+						</div>
+						<?php
+					}
+				} else {
+					echo educare_show_msg(__('There has been a critical issues on this website. Please scroll down and click <b>Reset Settings</b> button.', 'educare'), false);
+				}
+			} elseif ($target == 'results_card') {
+				$display = $status;
+				$current_template = educare_check_status('results_card_template');
+				
+				foreach ($display as $card_key => $card_value) {
+					if ($card_key == 'details' or $card_key == 'grade_sheet') {
+						$results_card = educare_requred_data($card_value, true, true);
+
+						foreach ($card_value as $key => $value) {
+
+							$info = '';
+							$field_name = $value->title;
+							$status = $value->status;
+
+							if ($key == 'details') {
+								$info = '<div class="action_menu"><i class="dashicons action_button dashicons-info"></i> <menu class="action_link info">'.
+								sprintf(
+									__(
+										'Hide or show %1$s header (h2) title from the results. If you want to disable the entire %1$s section from the card, please scroll down and uncheck <b>Students %1$s</b>',
+										'educare'
+									),
+									esc_html($field_name)
+								)
+								.'</menu></div>';
+								?>
+								
+								<!-- Details -->
+								<div class="educare-settings d-block border-0">
+									<h2 class="educare-title bg-white rounded mt-2"><?php esc_html_e($field_name, 'educare');?></h2>
+
+									<div class="table-responsive">
+										<table class="table table-bordered rounded-0">
+											<tbody>
+												<tr>
+													<td><?php esc_html_e($results_card['result'], 'educare');?></td>
+													<td><div class="success results_passed"><?php esc_html_e(educare_check_status('passed'), 'educare');?></div></td>
+													<td><?php esc_html_e($results_card['year'], 'educare');?></td>
+													<td><?php esc_html_e(date('Y'), 'educare');?></td>
+												</tr>
+												<tr>
+													<td><?php esc_html_e($results_card['gpa'], 'educare');?></td>
+													<td colspan="3">00</td>					
+												</tr>
+											</tbody>
+										</table>
+									</div>
+								</div>
+								<?php
+							}
+							
+							if ($key == 'grade_sheet') {
+								?>
+								<h2 class="educare-title bg-white rounded <?php echo esc_attr($status);?>"><?php esc_html_e($field_name, 'educare');?></h2>
+								<div class="table_container">
+									<table class="grade_sheet demo-table">
+										<tbody>
+											<tr>
+												<th class="<?php echo esc_attr($card_value->no->status);?>"><?php esc_html_e($results_card['no'], 'educare');?></th>
+												<th class="<?php echo esc_attr($card_value->subject->status);?>"><?php esc_html_e($results_card['subject'], 'educare');?></th>
+												<?php
+												// check currrent template
+												if (isset($display->template->$current_template)) {
+													// loop all fields and get title, subtitle and status
+													foreach ($display->template->$current_template as $card_field) {
+														// define field titile
+														$termTitle = $card_field->title;
+														// define subtitle
+														$subtitle = $card_field->subtitle;
+														// add some html to beautify!
+														if ($subtitle) {
+															$subtitle = '<small>'.esc_html__($subtitle, 'educare').'</small>';
+														}
+														// show fields
+														echo '<th class="'.esc_attr($card_field->status).'">'. esc_html__($termTitle, 'educare') . wp_kses_post( $subtitle ).'</th>';
+													}
+												}
+												?>
+											</tr>
+										</tbody>
+									</table>
+								</div>
+								<?php
+								$info = '<div class="action_menu"><i class="dashicons action_button dashicons-info"></i> <menu class="action_link info">'.
+								sprintf(
+									__(
+										'Hide or show %1$s header (h2) title from the results. If you want to disable the entire %1$s section from the card, please scroll down and uncheck <b>Students %1$s</b>',
+										'educare'
+									),
+									esc_html($field_name)
+								)
+								.'</menu></div>';
+							}
+
+							?>
+							<div class="educare-settings">
+								<div class="title">
+									<h3 class="educare-menu-container my-2"><?php esc_html_e(ucwords(str_replace('_', ' ', $key)), 'educare') . ' ' . wp_kses_post( $info );?></h3>
+									<p class="comments m-0">
+										<input type='text' id='<?php echo esc_attr($key);?>' name='<?php echo esc_attr( $target . '[' . $card_key . ']' . '[' . $key . '][title]');?>' value='<?php echo esc_attr($field_name);?>' placeholder='<?php echo sprintf(esc_attr__('Type here to modify (%s)'), __($field_name, 'educare'));?>'>
+									</p>
+								</div>
+								
+								<div class="status-button">
+									<div class="switch-radio">
+										<?php if ($key != 'Year') {
+											?>
+											<input type="radio" id="<?php echo esc_attr($target.'_'.$key);?>_no" name="<?php echo esc_attr( $target . '[' . $card_key . ']' . '[' . $key . '][status]');?>" value="unchecked" <?php checked( esc_attr($status), 'unchecked' );?>>
+											<label for="<?php echo esc_attr($target.'_'.$key);?>_no"><?php _e('Off', 'educare')?></label>
+											<?php
+										}?>
+										
+										<input type="radio" id="<?php echo esc_attr($target.'_'.$key);?>_yes" name="<?php echo esc_attr( $target . '[' . $card_key . ']' . '[' . $key . '][status]');?>" value="checked" <?php checked( esc_attr($status), 'checked' );?>>
+										<label for="<?php echo esc_attr($target.'_'.$key);?>_yes"><?php _e('On', 'educare')?></label>
+									</div>
+								</div>
+
+								<div class="submenu p-0">
+									<div class="submenu-content p-3">
+										<p class="mt-1 mb-2"><?php _e('Sub Titile', 'educare')?>:</p>
+										<input type="text" name="<?php echo esc_attr( $target . '[' . $card_key . ']' . '[' . $key . '][subtitle]');?>" value="<?php echo esc_attr($value->subtitle);?>" palaceholder="<?php _e('Sub Titile', 'educare')?>">
+									</div>
+								</div>
+							</div>
+							<?php
+						}
+					}
+
+					if ($card_key == 'template') {
+						if (property_exists($card_value, $current_template)) {
+							$fields = array (
+								'title' => 'Marks',
+								'subtitle' => 'Marks',
+								'status' => 'unchecked',
+								'default_value' => '80',
+								'placeholder' => '00',
+								'type' => 'number',
+								'auto' => 'off',
+								'hide' => 'off'
+							);
+
+							foreach ($card_value->$current_template as $key => $value) {
+								foreach ($fields as $field_key => $field_value) {
+									$$field_key = sanitize_text_field( $field_value );
+									
+									if (property_exists($value, $field_key)) {
+										$$field_key = sanitize_text_field( $value->$field_key );
+									}
+								}
+
+								?>
+								<div class="educare-settings">
+									<div class="title">
+										<h3 class="educare-menu-container my-2"><?php esc_html_e( $title, 'educare' );?></h3>
+										<p class="comments m-0">
+											<input type="text" id="marks" name="<?php echo esc_attr( $target . '[' .$card_key. '][' .$current_template. '][' .$key. '][title]');?>" value="<?php echo esc_attr( $title );?>" placeholder="<?php echo sprintf(esc_attr__('Type here to modify (%s)'), __($title, 'educare'));?>">
+										</p>
+									</div>
+
+									<div class="status-button">
+										<div class="switch-radio">
+											<input type="radio" id="<?php echo esc_attr($title.'_'.$key);?>_no" name="<?php echo esc_attr( $target . '[' .$card_key. '][' .$current_template. '][' .$key. '][status]');?>" value="unchecked"  <?php esc_attr(checked( 'unchecked', $status ));?>>
+											<label for="<?php echo esc_attr($title.'_'.$key);?>_no"><?php _e('Off', 'educare')?></label>
+											
+											<input type="radio" id="<?php echo esc_attr($title.'_'.$key);?>_yes" name="<?php echo esc_attr( $target . '[' .$card_key. '][' .$current_template. '][' .$key. '][status]');?>" value="checked"  <?php esc_attr(checked( 'checked', $status ));?>>
+											<label for="<?php echo esc_attr($title.'_'.$key);?>_yes"><?php _e('On', 'educare')?></label>
+										</div>
+									</div>
+
+									<div class="submenu p-0">
+										<div class="submenu-content p-3">
+											<p class="mt-1 mb-2"><?php _e('Sub Titile', 'educare')?>:</p>
+
+											<input class="mb-2" type="text" name="<?php echo esc_attr( $target . '[' .$card_key. '][' .$current_template. '][' .$key. '][subtitle]');?>" value="<?php echo esc_attr($subtitle);?>" palaceholder="<?php _e('Sub Titile', 'educare')?>">
+
+											<p class="mt-1 mb-2"><?php _e('Default value', 'educare')?>:</p>
+											<input class="mb-2" type="text" name="<?php echo esc_attr( $target . '[' .$card_key. '][' .$current_template. '][' .$key. '][default_value]');?>" value="<?php echo esc_attr($default_value);?>" palaceholder="><?php _e('Default value', 'educare')?>">
+
+											<p class="mt-1 mb-2"><?php _e('Placeholder', 'educare')?>:</p>
+											<input class="mb-2" type="text" name="<?php echo esc_attr( $target . '[' .$card_key. '][' .$current_template. '][' .$key. '][placeholder]');?>" value="<?php echo esc_attr($placeholder);?>" palaceholder="<?php _e('Placeholder', 'educare')?>">
+											
+											<div class="select">
+												<div>
+													<p class="mt-1 mb-2"><?php _e('Select Type', 'educare');?>:</p>
+													<select name="<?php echo esc_attr( $target . '[' .$card_key. '][' .$current_template. '][' .$key. '][type]');?>">
+														<option value="text" <?php esc_attr(selected( $type, 'text' ));?>><?php _e('Text', 'educare')?></option>
+														<option value="number" <?php esc_attr(selected( $type, 'number' ));?>><?php _e('Number', 'educare')?></option>
+														<option value="date" <?php esc_attr(selected( $type, 'date' ));?>><?php _e('Date', 'educare')?></option>
+														<option value="select" <?php esc_attr(selected( $type, 'select' ));?>><?php _e('Options', 'educare')?></option>
+													</select>
+												</div>
+
+												<div>
+													<p class="mt-1 mb-2"><?php _e('Auto Results', 'educare')?>:</p>
+													<select name="<?php echo esc_attr( $target . '[' .$card_key. '][' .$current_template. '][' .$key. '][auto]');?>">
+														<option value="on" <?php esc_attr(selected( $auto, 'on' ));?>><?php _e('Yes', 'educare')?></option>
+														<option value="off" <?php esc_attr(selected( $auto, 'off' ));?>><?php _e('No', 'educare')?></option>
+													</select>
+												</div>
+
+												<div>
+													<p class="mt-1 mb-2"><?php _e('Hide Fields', 'educare')?>:</p>
+													<select name="<?php echo esc_attr( $target . '[' .$card_key. '][' .$current_template. '][' .$key. '][hide]');?>">
+														<option value="on" <?php esc_attr(selected( $hide, 'on' ));?>><?php _e('Yes', 'educare')?></option>
+														<option value="off" <?php esc_attr(selected( $hide, 'off' ));?>><?php _e('No', 'educare')?></option>
+													</select>
+												</div>
+											</div>
+
+											<?php
+											if	($type == 'select') {
+												echo '<p>'.__('Options Value', 'educare').':</p>';
+
+												if	(property_exists($value, 'value')) {
+													if ($value->value) {
+														if (is_array($value->value)) {
+															foreach ($value->value as $options_key => $options) {
+																echo '<input name="'.esc_attr( $target . '[' .$card_key. '][' .$current_template. '][' .$key. '][value][]').'" type="text" value="'.esc_attr($options).'">';
+															}
+														}
+													} else {
+														echo '<input name="'.esc_attr( $target . '[' .$card_key. '][' .$current_template. '][' .$key. '][value][]').'" type="text" value="Options1">';
+														echo '<input name="'.esc_attr( $target . '[' .$card_key. '][' .$current_template. '][' .$key. '][value][]').'" type="text" value="Options2">';
+													}
+												}
+											}
+											?>
+										</div>
+									</div>
+								</div>
+								<?php
+							}
+						}
+					}
+				}
+			} elseif ($target == 'banner_settings') {
+				$logo1 = educare_get_attachment(0, 'logo1');
+				$logo2 = educare_get_attachment(0, 'logo2');
+				?>
+
+				<div class="position-relative <?php echo educare_advance_fields();?>">
+					<div class="position-absolute top-50 start-50">
+						<?php echo educare_advance_fields_badge();?>
+					</div>
+
+					<div class="template-info-container fixbd-flex bg-light text-center banner rounded">
+						<div class="banner-logo">
+							<div class="getAttachment">
+								<div class="attachmentPreview attachmentInput bg-white <?php echo educare_advance_fields();?>">
+									<div class="attachmentImg">
+										<?php
+										echo educare_advance_fields_badge();
+
+										if ($logo1) {
+											echo '<img class="educare-attachment attachment-id-0" src="'.esc_url($logo1).'">';
+										}
+										?>
+									</div>
+								</div>
+
+								<?php
+								if ($logo1) {
+									echo '<span class="btn btn-sm btn-danger d-inline-flex align-items-center gap-1 attachmentControl attachmentRemove"><span class="dashicons dashicons-remove"></span> '.__('Remove', 'educare').'</span>';
+								} else {
+									echo '<span class="btn btn-sm btn-success d-inline-flex align-items-center gap-1 attachmentControl attachmentInput"><span class="dashicons dashicons-cloud-upload"></span> '.__('Upload Now', 'educare').'</span>';
+								}
+								?>
+								
+								<input type="hidden" name="banner[logo1]" value="">
+							</div>
+						</div>
+
 						<div class="title">
-							<h3><?php echo esc_html(ucwords(str_replace('_', ' ', $target))) . ' ' . wp_kses_post( $info );?><h3>
-							<p class="comments">
-								<input type='text' id='<?php echo esc_attr($target);?>' name='display_input[]' value='<?php echo esc_attr($field_name);?>' placeholder='Type <?php echo esc_attr($field_name);?>'>
-							</p>
+							<div>
+								<h1><input class="text-center" type="text" name="banner[title]" value="Institutions Name Or Title" placeholder="<?php _e('Instutions name or slogan', 'educare');?>"></h1>
+
+								<p class="sub-title"><input class="text-center" type="text" name="banner[subtitle1]" value="Rangpur, Dhaka, Bangladesh" placeholder="<?php _e('Address or something like this', 'educare');?>"></p>
+								
+								<p class="sub-title"><input class="text-center" type="text" name="banner[subtitle2]" value="Founded in <?php echo esc_html(date('Y'))?>" placeholder="<?php _e('Year or something like this', 'educare');?>"></p>
+							</div>
+						</div>
+
+						<div class="banner-logo">
+						<div class="getAttachment">
+								<div class="attachmentPreview attachmentInput bg-white <?php echo educare_advance_fields();?>">
+									<div class="attachmentImg">
+										<?php
+										echo educare_advance_fields_badge();
+										
+										if ($logo2) {
+											echo '<img class="educare-attachment attachment-id-0" src="'.esc_url($logo2).'">';
+										}
+										?>
+									</div>
+								</div>
+
+								<?php
+								if ($logo2) {
+									echo '<span class="btn btn-sm btn-danger d-inline-flex align-items-center gap-1 attachmentControl attachmentRemove"><span class="dashicons dashicons-remove"></span> '.__('Remove', 'educare').'</span>';
+								} else {
+									echo '<span class="btn btn-sm btn-success d-inline-flex align-items-center gap-1 attachmentControl attachmentInput"><span class="dashicons dashicons-cloud-upload"></span> '.__('Upload Now', 'educare').'</span>';
+								}
+								?>
+								
+								<input type="hidden" name="banner[logo2]" value="">
+							</div>
+						</div>
+					</div>
+				</div>
+				<?php
+			} else {
+				// for radio button
+				if ($target == 'results_card_template' or $target == 'search_form_template' or $target == 'certificate_template' or $target == 'profiles_template') {
+					// Show all template
+					educare_show_template('educare_'.$target);
+
+					if ($target == 'search_form_template' or $target == 'certificate_template' or $target == 'profiles_template') {
+						$target_template = educare_check_status($target);
+						$template_data = educare_get_template_details($target, 'fields');
+
+						if ($template_data) {
+							echo '<div class="center mt-4">
+								<b>'.__('Template Settings', 'educare').'</b>
+							</div><hr>';
+
+							foreach ($template_data as $field => $value) {
+								echo "<div class='educare-settings'>";
+								echo "<div class='title'>
+								<h3>".esc_html__($value['title'], 'educare')."</h3>
+								<p class='comments mt-1 mb-2'>".esc_html__($value['subtitle'], 'educare')."</p>
+
+								<input type='text' name='template_settings".esc_attr('['.$target.']['.$target_template.']['.$field.'][value]')."' value='".esc_attr($value['value'])."' placeholder='".esc_attr($value['value'])."'>
+								</div></div>";
+							}
+						}
+					}
+				} else {
+					?>
+					<div class="educare-settings <?php echo esc_attr($advance_feature);?>">
+						<div class="title">
+							<h3><?php esc_html_e($title, 'educare');?> <?php echo wp_kses_post($advance_badge);?></h3>
+							<p class="comments m-0 mt-1"><?php echo wp_kses_post(__($comments, 'educare'));?></p>
 						</div>
 						
 						<div class="status-button">
 							<div class="switch-radio">
-								<?php if ($key != 'Year') {
-									?>
-									<input type="radio" id="<?php echo esc_attr($target);?>_no" name="<?php echo esc_attr($target);?>" value="unchecked" <?php if ($status == 'unchecked') { echo 'checked';};?>/>
-									<label for="<?php echo esc_attr($target);?>_no">No</label>
-									<?php
-								}?>
+								<input type="radio" id="<?php echo esc_attr($target);?>_no" name="<?php echo esc_attr($target);?>" value="unchecked" <?php checked( esc_attr($status), 'unchecked' );?>>
+								<label for="<?php echo esc_attr($target);?>_no"><?php _e('Off', 'educare')?></label>
 								
-								<input type="radio" id="<?php echo esc_attr($target);?>_yes" name="<?php echo esc_attr($target);?>" value="checked" <?php if ($status == 'checked') { echo 'checked';};?>/>
-								<label for="<?php echo esc_attr($target);?>_yes">Yes</label>
+								<?php
+								if ($advance) {
+									echo "<input type='hidden' name='".esc_attr( $target )."' value='unchecked'>";
+								} else	{
+									?>
+									<input type="radio" id="<?php echo esc_attr($target);?>_yes" name="<?php echo esc_attr($target);?>" value="checked" <?php checked( esc_attr($status), 'checked' );?>>
+									<label for="<?php echo esc_attr($target);?>_yes"><?php _e('On', 'educare')?></label>
+									<?php
+								}
+								?>
 							</div>
 						</div>
 					</div>
 					<?php
 				}
-			} else {
-				// for radio button
-				?>
-				<div class="educare-settings">
-					<div class="title">
-						<h3><?php echo esc_html($title);?><h3>
-						<p class="comments"><?php echo wp_kses_post($comments);?></p>
-					</div>
-					
-					<div class="status-button">
-						<div class="switch-radio">
-							<input type="radio" id="<?php echo esc_attr($target);?>_no" name="<?php echo esc_attr($target);?>" value="unchecked" <?php if ($status == 'unchecked') { echo 'checked';};?>/>
-							<label for="<?php echo esc_attr($target);?>_no">No</label>
-							
-							<input type="radio" id="<?php echo esc_attr($target);?>_yes" name="<?php echo esc_attr($target);?>" value="checked" <?php if ($status == 'checked') { echo 'checked';};?>/>
-							<label for="<?php echo esc_attr($target);?>_yes">Yes</label>
-						</div>
-					</div>
-				</div>
-				<?php
 			}
 		}
 		
@@ -4355,34 +4547,99 @@ function educare_settings_status($target, $title, $comments, $input = null) {
 
 
 /**
- * Displays the settings form for the Educare.
+ * Get details of a specific template.
  *
- * The `educare_settings_form` function is responsible for displaying the settings form for the Educare plugin.
- * The function generates a comprehensive form with collapsible sections, allowing users to configure various settings.
+ * Retrieves details of a specified template using a provided template identifier and optional field name.
  *
- * The function makes use of various HTML elements, CSS classes, and JavaScript to create collapsible sections and handle user interactions.
- * Each section represents a different category of settings, and the user can expand or collapse each section by clicking on the respective labels.
+ * @param string $template The identifier for the template to retrieve details for.
+ * @param string $field    Optional. The specific field within the template details to retrieve. Default is 'fields'.
  *
- * The form allows users to configure settings related to page setup, default fields, results system, security, and other advanced settings.
- * Users can enable or disable specific options, enter required details (e.g., page slugs, reCaptcha keys), and view guidelines or help messages.
+ * @return mixed|null|array Returns the specified field from the template details if found, or the entire template details.
+ *                         Returns null if the template or field does not exist, and false if the template exists but the field does not.
+ */
+function educare_get_template_details($template, $field = 'fields') {
+	$target_template = educare_check_status($template);
+	
+	if (function_exists($target_template)) {
+		$template_data = call_user_func($target_template, null, true);
+
+		if ($template_data) {
+			if ($field) {
+				if (key_exists($field, $template_data)) {
+					return $template_data[$field];
+				} else {
+					return false;
+				}
+			}
+			
+			return $template_data;
+		}
+
+	}
+
+	return null;
+}
+
+
+
+/**
+ * Get template settings with modified fields based on specified criteria.
  *
- * The function also provides options to save the settings and reset them to their default values using corresponding buttons.
+ * Retrieves template settings for a given template and modifies specified fields.
  *
- * @return void The function outputs the settings form for the Educare theme or plugin.
+ * @param string $template_for The identifier for the template settings to retrieve.
+ * @param array  $fields       An array of fields to modify within the template settings.
  *
- * @since 1.4.0
- * @last-update 1.4.2
+ * @return array Modified template settings with specified fields updated, or the original fields if conditions are not met.
+ */
+function educare_get_template_settings(array $fields, $template_name, $template_for = 'search_form_template') {
+	$template_settings = educare_check_status('template_settings');
+
+	if ($template_settings) {
+		if (property_exists($template_settings, $template_for)) {
+			$saved_fields = $template_settings->$template_for;
+
+			if ($template_name) {
+				if (property_exists($saved_fields, $template_name)) {
+					$current_template = $saved_fields->$template_name;
+
+					if ($current_template) {
+						foreach ($fields as $key => $value) {
+							if (isset($current_template->$key->value)) {
+								$fields[$key]['value'] = sanitize_text_field( $current_template->$key->value );
+							}
+						}
+
+						// return saved fields
+						return $fields;
+					}
+				} else {
+					return $fields;
+				}
+			}
+		}
+	}
+
+	// return original fields
+	return $fields;
+}
+
+
+
+/** 
+ * Educare settings forms
  * 
- * @example
- * Display the settings form for the Educare plugin.
- * educare_settings_form();
+ * @since 1.4.0
+ * @last-update 1.4.1
+ * 
+ * @return mixed
  */
 function educare_settings_form() {
 	?>
-		<form action="<?php echo esc_url($_SERVER['REQUEST_URI']); ?>" method="post">
+		<form class="educareUpdateSettings" action="<?php echo esc_url($_SERVER['REQUEST_URI']); ?>" method="post">
 			<?php
 			ob_start();
-			echo bloginfo( 'url' );
+			echo bloginfo('url');
 			$domain = ob_get_clean();
 
 			$active_menu = '';
@@ -4393,24 +4650,81 @@ function educare_settings_form() {
 			?>
 			<div class="collapses">
 				<div class="collapse">
-					<input class="head" type="radio" name="settings_status_menu" id="Page_Setup_menu" checked>
-					<label class="collapse-label" for="Page_Setup_menu"><div><i class="dashicons dashicons-edit-page"></i> Page Setup</div></label>
+					<input class="head" type="radio" name="settings_status_menu" id="Shortcode_menu" checked>
+					<label class="collapse-label" for="Shortcode_menu"><div class="collapse-label-title"><i class="dashicons dashicons-shortcode"></i> <?php _e('Shortcode', 'educare');?></div></label>
+					
 					<div class="collapse-content">
 						<?php
-						echo "<div style='padding: 1px 0;'>";
-						echo educare_guide_for("Enter your Front-End page slug (where you use educare shortcode in WP editor, template or any shortcode-ready area for front end results system). Don't need to insert with domain - ".esc_url($domain)."/results. Only slug will be accepted, for exp: results or index.php/results.");
-						echo '</div>';
-
-						echo '<div class="educare-settings"><div class="title"><h3>Shortcode</h3><h3>
-						<p class="comments">Copy and paste this <strong>`[educare_results]`</strong> shortcode in your editor, template or any shortcode-ready area for front end results system).</p>
-						<input type="text" id="Shortcode" value="[educare_results]" placeholder="[educare_results]" disabled>
-						</h3></div></div>';
+						$certificate_code = '[educare_results certificate="true" results="false"]';
+						$both_code = '[educare_results certificate="true"]';
 						
-						educare_settings_status('results_page', 'Results Page', "Enter your front end results page slug (where you use <strong>`[educare_results]`</strong> shortcode in your editor, template or any shortcode-ready area for front end results system).", true);
-						?>
+						// echo "<div style='padding: 1px 0;'></div>";
+						echo '
+						<div class="educare-settings pt-2"><div class="title"><h3>'.__('Results Shortcode', 'educare').'</h3><h3>
+						<p class="comments mt-1 mb-2">'.sprintf(__('Copy and paste this <strong>`%1$s`</strong> shortcode in your editor, template or any shortcode-ready area for front end (%2$s).', 'educare'), '[educare_results]', __('results system', 'educare')).'</p>
+						
+						<div class="educare-copy-button">
+							<input type="text" id="educare_results" value="[educare_results]" disabled>
+							<span class="copy-tooltip-text">Copied!</span>
+						</div>
 
-						<?php
-						educare_settings_status('students_page', 'Students Page', "Enter your front end students page slug (where you use <strong>`[educare_students]`</strong> shortcode in your editor, template or any shortcode-ready area for front end students profiles system).<br> <b>Note:</b> This feature has not been launched yet. It can be used in the next update", true);
+						</h3></div></div>
+
+						<div class="educare-settings '.esc_attr(educare_advance_fields()).'"><div class="title"><h3>'.__('Certificate Shortcode', 'educare').' '.educare_advance_fields_badge().'</h3><h3>
+						<p class="comments mt-1 mb-2">'.sprintf(__('Copy and paste this <strong>`%1$s`</strong> shortcode in your editor, template or any shortcode-ready area for front end (%2$s).', 'educare'), esc_html($certificate_code), __('certificate system', 'educare')).'</p>
+
+						<div class="educare-copy-button">
+							<input type="text" id="certificate_code" value="'.esc_attr($certificate_code).'" disabled>
+							<span class="copy-tooltip-text">Copied!</span>
+						</div>
+
+						</h3></div></div>
+
+						<div class="educare-settings '.esc_attr(educare_advance_fields()).'"><div class="title"><h3>'.__('Both (Results and Certificate)', 'educare').' '.educare_advance_fields_badge().'</h3><h3>
+						<p class="comments mt-1 mb-2">'.sprintf(__('Copy and paste this <strong>`%1$s`</strong> shortcode in your editor, template or any shortcode-ready area for front end (%2$s).', 'educare'), esc_html($both_code), __('results and certificate system', 'educare')).'</p>
+						
+						<div class="educare-copy-button">
+							<input type="text" id="both_code_hortcode" value="'.esc_attr($both_code).'" disabled>
+							<span class="copy-tooltip-text">Copied!</span>
+						</div>
+
+						</h3></div></div>
+
+						<div class="educare-settings '.esc_attr(educare_advance_fields()).'"><div class="title"><h3>'.__('Profiles Shortcode', 'educare').' '.educare_advance_fields_badge().'</h3><h3>
+						<p class="comments mt-1 mb-2">'.sprintf(__('Copy and paste this <strong>`%1$s`</strong> shortcode in your editor, template or any shortcode-ready area for front end (%2$s).', 'educare'), '[educare_profiles]', __('profiles system', 'educare')).'</p>
+
+						<div class="educare-copy-button">
+							<input type="text" id="profiles_hortcode" value="[educare_profiles]" disabled>
+							<span class="copy-tooltip-text">Copied!</span>
+						</div>
+						
+						</h3></div></div>
+						
+						<div class="educare-settings '.esc_attr(educare_advance_fields()).'"><div class="title"><h3>'.__('Edit Profiles Shortcode', 'educare').' '.educare_advance_fields_badge().'</h3><h3>
+						<p class="comments mt-1 mb-2">'.sprintf(__('Copy and paste this <strong>`%1$s`</strong> shortcode in your editor, template or any shortcode-ready area for front end (%2$s).', 'educare'), '[educare_edit_profiles]', __('edit profile page', 'educare')).'</p>
+
+						<div class="educare-copy-button">
+							<input type="text" id="profiles_hortcode" value="[educare_edit_profiles]" disabled>
+							<span class="copy-tooltip-text">Copied!</span>
+						</div>
+						
+						</h3></div></div>';
+
+						
+						echo '<h6 class="educare-settings mt-4 d-flex gap-2"><span class="dashicons dashicons-admin-page"></span>Page Setup</h6>';
+
+						echo '<div class="py-0 px-1">';
+						echo educare_guide_for(sprintf(__('Enter your Front-End page slug (where you use educare shortcode in WP editor, template or any shortcode-ready area for front end results system). Don\'t need to insert with domain - <strike class="disable">%s/</strike><code class="text-success">results</code>. Only slug will be accepted, for exp: <code class="text-success">results</code> or <code class="text-success">index.php/results</code>.', 'educare'), esc_url($domain)));
+						echo '</div>';
+						
+
+						educare_settings_status('results_page', 'Results Page', sprintf(__('Enter your front-end page slug, where you use <strong>`%1$s`</strong> shortcode in your editor, template or any shortcode-ready area for front end (%2$s).', 'educare'), '[educare_results]', __('results system', 'educare')), true);
+						
+						educare_settings_status('profiles_page', 'Profiles Page', sprintf(__('Enter your front-end page slug, where you use <strong>`%1$s`</strong> shortcode in your editor, template or any shortcode-ready area for front end (%2$s).', 'educare'), '[educare_profiles]', __('profiles system', 'educare')), true, true);
+
+						educare_settings_status('edit_profiles_page', 'Edit Profiles Page', sprintf(__('Enter your front-end page slug, where you use <strong>`%1$s`</strong> shortcode in your editor, template or any shortcode-ready area for front end (%2$s).', 'educare'), '[educare_edit_profiles]', __('profiles system', 'educare')), true, true);
+
+						educare_settings_status('front_dashboard', 'Front-End Dashboard Tab', sprintf(__('Enter your front-end dashboard tab slug, where you use <strong>`%1$s`</strong> shortcode in your editor, template or any shortcode-ready area for front end (%2$s).', 'educare'), '[educare_profiles]', __('profiles system', 'educare')), true, true);
 						?>
 					</div>
 				</div>
@@ -4418,7 +4732,7 @@ function educare_settings_form() {
 				<div class="collapse">
 					<div style="background-color: inicial;">
 					<input class="head" type="radio" name="settings_status_menu" id="Display_menu" <?php echo esc_attr(checked($active_menu, 'Display_menu'))?> />
-					<label class="collapse-label" for="Display_menu"><div><i class="dashicons dashicons-editor-spellcheck"></i> Default Fields</div></label>
+					<label class="collapse-label" for="Display_menu"><div class="collapse-label-title"><i class="dashicons dashicons-editor-spellcheck"></i><?php _e('Default Fields', 'educare');?></div></label>
 					<div class="collapse-content">
 						<?php
 						echo "<div style='padding: 1px 0;'>";
@@ -4433,35 +4747,175 @@ function educare_settings_form() {
 				</div>
 
 				<div class="collapse">
-					<input class="head" type="radio" name="settings_status_menu" id="Results_System_menu" <?php echo esc_attr(checked($active_menu, 'Results_System_menu'))?> />
-					<label class="collapse-label" for="Results_System_menu"><div><i class="dashicons dashicons-welcome-learn-more"></i> Results System</div></label>
+					<div style="background-color: inicial;">
+					<input class="head" type="radio" name="settings_status_menu" id="Logo_And_Branding_menu" <?php echo esc_attr(checked($active_menu, 'Logo_And_Branding_menu'))?> />
+					<label class="collapse-label" for="Logo_And_Branding_menu"><div class="collapse-label-title"><i class="dashicons dashicons-admin-customizer"></i><?php _e('Logo & Branding', 'educare')?> <?php echo educare_advance_fields_badge(false);?></div></label>
 					<div class="collapse-content">
+						<div style='padding: 1px 0;'></div>
+
+							<?php
+							educare_settings_status('banner_settings', '', "");
+
+							educare_settings_status('show_banner', 'Show Banner', "Enable or disable the display of the banner, including the title, subtitle, and logo, on the results card or search form", null, true);
+
+							educare_settings_status('admin_area_banner', 'Admin Area Banner', "Show banner (Title, Subtitle and Logo) in admin area. If you don't need to show banner in admin area, just uncheck it.", null, true);
+							?>
+
+						</div>
+					
+					</div>
+				</div>
+
+				<div class="collapse">
+					<div style="background-color: inicial;">
+					<input class="head" type="radio" name="settings_status_menu" id="Search_Form_menu" <?php echo esc_attr(checked($active_menu, 'Search_Form_menu'))?> />
+					<label class="collapse-label" for="Search_Form_menu"><div class="collapse-label-title"><i class="dashicons dashicons-search"></i><?php _e('Search Form', 'educare')?></div></label>
+					<div class="collapse-content">
+					<div style='padding: 1px 0;'></div>
+
 						<?php
-						educare_settings_status('institute', 'Institution', "Name of the institutions (Title)", true);
+						educare_settings_status('search_form_template', 'Search Form Template', "Select one for front-end result card layout");
+						?>
+
+					</div>
+					
+					</div>
+				</div>
+
+				<div class="collapse">
+					<div style="background-color: inicial;">
+					<input class="head" type="radio" name="settings_status_menu" id="dashboard_templates_menu" <?php echo esc_attr(checked($active_menu, 'dashboard_templates_menu'))?> />
+					<label class="collapse-label" for="dashboard_templates_menu"><div class="collapse-label-title"><i class="dashicons dashicons-dashboard"></i><?php _e('Dashboard Templates', 'educare')?> <?php echo educare_advance_fields_badge(false);?></div></label>
+					<div class="collapse-content">
+					<div style='padding: 1px 0;'></div>
+
+						<?php
+						educare_settings_status('profiles_template', 'Profiles', "Select one for front-end result card layout");
+						?>
+
+					</div>
+					
+					</div>
+				</div>
+
+				<div class="collapse">
+					<div style="background-color: inicial;">
+					<input class="head" type="radio" name="settings_status_menu" id="Certificate_Templates_menu" <?php echo esc_attr(checked($active_menu, 'Certificate_Templates_menu'))?> />
+					<label class="collapse-label" for="Certificate_Templates_menu"><div class="collapse-label-title"><i class="dashicons dashicons-awards"></i><?php _e('Certificate Templates', 'educare') . ' '; echo educare_advance_fields_badge(false);?></div></label>
+					<div class="collapse-content">
+
+						<div style='padding: 1px 0;'></div>
+							<?php
+							educare_settings_status('certificate_template', 'Certificate Template', "Select one for front-end certificate layout");
+
+							educare_settings_status('custom_certificate_bg', 'Custom Background', "Select custom background for certificate template. If you want to change your selected template background, you can easily select your custom certificate template from here.", 'files', true);
+							?>
+						</div>
+
+					</div>
+				</div>
+
+				<div class="collapse">
+					<div style="background-color: inicial;">
+					<input class="head" type="radio" name="settings_status_menu" id="Results_card_menu" <?php echo esc_attr(checked($active_menu, 'Results_card_menu'))?> />
+					<label class="collapse-label" for="Results_card_menu"><div class="collapse-label-title"><i class="dashicons dashicons-id"></i><?php _e('Results Card', 'educare')?></div></label>
+					<div class="collapse-content">
+					<div style='padding: 1px 0;'></div>
+
+						<?php
+						educare_settings_status('results_card_template', 'Result Card Template', "Select one for front-end result card layout");
+
+						echo '<div class="center mt-4">
+							<b>Template Settings</b>
+						</div><hr>';
+
+						educare_settings_status('results_card', '', "");
+
+						echo educare_guide_for(sprintf(
+							__(
+								"All options are performed based on the active template. So make sure, your active template supports these options. Also, you can customize card/academy logo, title subtitle from <a href='%s'>Logo & Branding</a> section",
+								'educare'
+							),
+							esc_url('/wp-admin/admin.php?page=educare-settings&menu=Logo_And_Branding')
+						));
+
+						educare_settings_status('student_info', 'Student Info', "Show information of students on result card");
 						
-						educare_settings_status('optional_sybmbol', 'Optional Subject Selection', "Define optional subject identifier character/symbol. In this way educare define and identify optional subjects when you add or import results.", true);
-		
-						educare_settings_status('group_subject', 'Group Subject', "Define how many subject in each group. In this way educare define last (your defined) subject as a group wise subject when you add or import any results and students. For disable or unlimited set <code>0</code>", true);
-
-						educare_settings_status('auto_results', 'Auto Results', "Automatically calculate students results status Passed/Failed and GPA");
-		
-						educare_settings_status('photos', 'Students Photos', "Show or Hide students photos");
-
-						educare_settings_status('details', 'Students Details', "Show information/details of students on result card");
+						educare_settings_status('details', 'Students Details', "Show extra-field/details of students on result card");
 
 						educare_settings_status('grade_sheet', 'Grade Sheet', "Show the grade sheet on the result card");
+
+						educare_settings_status('quick_overview', 'Quick Overview', "Disable this option when don't need to quick overview section on results card", null, true);
+						?>
+
+					</div>
+					
+					</div>
+				</div>
+
+				<div class="collapse">
+					<input class="head" type="radio" name="settings_status_menu" id="Results_System_menu" <?php echo esc_attr(checked($active_menu, 'Results_System_menu'))?> />
+					<label class="collapse-label" for="Results_System_menu"><div class="collapse-label-title"><i class="dashicons dashicons-welcome-learn-more"></i><?php _e('Results System', 'educare')?></div></label>
+					<div class="collapse-content">
+						<?php
+						educare_settings_status('passed', 'Passed Status', "Define text when results is passed", true);
+						educare_settings_status('failed', 'Failed Status', "Define text when results is failed", true);
+						
+						educare_settings_status('optional_sybmbol', 'Optional Subject Detection', "Define optional subject identifier character/symbol. In this way educare define and identify optional subjects when you add or import results.", true);
 		
-						educare_settings_status('custom_results', 'Custom Design Permissions', "You need to permit/allow this options when you add custom functionality or customize educare results card or searching forms");
+						educare_settings_status('group_subject', 'Group Based Subject', "Define how many subject in each group. For disable or unlimited set <code>0</code>", true);
+
+						educare_settings_status('auto_results', 'Auto Results', "Automatically calculate students results status Passed/Failed and GPA");
+
+						educare_settings_status('auto_regi_no', 'Auto Registration Number', "Automatically genarate student registration (Regi No) number.", null, true);
+
+						educare_settings_status('position_filtering', 'Position Filtering', "Filter position based on passed or failed status (Every single subject). Example: S1 fails in 2 subjects and S2 in 1 subject. In this case, S1 will be in first and other person will be in second position. Because, S2 failed in less subjects than S1.", null, true);
+
+						educare_settings_status('certificate_system', 'Certificate System', "This features allow students to view and download certificate", null, true);
+
+						educare_settings_status('rattings_system', 'Rattings System', "This features allow to remarks student with rattings skale", null, true);
+
+						educare_settings_status('remarks', 'Remarks System', "If you don't need to remarks section, judt uncheck it", null, true);
+
+						educare_settings_status('print_only_remarks', 'Print Only Remarks', "Hide remarks section from front-end result card and show only when print results. Checked this when you want to hide remarks from fornt end and Unchecked when need show remarks section both (front-end and also print).", null, true);
+						?>
+					</div>
+				</div>
+
+				<div class="collapse">
+					<input class="head" type="radio" name="settings_status_menu" id="Users_menu" <?php echo esc_attr(checked($active_menu, 'Users_menu'))?> />
+					<label class="collapse-label" for="Users_menu"><div class="collapse-label-title"><i class="dashicons dashicons-admin-users"></i><?php _e('Users Settings', 'educare') . ' '; echo educare_advance_fields_badge(false);?></div></label>
+					<div class="collapse-content">
+						<?php
+						educare_settings_status('photos', 'Users Photos', "Show or hide students, staffer photos");
+
+						educare_settings_status('user_documents', 'Documents', "Upload verification documents such as an identity card (Documents), ID, or any other required documents to verify users.", null, educare_advance_fields());
+
+						educare_settings_status('user_signature', 'Signature', "Upload signature verify users", null, educare_advance_fields());
+
+						educare_settings_status('staff_profiles', 'Staff Profiles', "Teachers or staff can login their profiles and access roles based data. If you don't need this just disable it.", null, educare_advance_fields());
+
+						educare_settings_status('user_profiles', 'Student Profiles', "Students can login their profiles and access roles based data. If you don't need this just disable it.", null, educare_advance_fields());
+
+						educare_settings_status('connect_wp_users', 'Connect WP Users', "Connect Educare users with WordPress users (with email or username) that alredy added or registared.", null, educare_advance_fields());
+
+						educare_settings_status('publish_user_by_admin', 'Allow the School Admin to Publish Users.', "Allow school administrators to publish user (students or staffer) without requiring approval from the main admin. Enable this option when verification is not needed. This feature is available exclusively with the Educare Multiple School Module.", null, educare_advance_fields());
+
+						educare_settings_status('publish_results_by_admin', 'Allow the School Admin to Publish results.', "Allow school administrators to publish results data without requiring approval from the main admin. Enable this option when verification is not needed. This feature is available exclusively with the Educare Multiple School Module.", null, educare_advance_fields());
+
+						educare_settings_status('publish_results_by_teachers', 'Allow Teachers To Publish Results', "Allow teachers to publish results while adding marks", null, true);
 						?>
 					</div>
 				</div>
 
 				<div class="collapse">
 					<input class="head" type="radio" name="settings_status_menu" id="Security_menu" <?php echo esc_attr(checked($active_menu, 'Security_menu'))?> />
-					<label class="collapse-label" for="Security_menu"><div><i class="dashicons dashicons-lock"></i> Security</div></label>
+					<label class="collapse-label" for="Security_menu"><div class="collapse-label-title"><i class="dashicons dashicons-lock"></i><?php _e('Security', 'educare')?></div></label>
 					<div class="collapse-content">
 						<?php
 						echo "<div style='padding: 1px 0;'>";
+
+						// Google reCAPTCHA
 						echo educare_guide_for("<i>FAQ:</i> How to get my site or secret key?<br>Please go to <a href ='https://www.google.com/recaptcha' target='_blank'>google recaptcha</a>. Click Admin Console or Get Started with Enterprise at the top right corner. Enter a label for your ReCaptcha and select the V2 checkbox. Add the URL for your site in the Domain section. Accept the terms of service and click Submit. Copy the Site Key and Secret Key that Google generates.");
 						echo '</div>';
 
@@ -4472,20 +4926,28 @@ function educare_settings_form() {
 						educare_settings_status('site_key', 'Site Key', "Paste your google re-captcha v2 site key:", true);
 
 						educare_settings_status('secret_key', 'Secret Key', "Paste your google re-captcha v2 secret key:", true);
+
+						educare_settings_status('always_re_captcha', 'Always Re-Captcha', "Show Re-Captcha always (for logged or non-logged in users). If you want to disable Captcha for logged in users, then turn off this options.");
+
+						educare_settings_status('secure_results', 'Login To Access Results', "Show results for login (specific) users only", null, true);
 						?>
 					</div>
 				</div>
 
 				<div class="collapse">
 					<input class="head" type="radio" name="settings_status_menu" id="Others_menu" <?php echo esc_attr(checked($active_menu, 'Others_menu'))?> />
-					<label class="collapse-label" for="Others_menu"><div><i class="dashicons dashicons-admin-tools"></i> Others</div></label>
+					<label class="collapse-label" for="Others_menu"><div class="collapse-label-title"><i class="dashicons dashicons-admin-tools"></i><?php _e('Others', 'educare')?></div></label>
 					<div class="collapse-content">
 						<?php
-						educare_settings_status('guide', 'Guidelines', "Enable this options to receive smart guidance or help messages. These features guide you to - how to use educare (recommended for new users).");
+						educare_settings_status('data_per_page', 'Data Per Page', "Define how many data display on one page. This is for default paginaton. You can change it anytime", true);
+
+						educare_settings_status('guide', 'Guidelines', "Enable this option to receive smart guidance and helpful messages from Educare. These features provide step-by-step assistance on using Educare, making them especially useful for new users.");
+
+						educare_settings_status('show_cover_photos', 'Show Cover Photos', "Enable or disable cover images in the admin area for sections such as Management, Attendance, and Performance headers.");
 
 						educare_settings_status('confirmation', 'Delete confirmation', "Enable these options to get a popup confirmation when you delete something.");
 
-						educare_settings_status('copy_demo', 'Copy Demo Data', "<strong>Recommendation:</strong> Allow this option when your systems don't allow to download demo file. If you enable this options all demo data will be show in text box. You can copy and paste this data into csv files.");
+						educare_settings_status('update_anywhere', 'Update Anywhere', "Enable this options to make sure any existing data, like student records, results, and marks, stays up-to-date when update anythink in management.");
 						
 						educare_settings_status('advance', 'Advance Settings', "Enable these options to access or view the Advanced/Developer menu. (This is only for developers or advanced users).");
 						?>
@@ -4502,14 +4964,14 @@ function educare_settings_form() {
 					<div class="collapses">
 						<div class="collapse">
 							<input class="head" type="radio" name="advance_settings_status" id="Advance_Settings_menu" checked>
-							<label class="collapse-label" for="Advance_Settings_menux"><div><i class="dashicons dashicons-performance"></i> Advance Settings</div></label>
+							<label class="collapse-label" for="Advance_Settings_menux"><div class="collapse-label-title"><i class="dashicons dashicons-performance"></i><?php _e('Advance Settings', 'educare')?></div></label>
 							<div class="collapse-content">
 								<?php
 								echo "<div style='padding: 1px 0;'>";
-								educare_settings_status('problem_detection', '(AI) Problem Detection', "Automatically detect and fix educare relatet problems. Please, enable this options when update educare");
+								educare_settings_status('problem_detection', '(AI) Problem Detection', "Automatically detect and fix Educare related problems. Recommended to enable this options when update Educare.");
 								echo '</div>';
 
-								educare_settings_status('clear_data', 'Clear Data', "Clear all (educare) data from database when you uninstall or delete educare from plugin list?");
+								educare_settings_status('clear_data', 'Clear Data', "Clear all Educare data from the database when you uninstall or delete Educare from the plugin list. Ensure it is disabled during updates.");
 								?>
 							</div>
 						</div>
@@ -4523,13 +4985,62 @@ function educare_settings_form() {
 
 			$update_settings = wp_create_nonce( 'educare_update_settings_status' );
 			$reset_settings = wp_create_nonce( 'educare_reset_default_settings' );
+			$reset_everything = wp_create_nonce( 'educare_reset_everything' );
 
 			echo '<input type="hidden" name="educare_update_settings_status_nonce" value="'.esc_attr($update_settings).'">';
 			echo '<input type="hidden" name="educare_reset_default_settings_nonce" value="'.esc_attr($reset_settings).'">';
+			echo '<input type="hidden" name="educare_reset_everything_nonce" value="'.esc_attr($reset_everything).'">';
 			?>
-				
-			<button type="submit" name="educare_update_settings_status" class="educare_button"><i class="dashicons dashicons-yes-alt"></i> Save</button>
-			<button type="submit" name="educare_reset_default_settings" class="educare_button"><i class="dashicons dashicons-update"></i> Reset Settings</button>
+
+			<!-- Reset -->
+			<div id="reset_settings">
+				<br>
+				<div class="collapses">
+					<div class="collapse">
+						<input class="head" type="radio" name="reset_settings_status" id="Reset_Settings_menu" checked="">
+						<label class="collapse-label" for="Reset_Settings_menu">
+							<div class="collapse-label-title"><i class="dashicons dashicons-update-alt"></i>Reset Settings</div>
+						</label>
+						<div class="collapse-content">
+							<div style="padding: 1px 0;">
+								<div class="educare-settings">
+									<div class="title">
+										<h3>Restore Default Settings</h3>
+										<h3>
+											<p class="comments">Are you sure to restore default settings? This will not effect your content (Class, Subject, Exam, Year, Extra Field and others), It's only reset your current settings status and value.</p>
+										</h3>
+									</div>
+
+									<div class="status-button">
+										<div class="switch-radio">
+											<button type="submit" name="educare_reset_default_settings" class="reset-button" title="Restore Default Settings"><i class="dashicons dashicons-update-alt"></i></button>
+										</div>
+									</div>
+								</div>
+
+								<div class="educare-settings reset-everything">
+									<div class="title">
+										<h3>Reset Everything</h3>
+										<h3>
+											<p class="comments">Are you sure you want to reset all settings? This action will restore all Educare-related data to it's default state. Please back up any important data before proceeding.</p>
+										</h3>
+									</div>
+
+									<div class="status-button">
+										<div class="switch-radio">
+											<button type="submit" name="educare_reset_everything" class="reset-button" title="Reset Everything"><i class="dashicons dashicons-trash"></i></button>
+										</div>
+									</div>
+								</div>
+							</div>					
+						</div>
+					</div>
+				</div>
+			</div>
+			
+			<div class="button-container">
+				<button type="submit" name="educare_update_settings_status" class="btn btn-success d-flex gap-2 align-items-center justify-content-center mt-3 py-2"><i class="dashicons dashicons-yes-alt"></i> <?php _e('Save Settings', 'educare')?></button>
+			</div>
 				
 		</form>
 	<?php
@@ -4538,7 +5049,7 @@ function educare_settings_form() {
 
 
 /**
- * ### Class wise Jubject
+ * Class wise Jubject
  * Usage example: educare_setting_subject('Subject');
  * 
  * @since 1.2.0
@@ -4557,354 +5068,545 @@ function educare_settings_form() {
  * 5. Make database clean
  * and much more...............
  */
+ function educare_process_class($list) {
+	if ($list === 'Rattings') {
+		echo educare_show_msg('Unlock Premium', false);
+	} else {
+		global $wpdb;
+		$table = $wpdb->prefix."educare_settings";
+		// Prepare the query with placeholders
+		$query = $wpdb->prepare( "SELECT * FROM $table WHERE list = %s", $list );
+		// Execute the prepared query and get the results
+		$search = $wpdb->get_results( $query );
 
-function educare_process_class($list) {
-	global $wpdb;
-	$table = $wpdb->prefix."educare_settings";
-	// Prepare the query with placeholders
-	$query = $wpdb->prepare( "SELECT * FROM $table WHERE list = %s", $list );
-	// Execute the prepared query and get the results
-	$search = $wpdb->get_results( $query );
+		if ($search) {
+			foreach ( $search as $print ) {
+				$data = $print->data;
+				$id = $print->id;
+			}
+			
+			$data = json_decode($data, true);
 
-	if ($search) {
-		foreach ( $search as $print ) {
-			$data = $print->data;
-			$id = $print->id;
-		}
-		
-		$data = json_decode($data, true);
-
-		// for add list items (Subject)
-		if (isset($_POST["educare_process_$list"])) {
-			// geting form data and store as a var
-			if (isset($_POST['edit_class']) or isset($_POST['update_class']) or isset($_POST['remove_class']) or isset($_POST['add_class'])) {
-				$target = sanitize_text_field($_POST['class']);
+			if ($list == 'Rattings') {
+				$msgs = 'remark';
 			} else {
-				$target = sanitize_text_field($_POST['subject']);
+				$msgs = 'subject';
 			}
 
-			if (isset($_POST['update_class'])) {
-				$class = sanitize_text_field($_POST['old_class']);
-			} else {
-				$class = sanitize_text_field($_POST['class']);
-			}
+			// check if user access this request
+			educare_check_access('management');
 
-			// Check if selected class exist or not, if exist then apply this logic
-			if (key_exists($class, $data)) {
-				// Choice selected grouo
-
-				if (isset($_POST['add_class'])) {
-					echo '<div class="notice notice-error is-dismissible"> <p><b> '.esc_html( $target ).'</b> is allready exist in '.esc_html( $list ).' list</p><button class="notice-dismiss"></button></div>';
+			// for add list items (Subject)
+			if (isset($_POST["educare_process_$list"])) {
+				// geting form data and store as a var
+				if (isset($_POST['edit_class']) or isset($_POST['update_class']) or isset($_POST['remove_class']) or isset($_POST['add_class'])) {
+					$target = sanitize_text_field($_POST['class']);
+				} else {
+					$target = sanitize_text_field($_POST['subject']);
 				}
 
-				if (isset($_POST['edit_class'])) {
-					$subject_list = array();
-					foreach ($data as $key => $value) {
-						$subject_list[$key] = $key;
+				if (isset($_POST['update_class'])) {
+					$class = sanitize_text_field($_POST['old_class']);
+				} else {
+					$class = sanitize_text_field($_POST['class']);
+				}
+
+				// Check if selected class exist or not, if exist then apply this logic
+				if (key_exists($class, $data)) {
+					// Choice selected grouo
+
+					if (isset($_POST['add_class'])) {
+						echo '<div class="sticky_msg"><div class="notice notice-error is-dismissible"><p>'.
+						sprintf(
+							__(
+								'<b>%1$s</b> is already exist in %2$s list',
+								'educare'
+							),
+							esc_html__($target, 'educare'),
+							esc_html__($list, 'educare')
+						)
+						.'</p><button class="notice-dismiss"></button></div></div>';
 					}
-				} else {
-					$subject_list = $data[$class];
-				}
-				
-				// check if subject field is empty or not
-				if (empty($target)) {
-					echo '<div class="sticky_msg"><div class="notice notice-error is-dismissible"> <p>You must fill the form for add the <b>Subject</b>. thanks</p><button class="notice-dismiss"></button></div></div>';
-				} else {
-					$search_terget = in_array(strtolower($target), array_map('strtolower', $subject_list));
+
+					if (isset($_POST['edit_class'])) {
+						$subject_list = array();
+						foreach ($data as $key => $value) {
+							$subject_list[$key] = $key;
+						}
+					} else {
+						$subject_list = $data[$class];
+					}
 					
-					if (isset($_POST['update_class']) or isset($_POST['add_class'])) {
-						$search_terget = key_exists(strtolower($target), $data);
-					}
+					// check if subject field is empty or not
+					if (empty($target)) {
+						echo '<div class="sticky_msg"><div class="notice notice-error is-dismissible"><p>'.sprintf(
+							__(
+								'You must fill the form for add the <b>%s</b>.',
+								'educare'
+							),
+							esc_html__($msgs, 'educare')
+						).'</p><button class="notice-dismiss"></button></div></div>';
+					} else {
+						$search_terget = in_array(strtolower($target), array_map('strtolower', $subject_list));
+						
+						if (isset($_POST['update_class']) or isset($_POST['add_class'])) {
+							$search_terget = key_exists(strtolower($target), $data);
+						}
 
-					$process = true;
-					$msg = '';
+						$process = true;
+						$msg = '';
 
-					// check if subject exist or not
-					if ($search_terget) {
-						if (isset($_POST['add_subject']) or isset($_POST['update_subject']) or isset($_POST['add_class']) or isset($_POST['update_class'])) {
-							// if add_Subject
-							$process = false;
-							$update_subject = false;
+						// check if subject exist or not
+						if ($search_terget) {
+							if (isset($_POST['add_subject']) or isset($_POST['update_subject']) or isset($_POST['add_class']) or isset($_POST['update_class'])) {
+								// if add_Subject
+								$process = false;
+								$update_subject = false;
+								if (isset($_POST['update_subject'])) {
+									$old_subject = strtolower(sanitize_text_field( $_POST['old_subject'] ));
+									$old_class = strtolower(sanitize_text_field( $_POST['old_class'] ));
+
+									if (strtolower($target) == $old_subject and strtolower($class) == $old_class) {
+										$update_subject = true;
+									}
+								}
+
+								if (isset($_POST['update_class'])) {
+									$old_class = strtolower(sanitize_text_field( $_POST['old_class'] ));
+
+									if (strtolower($target) !== $old_class) {
+										$update_subject = true;
+									}
+								}
+
+								if ($update_subject) {
+									$msg = educare_show_msg(__('No changes were found in this request.', 'educare'), 'info');
+								} else {
+									$msg = '<div class="sticky_msg"><div class="notice notice-error is-dismissible"> <p>'.
+									sprintf(
+										__(
+											'<b>%1$s</b> is already exist in your selected %2$s (%3$s)',
+											'educare'
+										),
+										esc_html__($target, 'educare'),
+										esc_html__($list, 'educare'),
+										esc_html__($class, 'educare')
+									)
+									.'</p><button class="notice-dismiss"></button></div></div>';
+
+									if (isset($_POST['update_class'])) {
+										$msg = '<div class="sticky_msg"><div class="notice notice-error is-dismissible"> <p>'.
+										sprintf(
+											__(
+												'<b>%1$s</b> is already exist in %2$s list',
+												'educare'
+											),
+											esc_html__($target, 'educare'),
+											esc_html__($list, 'educare')
+										)
+										.'</p><button class="notice-dismiss"></button></div></div>';
+									}
+									
+								}
+							}
+							elseif (isset($_POST['edit_subject'])) {
+								?>
+								<div class="sticky_msg">
+									<div class="notice notice-success is-dismissible add_results">
+										<p>
+
+											<form action="" method="post" class="py-0 px-3 add_results bg-transparent shadow-none">
+												<div class="d-block fw-bold mb-3"><?php echo __('Edit:', 'educare') .' '. esc_html__($target, 'educare');?></div>
+												<?php
+												$update_subject_nonce = wp_create_nonce( 'update_subject' );
+												$remove_subject_nonce = wp_create_nonce( 'remove_subject' );
+												
+												echo '<input type="hidden" name="update_subject_nonce" value="'.esc_attr($update_subject_nonce).'">';
+												echo '<input type="hidden" name="remove_subject_nonce" value="'.esc_attr($remove_subject_nonce).'">';
+												?>
+
+												<input type="hidden" name="educare_process_<?php echo esc_attr($list);?>">
+												<input type="hidden" name="old_subject" value="<?php echo esc_attr($target);?>">
+												<input type="hidden" name="old_class" value="<?php echo esc_attr($class);?>">
+												
+												<div class="mb-3 row">
+													<label for="editFieldSubject" class="col-sm-2 col-form-label"><?php esc_html_e(ucfirst($msgs), 'educare');?></label>
+													<div class="col-sm-10">
+														<input id="editFieldSubject" type="text" name="subject" class="form-control-plaintext" value="<?php echo esc_attr($target);?>" placeholder="<?php echo esc_attr($target);?>" pattern="[A-Za-z0-9 ]+" title="<?php _e('Only characters, numbers and space allowed. (A-Za-z0-9)', 'educare')?>">
+													</div>
+												</div>
+
+												<div class="mb-3 row">
+													<label for="editFieldClass" class="col-sm-2 col-form-label"><?php esc_html_e(ucfirst($list), 'educare');?></label>
+													<div class="col-sm-10">
+														<select class="m-0" name="class" id="editFieldClass">
+															<?php
+															foreach ($data as $key => $value) {
+																if ($key == $class) {
+																	$selected = 'selected';
+																} else {
+																	$selected = '';
+																}
+																echo "<option value='".esc_attr( $key )."' ".esc_attr( $selected ).">".esc_html( $key )."</option>";
+															}
+															?>
+														</select>
+													</div>
+												</div>
+
+												<?php educare_update_anywhere_options();?>
+
+												<div class="row">
+													<div class="col-sm-2"></div>
+													<div class="col-sm-10">
+														<div class="d-flex gap-2">
+															<button type="submit" name="update_subject" id="educare_results_btn" class="d-inline-flex gap-1 align-items-center justify-content-center btn btn-success p-2 pe-3 proccess_<?php echo esc_attr($list);?>"><i class="dashicons dashicons-update"></i> <?php echo __('Update', 'educare');?></button>
+
+															<button type="submit" name="remove_subject" class="d-inline-flex gap-1 align-items-center justify-content-center btn btn-danger p-2 pe-3 proccess_<?php echo esc_attr($list);?>" data-class="<?php echo esc_attr($class);?>" data-subject="<?php echo esc_attr($target);?>"><i class="dashicons dashicons-trash"></i> Delete</button>
+														</div>
+													</div>
+												</div>
+											</form>
+										</p>
+
+										<button class="notice-dismiss"></button>
+									</div>
+								</div>
+								<?php
+							}
+							elseif (isset($_POST['edit_class'])) {
+								?>
+								<div class="sticky_msg">
+									<div class="notice notice-success is-dismissible add_results">
+										<p>
+											<form action="" method="post" class="py-0 px-3 add_results bg-transparent shadow-none">
+												<div class="d-block fw-bold mb-3"><?php echo __('Edit', 'educare') .' '. esc_html__($class, 'educare');?></div>
+
+												<?php
+												$update_class_nonce = wp_create_nonce( 'update_class' );
+												echo '<input type="hidden" name="update_class_nonce" value="'.esc_attr($update_class_nonce).'">';
+												echo '<input type="hidden" name="educare_process_'.esc_attr($list).'">';
+												echo '<input type="hidden" name="old_class" value="'.esc_attr($class).'">';
+												?>
+
+												<div class="mb-3 row">
+													<label for="editFieldClass" class="col-sm-2 col-form-label"><?php echo esc_html(ucfirst($list));?> Name</label>
+													<div class="col-sm-10">
+														<input id="editFieldClass" type="text" name="class" class="fields" value="<?php echo esc_attr($class);?>" placeholder="<?php echo esc_attr($class);?>" pattern="[A-Za-z0-9 ]+" title="<?php _e('Only characters, numbers and space allowed. (A-Za-z0-9)', 'educare')?>">
+													</div>
+												</div>
+
+												<?php educare_update_anywhere_options();?>
+
+												<div class="row">
+													<div class="col-sm-2"></div>
+													<div class="col-sm-10">
+														<button type="submit" name="update_class" id="educare_results_btn" class="d-inline-flex gap-1 align-items-center justify-content-center btn btn-success p-2 pe-3 proccess_<?php echo esc_attr($list);?>"><i class="dashicons dashicons-update"></i> <?php _e('Update', 'educare')?></button>
+													</div>
+												</div>
+
+											</form>
+										</p>
+										
+										<button class="notice-dismiss"></button>
+									</div>
+								</div>
+								<?php
+							}
+
+							elseif (isset($_POST['remove_subject'])) {
+								$msg = '<div class="sticky_msg"><div class="notice notice-success is-dismissible"><p>'.
+								sprintf(
+									__(
+										'Successfully removed <b>%1$s</b> from the %2$s list.',
+										'educare'
+									),
+									esc_html__($target, 'educare'),
+									esc_html__($list, 'educare')
+								)
+								.'</p><button class="notice-dismiss"></button></div></div>';
+								
+								// convert indexed array to associative array. So, we can essily select your specific data/value by specific key. Otherwise, it's hard to detect specific data with indexed key.
+								$subject_list = array_combine($subject_list, $subject_list);
+								// remove data by specific key
+								unset($subject_list[$target]);
+								$subject_list = array_values($subject_list);
+
+								$data[$class] = $subject_list;
+							} else {
+								echo '<div class="notice notice-error is-dismissible"> <p><b class="error">'.__('Somethink went wrong!</b> Maybe its a bug. Soon, we (Educare) will fix these issues after the next update', 'educare').'</p><button class="notice-dismiss"></button></div>';
+							}
+						} else {
+							if (isset($_POST['add_subject'])) {
+								//  if add sobject
+								$subject_list = array_unique($subject_list);
+								array_push($subject_list, $target);
+								$data[$class] = $subject_list;
+								
+								$msg = '<div class="sticky_msg"><div class="notice notice-success is-dismissible"> <p>'.
+								sprintf(
+									__(
+										'Successfully Added <b>%1$s</b> at the %2$s list<br>%3$s: <b>%4$s</b><br>Total: <b>%5$s</b> %2$s added.',
+										'educare'
+									),
+									esc_html__($target, 'educare'),
+									esc_html__($msgs, 'educare'),
+									esc_html__($list, 'educare'),
+									esc_html__($class, 'educare'),
+									esc_html(count($subject_list))
+								)
+								.'</p><button class="notice-dismiss"></button>
+								</div></div>';
+							}
+
 							if (isset($_POST['update_subject'])) {
-								$old_subject = strtolower(sanitize_text_field( $_POST['old_subject'] ));
-								$old_class = strtolower(sanitize_text_field( $_POST['old_class'] ));
+								$old_sub = sanitize_text_field( $_POST['old_subject'] );
+								$old_subject = strtolower($old_sub);
 
-								if (strtolower($target) == $old_subject and strtolower($class) == $old_class) {
-									$update_subject = true;
+								$old_class = sanitize_text_field( $_POST['old_class'] );
+								$class = $class;
+
+								// echo "Old Subject: $old_subject <br>Old Class: $old_class <br>";
+								// echo "New Subject: $target <br>New Class: $class <br>";
+								$get_key = array_search($old_sub, $data[$old_class]);
+
+								if (strtolower($target) != $old_subject and $class == $old_class) {
+									$data[$old_class][$get_key] = $target;
+
+									$msg = '<div class="sticky_msg"><div class="notice notice-success is-dismissible"> <p>'.
+									sprintf(
+										__(
+											'Successfully change %1$s <b class="error">%2$s</b> to <b class="success">%3$s</b>',
+											'educare'
+										),
+										esc_html__($msgs, 'educare'),
+										esc_html__($old_sub, 'educare'),
+										esc_html__($target, 'educare')
+									)
+									.'</p><button class="notice-dismiss"></button></div></div>';
+
+									educare_update_anywhere(ucfirst($msgs), $old_sub, $target);
+								}
+								elseif (strtolower($target) == $old_subject and $class != $old_class) {
+									unset($data[$old_class][$get_key]);
+									array_values($data[$old_class]);
+									array_push($data[$class], $target);
+									
+									$msg = '<div class="sticky_msg"><div class="notice notice-success is-dismissible"> <p>'.
+									sprintf(
+										__(
+											'Successfully change %1$s <b class="error">%2$s</b> to <b class="success">%3$s</b>',
+											'educare'
+										),
+										esc_html__($list, 'educare'),
+										esc_html__($old_class, 'educare'),
+										esc_html__($class, 'educare')
+									)
+									.'</p><button class="notice-dismiss"></button></div></div>';
+								} else {
+									// Add data
+									$data[$old_class][$get_key] = $target;
+									// Remove data
+									unset($data[$old_class][$get_key]);
+									array_values($data[$old_class]);
+									array_push($data[$class], $target);
+
+									$msg = '<div class="sticky_msg"><div class="notice notice-success is-dismissible"><p>'.
+									sprintf(
+										__(
+											'Successfully update %1$s <b class="error">%2$s</b> to <b class="success">%3$s</b>. also changed %4$s <b class="error">%5$s</b> to <b class="success">%6$s</b>.',
+											'educare'
+										),
+										esc_html__($msgs, 'educare'),
+										esc_html__($old_sub, 'educare'),
+										esc_html__($target, 'educare'),
+										esc_html__($list, 'educare'),
+										esc_html__($old_class, 'educare'),
+										esc_html__($class, 'educare')
+									)
+									.'</p><button class="notice-dismiss"></button></div></div>';
+
+									educare_update_anywhere(ucfirst($msgs), $old_sub, $target);
 								}
 							}
 
 							if (isset($_POST['update_class'])) {
-								$old_class = strtolower(sanitize_text_field( $_POST['old_class'] ));
+								$old_class = sanitize_text_field( $_POST['old_class'] );
+								$get_key = array_search($data[$old_class], $data);
 
-								if (strtolower($target) !== $old_class) {
-									$update_subject = true;
-								}
-							}
-
-							if ($update_subject) {
-								$msg = '<div class="sticky_msg"><div class="notice notice-error is-dismissible"> <p>There are no changes for update</p><button class="notice-dismiss"></button></div></div>';
-							} else {
-								$msg = '<div class="sticky_msg"><div class="notice notice-error is-dismissible"> <p><b> '.esc_html( $target ).'</b> is allready exist in your selected '.esc_html( $list ).' ('.esc_html( $class ).')</p><button class="notice-dismiss"></button></div></div>';
-
-								if (isset($_POST['update_class'])) {
-									$msg = '<div class="notice notice-error is-dismissible"> <p><b> '.esc_html( $target ).'</b> is allready exist in '.esc_html( $list ).' list</p><button class="notice-dismiss"></button></div>';
-								}
-								
-							}
-						}
-						elseif (isset($_POST['edit_subject'])) {
-							?>
-							<div class="sticky_msg">
-								<div class="notice notice-success is-dismissible add_results"><p>
-								<center><h2>Edit Subject</h2></center>
-
-									<form action="" method="post">
-										<input type="hidden" name="educare_process_<?php echo esc_attr($list);?>">
-										<input type="hidden" name="old_subject" value="<?php echo esc_attr($target);?>">
-										<input type="hidden" name="old_class" value="<?php echo esc_attr($class);?>">
-
-										Edit - <b><?php echo esc_html($target);?></b>:
-
-										<div class="select add-subject">
-											<div>
-												<p>Subject name:</p>
-												<input type="text" name="subject" class="fields" value="<?php echo esc_attr($target);?>" placeholder="<?php echo esc_attr($target);?>" pattern="[A-Za-z0-9 ]+" title="Only Caretaker, Number and Space allowed. (A-Za-z0-9)">
-											</div>
-
-											<div>
-												<p>Subject for <?php echo esc_html($list);?></p>
-												<select name='class'>
-													<?php
-													foreach ($data as $key => $value) {
-														if ($key == $class) {
-															$selected = 'selected';
-														} else {
-															$selected = '';
-														}
-														echo "<option value='".esc_attr( $key )."' ".esc_attr( $selected ).">".esc_html( $key )."</option>";
-													}
-													?>
-												</select>
-											</div>
-										</div>
-
-										<input id="educare_results_btn" class="educare_button proccess_<?php echo esc_attr($list);?>" name="update_subject" type="submit" value="&#xf464 Edit">
-
-										<input type="submit" name="remove_subject" class="educare_button proccess_<?php echo esc_attr($list);?>" value="&#xf182">
-
-										<?php
-										$update_subject_nonce = wp_create_nonce( 'update_subject' );
-										$remove_subject_nonce = wp_create_nonce( 'remove_subject' );
-										
-										echo '<input type="hidden" name="update_subject_nonce" value="'.esc_attr($update_subject_nonce).'">';
-										echo '<input type="hidden" name="remove_subject_nonce" value="'.esc_attr($remove_subject_nonce).'">';
-										?>
-										
-									</form>
-									</p>
-									<button class="notice-dismiss"></button>
-								</div>
-							</div>
-							<?php
-						}
-						elseif (isset($_POST['edit_class'])) {
-							?>
-							<div class="sticky_msg">
-								<div class="notice notice-success is-dismissible add_results"><p>
-									<form action="" method="post">
-										Edit <?php echo esc_attr($list);?>:
-										<input type="hidden" name="educare_process_<?php echo esc_attr($list);?>">
-										<input type="hidden" name="old_class" value="<?php echo esc_attr($class);?>">
-										<input type="text" name="class" class="fields" value="<?php echo esc_attr($class);?>" placeholder="<?php echo esc_attr($class);?>" pattern="[A-Za-z0-9 ]+" title="Only Caretaker, Number and Space allowed. (A-Za-z0-9)">
-
-										<br>
-										
-										<button id="educare_results_btn" class="educare_button proccess_<?php echo esc_attr($list);?>" name="update_class" type="submit"><i class="dashicons dashicons-edit"></i> Edit</button>
-
-										<?php
-										$update_class_nonce = wp_create_nonce( 'update_class' );
-										
-										echo '<input type="hidden" name="update_class_nonce" value="'.esc_attr($update_class_nonce).'">';
-										?>
-
-									</form>
-									</p>
-									<button class="notice-dismiss"></button>
-								</div>
-							</div>
-							<?php
-						}
-
-						elseif (isset($_POST['remove_subject'])) {
-							$msg = '<div class="sticky_msg"><div class="notice notice-success is-dismissible"><p>Successfully removed <b>'.esc_html($target).'</b> from the subject list.</p><button class="notice-dismiss"></button></div></div>';
-							// convert indexed array to associative array. So, we can essily select your specific data/value by specific key. Otherwise, it's hard to detect specific data with indexed key.
-							$subject_list = array_combine($subject_list, $subject_list);
-							// remove data by specific key
-							unset($subject_list[$target]);
-							$subject_list = array_values($subject_list);
-
-							$data[$class] = $subject_list;
-						} else {
-							echo '<div class="notice notice-error is-dismissible"> <p><b class="error">Somethink went wrong!</b> Maybe its a bug. Soon, we (Educare) will fix these issues after the next update</p><button class="notice-dismiss"></button></div>';
-						}
-					} else {
-						if (isset($_POST['add_subject'])) {
-							//  if add sobject
-							$subject_list = array_unique($subject_list);
-							array_push($subject_list, $target);
-							$data[$class] = $subject_list;
-							
-							$msg = '<div class="sticky_msg"><div class="notice notice-success is-dismissible"> <p>Successfully Added <b>'.esc_html($target).'</b> at the '.esc_html( $list ).' list<br>'.esc_html( $list ).': <b>'.esc_html($class).'</b><br>Total: <b>'.esc_html(count($subject_list)).'</b> Subject added</p><button class="notice-dismiss"></button>
-							</div></div>';
-						}
-
-						if (isset($_POST['update_subject'])) {
-							$old_sub = sanitize_text_field( $_POST['old_subject'] );
-							$old_subject = strtolower($old_sub);
-
-							$old_class = sanitize_text_field( $_POST['old_class'] );
-							$class = $class;
-
-							// echo "Old Subject: $old_subject <br>Old Class: $old_class <br>";
-							// echo "New Subject: $target <br>New Class: $class <br>";
-							$get_key = array_search($old_sub, $data[$old_class]);
-
-							if (strtolower($target) != $old_subject and $class == $old_class) {
-								$data[$old_class][$get_key] = $target;
-
-								$msg = '<div class="sticky_msg"><div class="notice notice-success is-dismissible"> <p>Successfully change subject <b class="error">'.esc_html($old_sub).'</b> to <b class="success">'.esc_html($target).'</b></p><button class="notice-dismiss"></button></div></div>';
-							}
-							elseif (strtolower($target) == $old_subject and $class != $old_class) {
-								unset($data[$old_class][$get_key]);
-								array_values($data[$old_class]);
-								array_push($data[$class], $target);
-								
-								$msg = '<div class="sticky_msg"><div class="notice notice-success is-dismissible"> <p>Successfully change '.esc_html( $list ).' <b class="error">'.esc_html($old_class).'</b> to <b class="success">'.esc_html($class).'</b></p><button class="notice-dismiss"></button></div></div>';
-							} else {
-								// Add data
-								$data[$old_class][$get_key] = $target;
-								// Remove data
-								unset($data[$old_class][$get_key]);
-								array_values($data[$old_class]);
-								array_push($data[$class], $target);
-
-								$msg = "<div class='sticky_msg'><div class='notice notice-success is-dismissible'><p>Succesfully update subject <b class='error'>".esc_html($old_sub)."</b> to <b class='success'>".esc_html($target)."</b>. also changed ".esc_html( $list )." <b class='error'>".esc_html($old_class)."</b> to <b class='success'>".esc_html($class)."</b>.</p><button class='notice-dismiss'></button></div></div>";
-							}
-						}
-
-						if (isset($_POST['update_class'])) {
-							$old_class = sanitize_text_field( $_POST['old_class'] );
-							$get_key = array_search($data[$old_class], $data);
-
-							if(strtolower($old_class) == strtolower($target)) {
-								$msg = "<div class='sticky_msg'><div class='notice notice-error is-dismissible'><p>There are no changes for updates</p><button class='notice-dismiss'></button></div></div>";
-							} else {
-								if (key_exists(strtolower($target), array_change_key_case($data))) {
-									echo '<div class="notice notice-error is-dismissible"><p><b>'.esc_html($target).'</b> is allready exist in '.esc_html( $list ).' list</p><button class="notice-dismiss"></button></div>';
+								if(strtolower($old_class) == strtolower($target)) {
+									$msg = educare_show_msg(__('No changes were found in this request.', 'educare'), 'info');
 								} else {
-									if ($target !== $old_class) {
-										$data = educare_replace_key($data, $old_class, $target);
-										$msg = '<div class="sticky_msg"><div class="notice notice-success is-dismissible"> <p>Successfully changed '.esc_html( $list ).' <b class="error">'.esc_html($old_class).'</b> to <b class="success">'.esc_html($target).'</b></p><button class="notice-dismiss"></button></div></div>';
+									if (key_exists(strtolower($target), array_change_key_case($data))) {
+										echo '<div class="sticky_msg"><div class="notice notice-error is-dismissible"> <p>'.
+										sprintf(
+											__(
+												'<b>%1$s</b> is already exist in %2$s list',
+												'educare'
+											),
+											esc_html__($target, 'educare'),
+											esc_html__($list, 'educare')
+										)
+										.'</p><button class="notice-dismiss"></button></div></div>';
+									} else {
+										if ($target !== $old_class) {
+											$data = educare_replace_key($data, $old_class, $target);
+											$msg = '<div class="sticky_msg"><div class="notice notice-success is-dismissible"> <p>'.
+											sprintf(
+												__(
+													'Successfully change %1$s <b class="error">%2$s</b> to <b class="success">%3$s</b>',
+													'educare'
+												),
+												esc_html__($list, 'educare'),
+												esc_html__($old_class, 'educare'),
+												esc_html__($target, 'educare')
+											)
+											.'</p><button class="notice-dismiss"></button></div></div>';
+
+											educare_update_anywhere($list, $old_class, $target);
+										}
 									}
 								}
 							}
-						}
 
-						if (isset($_POST['remove_class'])) {
-							$class = sanitize_text_field( $_POST['class'] );
+							if (isset($_POST['remove_class'])) {
+								$class = sanitize_text_field( $_POST['class'] );
+								
+								unset($data[$class]);
+								
+								$msg = '<div class="sticky_msg"><div class="notice notice-success is-dismissible"><p>'.
+								sprintf(
+									__(
+										'Successfully removed <b>%1$s</b> from the %2$s list.',
+										'educare'
+									),
+									esc_html__($class, 'educare'),
+									esc_html__($list, 'educare')
+								)
+								.'</p><button class="notice-dismiss"></button></div></div>';
+							}
 							
-							unset($data[$class]);
-							
-							$msg = '<div class="notice notice-success is-dismissible"> <p><b class="error">'.esc_html($class).'</b> has been successfully removed from the '.esc_html( $list ).' list</p><button class="notice-dismiss"></button></div>';
-						}
-						
-					} // unique data
+						} // unique data
 
-					if ($process) {
-						$wpdb->update(
-							$table, 			//table
-							array( 				// data
-								"data" => json_encode($data)
-							),
-						
-							array( 				//where
-								'ID' => $id
-							)
-						);
-						
-					}
-					
-					echo $msg;
-				}
-
-			} else {
-
-				if (isset($_POST['add_class'])) {
-					if (key_exists(strtolower($class), array_change_key_case($data))) {
-						echo '<div class="notice notice-error is-dismissible"><p><b>'.esc_html($class).'</b> is allready exist in '.esc_html( $list ).' list</p><button class="notice-dismiss"></button></div>';
-					} else {
-						if (empty($class)) {
-							echo '<div class="sticky_msg"><div class="notice notice-error is-dismissible"> <p>You must fill the form for add the <b>'.esc_html( $list ).'</b>. thanks</p><button class="notice-dismiss"></button></div></div>';
-						} else {
-							$data[$class] = array();
-							
+						if ($process) {
 							$wpdb->update(
-								$table, //table
-								array( // data
+								$table, 			//table
+								array( 				// data
 									"data" => json_encode($data)
 								),
 							
-								array( //where
+								array( 				//where
 									'ID' => $id
 								)
 							);
-
-							echo '<div class="sticky_msg"><div class="notice notice-success is-dismissible"> <p>Successfully Added <b>'.esc_html($target).'</b> at the '.esc_html( $list ).' list<br></p><button class="notice-dismiss"></button>
-							</div></div>';
+							
 						}
-					}
-				} else {
-					echo '<div class="notice notice-error is-dismissible">';
-
-					if ($data) {
-						?>
-						<p>Sorry, <b><?php echo esc_html($class);?></b> not exist<b></b> at the <?php echo esc_html($list);?> list<br>
-						If you need to add subject in this (<?php echo esc_html($class);?>) <?php echo esc_html($list);?>. First, You need to add this (<?php echo esc_html($class);?>) in the <?php echo esc_html($list);?> list. Then, You would allowed to add some subject. thanks
-						<?php
-					} else {
-						?>
-						<p>Sorry, you don't have added any <?php echo esc_html($list);?> yet. For add subject, you need to add a <?php echo esc_html($list);?> first. Then, you get to add a subject for this <?php echo esc_html($list);?>. thank you 
-						<?php
-					}
 						
-					echo '</p><button class="notice-dismiss"></button></div>';
+						echo $msg;
+					}
+
+				} else {
+
+					if (isset($_POST['add_class'])) {
+						if (key_exists(strtolower($class), array_change_key_case($data))) {
+							echo '<div class="sticky_msg"><div class="notice notice-error is-dismissible"> <p>'.
+							sprintf(
+								__(
+									'<b>%1$s</b> is already exist in %2$s list',
+									'educare'
+								),
+								esc_html__($class, 'educare'),
+								esc_html__($list, 'educare')
+							)
+							.'</p><button class="notice-dismiss"></button></div></div>';
+						} else {
+							if (empty($class)) {
+								echo '<div class="sticky_msg"><div class="notice notice-error is-dismissible"> <p>'.sprintf(
+									__(
+										'You must fill the form for add the <b>%s</b>.',
+										'educare'
+									),
+									esc_html__($list, 'educare')
+								).'</p><button class="notice-dismiss"></button></div></div>';
+							} else {
+								$data[$class] = array();
+								
+								$wpdb->update(
+									$table, //table
+									array( // data
+										"data" => json_encode($data)
+									),
+								
+									array( //where
+										'ID' => $id
+									)
+								);
+
+								echo '<div class="sticky_msg"><div class="notice notice-success is-dismissible"> <p>'.
+								sprintf(
+									__(
+										'Successfully Added <b>%1$s</b> at the %2$s list.',
+										'educare'
+									),
+									esc_html__($target, 'educare'),
+									esc_html__($list, 'educare')
+								)
+								.'</p><button class="notice-dismiss"></button>
+								</div></div>';
+							}
+						}
+					} else {
+						echo '<div class="sticky_msg"><div class="notice notice-error is-dismissible"><p>';
+
+						if ($data) {
+							echo sprintf(
+								__(
+									'Sorry, <b>%1$s</b> not exist<b></b> at the %2$s list<br>If you need to add subject in this (%1$s) %2$s. First, You need to add this (%1$s) in the %2$s list. Then, You would be allowed to add some subject.',
+									'educare'
+								),
+								esc_html__($class, 'educare'),
+								esc_html__($list, 'educare')
+							);
+						} else {
+							echo sprintf(
+								__(
+									'Sorry, you don\'t have added any %1$s yet. For adding a subject, you need to add a %1$s first. Then, you can add a subject for this %1$s.',
+									'educare'
+								),
+								esc_html__($list, 'educare')
+							);
+						}
+							
+						echo '</p><button class="notice-dismiss"></button></div></div>';
+					}
 				}
 			}
+		} else {
+			echo educare_guide_for('db_error', false);
 		}
-	} else {
-		echo educare_guide_for('db_error', '', false);
-	}
 
-	// Add newly adde class or group in options (also selected) without realoding the page
-	if (isset($_POST['educare_process_Class']) or isset($_POST['educare_process_Group'])) {
-		$data_for = 'Group';
-		$class = sanitize_text_field( $_POST['class'] );
+		// Add newly adde class or group in options without realoding the page
+		if (isset($_POST['educare_process_Class']) or isset($_POST['educare_process_Group'])) {
+			$class = sanitize_text_field( $_POST['class'] );
 
-		if (isset($_POST['educare_process_Class'])) {
-			$data_for = 'Class';
+			if (isset($_POST['educare_process_Group'])) {
+				$data_for = 'Group';
+			} elseif (isset($_POST['educare_process_Rattings'])) {
+				$data_for = 'Rattings';
+			} else {
+				$data_for = 'Class';
+			}
+			
+			?>
+			<script>
+				jQuery(document).ready(function($) {
+					$('#add_<?php echo esc_js($data_for);?>').html('<?php esc_js(educare_get_options($data_for, $class))?>');
+				});
+			</script>
+			<?php
 		}
-		
-		?>
-		<script>
-			jQuery(document).ready(function($) {
-				$('#add_<?php echo esc_js($data_for);?>').html('<?php echo esc_js(educare_get_options($data_for, $class)); ?>');
-			});
-		</script>
-		<?php
 	}
 }
-
 
 
 
@@ -4949,19 +5651,15 @@ function educare_process_class($list) {
  * Display the form for adding a new class in the Educare theme or plugin.
  * educare_setting_subject('classes', true);
  */
-function educare_setting_subject($list, $form = null) {
-	// Access the global $wpdb object for database queries
+ function educare_setting_subject($list, $form = null) {
 	global $wpdb;
+
 	$table = $wpdb->prefix."educare_settings";
 	// Prepare the query with placeholders
 	$query = $wpdb->prepare( "SELECT * FROM $table WHERE list = %s", $list );
 	// Execute the prepared query and get the results
 	$search = $wpdb->get_results( $query );
 
-	// Initialize variables to store data retrieved from the database
-	$data = array();
-
-	// If data is found, extract and decode it into an array
 	if ($search) {
 		foreach ( $search as $print ) {
 			$data = $print->data;
@@ -4972,6 +5670,12 @@ function educare_setting_subject($list, $form = null) {
 	} else {
 		$data = array();
 	}
+
+	if ($list == 'Rattings') {
+		$msgs = 'remarks';
+	} else {
+		$msgs = 'subject';
+	}
 	
 	if (!$form) {
 		$count = 1;
@@ -4979,22 +5683,19 @@ function educare_setting_subject($list, $form = null) {
 		$first = array_key_first($data);
 
 		if ($data) {
-			// echo '<h3 id="'.esc_attr( $list ).'">'.esc_html( $list ).'</h3>';
 			echo '<div class="collapses">';
 			foreach ($data as $class => $val) {
-				// here $val = total subject in this class
 				?>
 				<div class="collapse">
 					<input class="head" type="radio" name="<?php echo esc_attr($list);?>" data="<?php echo esc_attr($class);?>" id="<?php echo esc_attr( $list . '_' . $class );?>" <?php if ($class == $first or isset($_POST['class']) and $_POST['class'] == $class) {echo 'checked';}?>>
 					<label class="collapse-label" for="<?php echo esc_attr( $list . '_' . $class );?>">
-						<?php echo esc_html( $count++ ) . '. ' . esc_html( $class );?>
+						<?php echo esc_html__( $count++ , 'educare') . '. ' . esc_html__( $class, 'educare' );?>
 						<span>
 							<form action="<?php echo esc_url($_SERVER['REQUEST_URI']); ?>" method="post">
 
-								<input type="hidden" name="educare_process_<?php echo esc_attr($list);?>"><input type="hidden" name="class" value="<?php echo esc_attr( $class );?>">
-
+								<input type="hidden" name="educare_process_<?php echo esc_attr($list);?>">
+								<input type="hidden" name="class" value="<?php echo esc_attr( $class );?>">
 								<input type="submit" class="proccess_<?php echo esc_attr($list);?>" name="edit_class" value="&#xf464">
-
 								<input type="submit" class="proccess_<?php echo esc_attr($list);?>" name="remove_class" value="&#xf182">
 
 								<?php
@@ -5010,69 +5711,87 @@ function educare_setting_subject($list, $form = null) {
 					</label>
 
 					<div class="collapse-content bg-white">
-						<table class='grade_sheet list'>
-							<thead>
-								<tr>
-									<th>No</th>
-									<th width='100%'>Subject</th>
-									<th>Edit</th>
-									<th>Delete</th>
-								</tr>
-							</thead>
-
-							<tbody>
-							<?php
-							if ($val) {
-								$no = 1;
-								foreach ($val as $subject) {
-									// echo '<li>';
-									// echo $subject;
-									// echo '</li>';
-									?>
+						<div class="table-responsivex">
+							<table class='table overflow-autox align-middle data-list bg-white list'>
+								<thead>
 									<tr>
-										<td><?php echo esc_html($no++);?></td>
-										<td><?php echo esc_html($subject);?></td>
-										<td colspan='2'>
-											<form class="educare-modify" action="<?php echo esc_url($_SERVER['REQUEST_URI']); ?>" method="post">
-
-												<input type="hidden" name="educare_process_<?php echo esc_attr($list);?>">
-
-												<input type="hidden" name="class" value="<?php echo esc_attr($class);?>"/>
-
-												<input type="hidden" name="subject" value="<?php echo esc_attr($subject);?>"/>
-												
-												<input type="submit" name="edit_subject" class="button success proccess_<?php echo esc_attr($list);?>" value="&#xf464">
-												
-												<input type="submit" name="<?php echo esc_attr("remove_subject");?>" class="button error proccess_<?php echo esc_attr($list);?>" value="&#xf182">
-
-												<?php
-												$edit_subject_nonce = wp_create_nonce( 'edit_subject' );
-												$remove_subject_nonce = wp_create_nonce( 'remove_subject' );
-												
-												echo '<input type="hidden" name="edit_subject_nonce" value="'.esc_attr($edit_subject_nonce).'">';
-												echo '<input type="hidden" name="remove_subject_nonce" value="'.esc_attr($remove_subject_nonce).'">';
-												?>
-													
-											</form>
-										</td>
+										<th><?php _e('No.', 'educare');?></th>
+										<th width='100%'><?php echo esc_html__(ucfirst($msgs), 'educare');?></th>
+										<th><?php _e('Edit', 'educare');?></th>
+										<th><?php _e('Delete', 'educare');?></th>
 									</tr>
-									<?php
+								</thead>
+
+								<tbody>
+								<?php
+								if ($val) {
+									$no = 1;
+									
+									foreach ($val as $subject) {
+										?>
+										<tr>
+											<td><?php echo esc_html__($no++, 'educare');?></td>
+											<td><?php echo esc_html__($subject, 'educare');?></td>
+											<td colspan='2'>
+												<form class="d-flex gap-2 my-1" action="<?php echo esc_url($_SERVER['REQUEST_URI']); ?>" method="post">
+													<input type="hidden" name="educare_process_<?php echo esc_attr($list);?>">
+
+													<input type="hidden" name="class" value="<?php echo esc_attr($class);?>"/>
+
+													<input type="hidden" name="subject" value="<?php echo esc_attr($subject);?>"/>
+
+													<div class="d-flex gap-1">
+														<button type="submit" name="edit_subject" class="d-inline-flex gap-1 align-items-center justify-content-center btn btn-outline-success proccess_<?php echo esc_attr($list);?>"><i class="dashicons dashicons-edit"></i></button>
+
+														<button type="submit" name="<?php echo esc_attr("remove_subject");?>" class="d-inline-flex gap-1 align-items-center justify-content-center btn btn-outline-danger proccess_<?php echo esc_attr($list);?>"><i class="dashicons dashicons-trash"></i></button>
+													</div>
+
+													<?php
+													$edit_subject_nonce = wp_create_nonce( 'edit_subject' );
+													$remove_subject_nonce = wp_create_nonce( 'remove_subject' );
+													
+													echo '<input type="hidden" name="edit_subject_nonce" value="'.esc_attr($edit_subject_nonce).'">';
+													echo '<input type="hidden" name="remove_subject_nonce" value="'.esc_attr($remove_subject_nonce).'">';
+													?>
+														
+												</form>
+											</td>
+										</tr>
+										<?php
+									}
+
+								} else {
+
+									echo '<tr><td colspan="4"><div class="notice notice-error is-dismissible"><p>
+										'.sprintf(
+											__(
+												'Currently, you have not added any %1$s to this %2$s. Please add a %1$s for this %2$s using the form given below.',
+												'educare'
+											),
+											esc_html__($msgs, 'educare'),
+											esc_html__($list, 'educare')
+										).'
+									</p></div></td></tr>';
 								}
-
-							} else {
-
-								echo "<tr><td colspan='4'><div class='notice notice-error is-dismissible'><p>Currently, you don't have added any subject in this ".esc_html( $list ).". Please add a subject for this ".esc_html( $list )." by using above forms. Thanks</p></div></td></tr>";
-							}
-							?>
-							</tbody>
-						</table>
+								?>
+								</tbody>
+							</table>
+						</div>
 					</div>
 				</div>
 				<?php
 			}
 			echo '</div>';
 		} else {
-			echo "<div class='notice notice-error is-dismissible'><p>Currently, you don't have added any ".esc_html( $list ).". Please add a ".esc_html( $list )." by clicking on the <b>Add ".esc_html( $list )."</b> tab. Thanks</p></div>";
+			echo '<div class="notice notice-error is-dismissible"><p>
+			'.sprintf(
+				__(
+					'Currently, you have not added any %1$s. Please add a %1$s using the form given below.',
+					'educare'
+				),
+				esc_html__($list, 'educare')
+			).'
+			</p></div>';
 		}
 		
 	}
@@ -5081,256 +5800,319 @@ function educare_setting_subject($list, $form = null) {
 		?>
 		<div class="educare_tabs form_tab">
 			<div class="tab_head">
-				<button class="tablink educare_button" data="<?php echo esc_attr($list);?>_subject">Add Subject</button>
-				<button class="tablink" data="<?php echo esc_attr($list);?>_class">Add <?php echo esc_html($list);?></button>
+				<button class="tablink educare_button" data="<?php echo esc_attr($list);?>_subject"><?php echo sprintf(__('Add %s', 'educare'), esc_html__(ucfirst($msgs), 'educare'));?></button>
+				<button class="tablink" data="<?php echo esc_attr($list);?>_class"><?php echo sprintf(__('Add %s', 'educare'), esc_html__(ucfirst($list), 'educare'));?></button>
 			</div>
 			
 			<div id="<?php echo esc_attr($list);?>_subject" class="section_name">
 				<form class="add_results" action="" method="post" id="add_subject">
-					<div class="content">
-						<input type="hidden" name="educare_process_<?php echo esc_attr($list);?>">
+					<div class="content pt-4">
+						<?php
+						$nonce = wp_create_nonce( 'add_subject' );
+						echo '<input type="hidden" name="add_subject_nonce" value="'.esc_attr($nonce).'">';
+						echo '<input type="hidden" name="educare_process_'.esc_attr($list).'">';
+						?>
 
-						<div class="select add-subject">
-							<div>
-							<p>Subject:</p>
-								<input type="text" name="subject" class="fields" placeholder="subject name" pattern="[A-Za-z0-9 ]+" title="Only characters, numbers and space allowed. (A-Za-z0-9)">
+						<div class="mb-3 row">
+							<label for="fieldSubject" class="col-sm-2 col-form-label"><?php echo esc_html__(ucfirst($msgs), 'educare');?></label>
+							<div class="col-sm-10">
+								<input id="fieldSubject" type="text" name="subject" class="form-control-plaintext" placeholder="<?php echo esc_html__(ucfirst($msgs), 'educare');?>" pattern="[A-Za-z0-9 ]+" title="<?php _e('Only characters, numbers and space allowed. (A-Za-z0-9)', 'educare')?>">
 							</div>
+						</div>
 						
-							<div>
-								<p>Subject For (<?php echo esc_attr($list);?>):</p>
-								<select id='add_<?php echo esc_attr($list);?>' name='class'>
+						<div class="mb-3 row">
+							<label for="add_<?php echo esc_attr($list);?>" class="col-sm-2 col-form-label"><?php esc_html_e($list, 'educare')?></label>
+							<div class="col-sm-10">
+								<select class="form-select" id='add_<?php echo esc_attr($list);?>' name='class'>
 									<?php
 									foreach ($data as $key => $value) {
-										echo "<option value='".esc_attr($key)."'>".esc_html($key)."</option>";
+										echo "<option value='".esc_attr($key)."'>".esc_html__($key, 'educare')."</option>";
 									}
 									?>
 								</select>
 							</div>
 						</div>
 
-						<?php
-						$nonce = wp_create_nonce( 'add_subject' );
-						echo '<input type="hidden" name="add_subject_nonce" value="'.esc_attr($nonce).'">';
-						?>
-
-						<button id="educare_results_btn" class="educare_button proccess_<?php echo esc_attr($list);?>" name="add_subject" type="submit"><i class="dashicons dashicons-plus-alt"></i> Add Subject</button>
+						<div class="mb-3 row">
+							<div class="col-sm-2 col-form-label"></div>
+							<div class="col-sm-10">
+								<button id="educare_results_btn" class="educare_button m-0 proccess_<?php echo esc_attr($list);?>" name="add_subject" type="submit"><i class="dashicons dashicons-plus-alt"></i> <?php _e('Add', 'educare')?></button>
+							</div>
+						</div>
 					</div>
 				</form>
 			</div>
 
 			<div id="<?php echo esc_attr($list);?>_class" class="section_name" style="display:none">
 				<form class="add_results" action="" method="post" id="add_subject">
-					<div class="content">
-						<input type="hidden" name="educare_process_<?php echo esc_attr($list);?>">
-						<div class="select add-subject">
-							<div>
-								<p><?php echo esc_html($list);?>:</p>
-								<input type="text" name="class" class="fields" placeholder="<?php echo esc_attr($list);?> name" pattern="[A-Za-z0-9 ]+" title="Only characters, numbers and space allowed. (A-Za-z0-9)">
-							</div>
-						</div>
-						
-						<br>
-
+					<div class="content pt-4">
 						<?php
 						$nonce = wp_create_nonce( 'add_class' );
 						echo '<input type="hidden" name="add_class_nonce" value="'.esc_attr($nonce).'">';
+						echo '<input type="hidden" name="educare_process_'.esc_attr($list).'">';
 						?>
-						
-						<button id="educare_results_btn" class="educare_button proccess_<?php echo esc_attr($list);?>" name="add_class" type="submit"><i class="dashicons dashicons-plus-alt"></i> Add <?php echo esc_html($list);?></button>
+
+						<div class="mb-3 row">
+							<label for="fieldClass" class="col-sm-2 col-form-label"><?php esc_html_e($list, 'educare')?></label>
+							<div class="col-sm-10">
+								<input id="fieldClass" type="text" name="class" class="form-control-plaintext" placeholder="<?php esc_html_e($list, 'educare')?>" pattern="[A-Za-z0-9 ]+" title="<?php _e('Only characters, numbers and space allowed. (A-Za-z0-9)', 'educare')?>">
+							</div>
+						</div>
+
+						<div class="mb-3 row">
+							<div class="col-sm-2 col-form-label"></div>
+							<div class="col-sm-10">
+								<button id="educare_results_btn" class="educare_button m-0 proccess_<?php echo esc_attr($list);?>" name="add_class" type="submit"><i class="dashicons dashicons-plus-alt"></i> <?php _e('Add', 'educare')?></button>
+							</div>
+						</div>
 					</div>
 				</form>
 			</div>
 		</div>
-		
-		<!-- Default value -->
-		<div class="educare_data_field">
-			<div class="educareSettingSubForm" data-value="<?php echo esc_attr($list);?>"></div>
-		</div>
-
 		<?php
 	}
 }
 
 
 
+function educare_removeElementsByKeyValue(array &$array, $searchValue, $searchKey = null) {
+	$removed_array = array();
+
+	if ($searchKey) {
+		foreach ($array as $key => $item) {
+			if (isset($item[$searchKey]) && $item[$searchKey] === $searchValue) {
+				unset($array[$key]);
+				$removed_array = array_values($array);
+			}
+		}
+	} else {
+		$remove_key = array_search($searchValue, $array);
+		if ($remove_key !== false) {
+			// Unset or remove the key from the array
+			unset($array[$remove_key]);
+			$removed_array = array_values($array);
+		}
+	}
+
+	return $removed_array;
+}
+
+
+
 /**
- * ### Display Content
- * 
+ * Display Content
  * Usage example: educare_content('Exam');
  * 
  * @since 1.0.0
  * @last-update 1.0.0
  * 
  * @param string $list	Exam, Year, Extra field
+ * @param bool $form return form for add data
  * @return void|HTML
  * 
  * Display Content - Subject, Exam, Class, Year Extra field...
  */
-
 function educare_content($list, $form = null) {
-	global $wpdb;
-	$table = $wpdb->prefix."educare_settings";
-	// remove all _ characters from the list (normalize the $list)
-	$List = str_replace('_', ' ', $list);
-   
-	// Prepare the query with placeholders
-	$query = $wpdb->prepare( "SELECT * FROM $table WHERE list = %s", $list );
-	// Execute the prepared query and get the results
-	$search = $wpdb->get_results( $query );
-	
-	if ($search) {
+	$advance = array(
+		'School',
+		'Term',
+		'Staff_position'
+	);
+
+	if (in_array($list, $advance)) {
+	} else {
+		global $wpdb;
+		$table = $wpdb->prefix."educare_settings";
+		// remove all _ characters from the list (normalize the $list)
+		$List = str_replace('_', ' ', $list);
 		
-		foreach ( $search as $print ) {
-			$target = $print->data;
-			$target = json_decode($target);
-		}
+		// Prepare the query with placeholders
+		$query = $wpdb->prepare( "SELECT * FROM $table WHERE list = %s", $list );
+		// Execute the prepared query and get the results
+		$search = $wpdb->get_results( $query );
 		
-		if ($target) {
+		if ($search) {
+			foreach ( $search as $print ) {
+				$target = $print->data;
+				$target = json_decode($target);
+			}
 			
-			ob_start();
-			$count = 0;
-			for ($i = 0; $i < count($target); $i++) {
-				$content = $target[$i];
-				// for ignore extra field type
-				$Content = $target[$i];
-				$type_th = '';
-				$type_td = '';
-				
-				if ($list == 'Extra_field') {
-					$get_type = strtok($content, ' ');
-					$Content = substr(strstr($content, ' '), 1);
-					$type_th = "<th>Type</th>";
-					$type_td = "<td><span class='type ".esc_attr($get_type)."'></span></td>";
+			if ($target) {
+				ob_start();
+				$count = 0;
+				for ($i = 0; $i < count($target); $i++) {
+					$Content = $target[$i];
+					$type_th = '';
+					$type_td = '';
+					
+					if ($list == 'Extra_field') {
+						$get_type = $Content->type;
+						$Content = $Content->title;
+						
+						$type_th = '<th>'.__('Type', 'educare').'</th>';
+						$type_td = "<td><span class='type ".esc_attr($get_type)."'></span></td>";
+					}
+					
+					if ($list) {
+					?>
+						<tr>
+							<td><?php esc_html_e(++$count, 'educare');?></td>
+							<td><b><?php esc_html_e($Content, 'educare');?></b></td>
+							<?php echo wp_kses_post($type_td);?>
+							<td colspan='2'>
+								<form class="d-flex gap-2 my-1" action="<?php echo esc_url($_SERVER['REQUEST_URI']); ?>" method="post">
+									<?php
+									$update_nonce = wp_create_nonce( 'educare_edit_'.esc_attr($list) );
+									$remove_nonce = wp_create_nonce( 'remove_'.esc_attr($list) );
+									
+									echo '<input type="hidden" name="educare_edit_'.esc_attr($list).'_nonce" value="'.esc_attr($update_nonce).'">';
+									echo '<input type="hidden" name="remove_'.esc_attr($list).'_nonce" value="'.esc_attr($remove_nonce).'">';
+									?>
+
+									<input type="hidden" name="remove" value="<?php echo esc_attr($Content);?>"/>
+									<input type="hidden" name="<?php echo esc_attr($list);?>" value="<?php echo esc_attr($Content);?>"/>
+
+									<div class="d-flex gap-1">
+										<button type="submit" name="educare_edit_<?php echo esc_attr($list);?>" class="d-inline-flex gap-1 align-items-center justify-content-center btn btn-outline-success edit<?php echo esc_attr(str_replace('_', '', $list));?>"><i class="dashicons dashicons-edit"></i></button>
+
+										<button type="submit" name="<?php echo esc_attr("remove_$list");?>" class="d-inline-flex gap-1 align-items-center justify-content-center btn btn-outline-danger remove<?php echo esc_attr(str_replace('_', '', $list));?>"><i class="dashicons dashicons-trash"></i></button>
+									</div>
+								</form>
+							</td>
+						</tr>
+					<?php
+					
+					} // end if ($list)
 				}
 				
-				if ($list) {
-				?>
-					<tr>
-						<td><?php echo esc_html(++$count);?></td>
-						<td><b><?php echo esc_html($Content);?></b></td>
-						<?php echo wp_kses_post($type_td);?>
-						<td colspan='2'><form class="educare-modify" action="<?php echo esc_url($_SERVER['REQUEST_URI']); ?>" method="post">
-							
-							<input type="hidden" name="remove" value="<?php echo esc_attr($content);?>"/>
-
-							<input type="hidden" name="<?php echo esc_attr($list);?>" value="<?php echo esc_attr($content);?>"/>
-							
-							<input type="submit" name="educare_edit_<?php echo esc_attr($list);?>" class="button success edit<?php echo esc_attr(str_replace('_', '', $list));?>" value="&#xf464">
-							
-							<input type="submit" name="<?php echo esc_attr("remove_$list");?>" class="button error remove<?php echo esc_attr(str_replace('_', '', $list));?>" value="&#xf182">
-							
-							<?php
-							$update_nonce = wp_create_nonce( 'educare_edit_'.esc_attr($list) );
-							$remove_nonce = wp_create_nonce( 'remove_'.esc_attr($list) );
-							
-							echo '<input type="hidden" name="educare_edit_'.esc_attr($list).'_nonce" value="'.esc_attr($update_nonce).'">';
-							echo '<input type="hidden" name="remove_'.esc_attr($list).'_nonce" value="'.esc_attr($remove_nonce).'">';
-							?>
-						    	
-						</form></td>
-					</tr>
-				<?php
-				
-				} // end if ($list)
+				$target = ob_get_clean();
 			}
 			
-			$target = ob_get_clean();
-		}
-		
-		if (!$form) {
-			if (!empty($target)) {
-				?>
-				<table class='grade_sheet list'>
-					<thead>
-						<tr>
-							<th>No</th>
-							<th width='100%'><?php echo esc_html($List);?></th>
-							<?php echo wp_kses_post($type_th);?>
-							<th>Edit</th>
-							<th>Delete</th>
-						</tr>
-					</thead>
-					<tbody>
-						<?php echo wp_check_invalid_utf8(str_replace('_', ' ', $target));?>
-					</tbody>
-				</table>
-				<?php
-			} else {
-				?>
-				<div class="notice notice-error is-dismissible">
-						<p>Currently, You don't have added any <b><?php echo esc_html($List);?></b>. Please add a <?php echo esc_html($List);?> by using this forms</p>
-				</div>
-				<?php
-			}
-		}
-
-		if ($form) {
-			// Create nonce for this form
-			$nonce = wp_create_nonce( 'educare_add_'.esc_attr($list) );
-			
-			if ($list == 'Extra_field') {
-				?>
-				<form class="add_results" action="" method="post">
-				<div class="content">
-					<div class="select add-subject">
-						<div>
-							<p>Name:</p>
-							<input type="text" name="field" class="fields" placeholder="<?php echo esc_attr($List);?> name" pattern="[A-Za-z0-9 ]+" title="Only Caretaker, Number and Space allowed. (A-Za-z0-9)">
-						</div>
-						
-						<div>
-							<p>Select type:</p>
-							<select name="type">
-								<option value="text">Text</option>
-								<option value="number">Number</option>
-								<option value="date">Date</option>
-								<option value="email">Email</option>
-							<select>
-						</div>
-					</div>
-					
-					<input type="text" name="<?php echo esc_attr($list);?>" hidden>
-
-					<?php
-					// Print nonce value
-					echo '<input type="hidden" name="educare_add_'.esc_attr($list).'_nonce" value="'.esc_attr($nonce).'">';
+			if (!$form) {
+				if (!empty($target)) {
 					?>
-
-					<button id="educare_add_<?php echo esc_attr($list);?>" class="educare_button" name="educare_add_<?php echo esc_attr($list);?>" type="submit" onClick="<?php echo esc_js('add(this.form)');?>"><i class="dashicons dashicons-plus-alt"></i> Add <?php echo esc_html($List);?></button>
-				</div>
-				</form>
-				<br>
-				<?php
-				
-			} else {
-				?>
-				<form class="add_results" action="" method="post">
-					<div class="content">
-						<?php echo esc_html($List);?>:
-						<label for="<?php echo esc_attr($list);?>" class="labels" id="<?php echo esc_attr($list);?>"></label>
-						<input type="text" name="<?php echo esc_attr($list);?>" class="fields" placeholder="<?php echo esc_attr($List);?> name" pattern="[A-Za-z0-9 ]+" title="Only Caretaker, Number and Space allowed. (A-Za-z0-9)">
-
-						<?php
-						// Print nonce value
-						echo '<input type="hidden" name="educare_add_'.esc_attr($list).'_nonce" value="'.esc_attr($nonce).'">';
-						?>
-						
-						<button id="educare_add_<?php echo esc_attr($list);?>" class="educare_button" name="educare_add_<?php echo esc_attr($list);?>" type="submit"><i class="dashicons dashicons-plus-alt"></i> Add <?php echo esc_html($List);?></button>
-					</div>
-				</form>
-				<br>
-				<?php
+					<table class='table align-middle data-list bg-white list'>
+						<thead>
+							<tr>
+								<th><?php _e('No.', 'educare');?></th>
+								<th width='100%'><?php echo esc_html__($List, 'educare');?></th>
+								<?php echo wp_kses_post($type_th);?>
+								<th><?php _e('Edit', 'educare');?></th>
+								<th><?php _e('Delete', 'educare');?></th>
+							</tr>
+						</thead>
+						<tbody>
+							<?php echo wp_check_invalid_utf8(str_replace('_', ' ', $target));?>
+						</tbody>
+					</table>
+					<?php
+				} else {
+					echo '<div class="notice notice-error is-dismissible"><p>
+					'.sprintf(
+						__(
+							'Currently, you have not added any %1$s. Please add a %1$s using the form given below.',
+							'educare'
+						),
+						esc_html__($List, 'educare')
+					).'
+					</p></div>';
+				}
 			}
+
+			if ($form) {
+				// Create nonce for this form
+				$nonce = wp_create_nonce( 'educare_add_'.esc_attr($list) );
+
+				if ($list == 'Extra_field') {
+					?>
+					<form class="add_results" action="" method="post">
+						<div class="content">
+							<?php
+							// Print nonce value
+							echo '<input type="hidden" name="educare_add_'.esc_attr($list).'_nonce" value="'.esc_attr($nonce).'">';
+							echo '<input type="hidden" name="'.esc_attr($list).'">';
+							?>
+
+							<div class="mb-3 row">
+								<label for="fieldName" class="col-sm-2 col-form-label"><?php _e('Field Name', 'educare');?></label>
+								<div class="col-sm-10">
+									<input id="fieldName" type="text" name="field" class="fields" placeholder="<?php _e('Field Name', 'educare');?>" pattern="[A-Za-z0-9 ]+" title="<?php _e('Only characters, numbers and space allowed. (A-Za-z0-9)', 'educare')?>">
+								</div>
+							</div>
+
+							<div class="mb-3 row">
+								<label for="fieldType" class="col-sm-2 col-form-label"><?php _e('Select type', 'educare');?></label>
+								<div class="col-sm-10">
+									<select id="fieldType" class="m-0" name="type">
+										<option value="text"><?php _e('Text', 'educare');?></option>
+										<option value="number"><?php _e('Number', 'educare');?></option>
+										<option value="date"><?php _e('Date', 'educare');?></option>
+										<option value="email"><?php _e('Email', 'educare');?></option>
+									<select>
+								</div>
+							</div>
+
+							<div class="mb-3 row">
+								<label for="fieldFor" class="col-sm-2 col-form-label"><?php _e('Field For', 'educare');?></label>
+								<div class="col-sm-10">
+									<select id="fieldFor" class="m-0" name="for[]" multiple>
+										<option value="students"><?php _e('Students', 'educare');?></option>
+										<option value="teachers"><?php _e('Teachers/Staff', 'educare');?></option>
+										<option value="results"><?php _e('Results', 'educare');?></option>
+									<select>
+								</div>
+							</div>
+
+							<div class="mb-3 row">
+								<div class="col-sm-2 col-form-label"></div>
+								<div class="col-sm-10">
+									<button id="educare_add_<?php echo esc_attr($list);?>" class="educare_button m-0" name="educare_add_<?php echo esc_attr($list);?>" type="submit" onClick="<?php echo esc_js('add(this.form)');?>"><i class="dashicons dashicons-plus-alt"></i> <?php _e('Add', 'educare');?></button>
+								</div>
+							</div>
+						</div>
+					</form>
+					<br>
+					<?php
+					
+				} else {
+					?>
+					<form class="add_results" action="" method="post">
+						<div class="content">
+							<?php
+							// Print nonce value
+							echo '<input type="hidden" name="educare_add_'.esc_attr($list).'_nonce" value="'.esc_attr($nonce).'">';
+							?>
+
+							<div class="mb-3 row">
+								<label for="field<?php echo esc_attr($list);?>" class="col-sm-2 col-form-label"><?php esc_html_e($List, 'educare');?></label>
+								<div class="col-sm-10">
+									<input id="field<?php echo esc_attr($list);?>" type="text" name="<?php echo esc_attr($list);?>" class="form-control-plaintext" placeholder="<?php echo esc_attr($List);?> name" pattern="[A-Za-z0-9 ]+" title="<?php _e('Only characters, numbers and space allowed. (A-Za-z0-9)', 'educare')?>">
+								</div>
+							</div>
+
+							<div class="mb-3 row">
+								<div class="col-sm-2"></div>
+								<div class="col-sm-10">
+									<button id="educare_add_<?php echo esc_attr($list);?>" class="educare_button m-0" name="educare_add_<?php echo esc_attr($list);?>" type="submit"><i class="dashicons dashicons-plus-alt"></i> <?php _e('Add', 'educare');?></button>
+								</div>
+							</div>
+						</div>
+					</form>
+					<br>
+					<?php
+				}
+			}
+		} else {
+			// database error
+			// echo educare_guide_for('db_error', false);
 		}
-	} else {
-		// database error
 	}
 }
 
 
 
 /** 
- * ### Pack all in one
+ * Pack all in one
  * 
  * @since 1.4.0
  * @last-update 1.4.0
@@ -5338,7 +6120,6 @@ function educare_content($list, $form = null) {
  * @param string $list		for specific data - Class or Group
  * @return mixed
  */
-
 function educare_get_all_content($list) {
 	// content list
 	ob_start();
@@ -5353,27 +6134,19 @@ function educare_get_all_content($list) {
 
 
 
-
 /** 
- * ### Responce all content
+ * Responce all content
  * 
  * Ajax respnce for management menu/page
  * 
  * @since 1.4.0
- * @last-update 1.4.7
+ * @last-update 1.4.0
  * 
  * @return mixed
  */
-
-function educare_process_content() {
-	// Check user capability to manage options
-	if (!current_user_can('manage_options')) {
-		exit;
-	}
-	
+ function educare_process_content() {
 	$action_for = sanitize_text_field($_POST['action_for']);
-	// $currenTab = sanitize_text_field($_POST['currenTab']);
-	
+
 	if (isset($_POST['active_menu'])) {
 		$active_menu = sanitize_text_field($_POST['active_menu']);
 	} else {
@@ -5386,8 +6159,8 @@ function educare_process_content() {
 	wp_parse_str($_POST['form_data'], $_POST);
 	$_POST[$action_for] = $action_for;
 	$_POST['active_menu'] = $active_menu;
-	
-	// verify is request comming from valid sources
+
+	// Verify the nonce to ensure the request originated from the expected source
 	educare_verify_nonce($action_for, $action_for.'_nonce');
 
 	if (isset($_POST['educare_process_Class'])) {
@@ -5398,12 +6171,149 @@ function educare_process_content() {
 		educare_process_class('Group');
 		educare_setting_subject('Group');
 	}
-	elseif (isset($_POST['educare_update_settings_status']) or isset($_POST['educare_reset_default_settings'])) {
+	elseif (isset($_POST['educare_process_Rattings'])) {
+		educare_process_class('Rattings');
+		educare_setting_subject('Rattings');
+	}
+	elseif (isset($_POST['educare_update_settings_status']) or isset($_POST['educare_reset_default_settings']) or isset($_POST['educare_reset_everything'])) {
+		echo '<h1>'.__('Settings', 'educare').'</h1>';
+
+		// for update settings status
+		if (!empty($_POST)) {
+			global $wpdb;
+			$table = $wpdb->prefix."educare_settings";
+			// Prepare the query with placeholders
+			$query = $wpdb->prepare( "SELECT * FROM $table WHERE list = %s", 'Settings' );
+			// Execute the prepared query and get the results
+			$search = $wpdb->get_row( $query );
+			
+			if ($search) {
+				// Get active template name securely
+				$active_template = isset($_POST['results_card_template']) ? sanitize_text_field($_POST['results_card_template']) : '';
+				// Getting current template field
+				$template_fields = educare_get_template_data('fields', true, $active_template);
+
+				$request = array(
+					'data' => $search,
+					'request_data' => $_POST,
+					'card_template' => array(
+						'active_template' => $active_template,
+						'template_fields' => $template_fields
+					)
+				);
+				
+				function educare_save_settings($request) {
+					$id = sanitize_text_field($request['data']->id);
+					$data = educare_decrypt_data($request['data']->data);
+					
+					$request_data = $request['request_data'];
+					$active_template = sanitize_text_field($request['card_template']['active_template']);
+					$template_fields = $request['card_template']['template_fields'];
+					$advance_fields = true;
+
+					foreach ($request_data as $target => $value) {
+						$status = 'unchecked';
+
+						if (property_exists($data, $target)) {
+							$status = $data->$target;
+						}
+
+						if ($target != 'display' or $target != 'results_card') {
+							$update_data = sanitize_text_field($value);
+						}
+
+						if ($target == 'display') {
+							$update_data = json_decode(json_encode($value));
+						}
+
+						if ($target == 'results_card') {
+							// Escape all data and Convert array to object
+							$data->banner = json_decode(json_encode($request_data['banner']));
+							$update_data = json_decode(json_encode($value));
+
+							if ($advance_fields) {
+								if ($data->banner->logo1) {
+									$data->banner->logo1 = 0;
+								}
+								if ($data->banner->logo2) {
+									$data->banner->logo2 = 0;
+								}
+
+								if ($data->banner->title) {
+									$data->banner->title = 'Institutions Name Or Title';
+								}
+								if ($data->banner->subtitle1) {
+									$data->banner->subtitle1 = 'Rangpur, Dhaka, Bangladesh';
+								}
+								if ($data->banner->subtitle2) {
+									$data->banner->subtitle2 = 'Founded in 2025';
+								}
+							}
+							
+							$data->$target->details = $update_data->details;
+							$data->$target->grade_sheet = $update_data->grade_sheet;
+
+							if (!property_exists($data->$target->template, $active_template)) {
+								$data->$target->template->$active_template = json_decode(json_encode($template_fields));
+							}
+
+							foreach ($data->$target->template as $template_name => $template_data) {
+								if (isset($update_data->template)) {
+									if (property_exists($update_data->template, $template_name)) {
+										$data->$target->template->$template_name = $update_data->template->$template_name;
+									}
+								}
+							}
+
+						} else {
+							$data->$target = $update_data;
+						}
+
+						if ($target == 'template_settings') {
+							$template_settings = json_decode(json_encode($value));
+							$data->template_settings = $template_settings;
+						}
+					}
+
+					$process_data = array(
+						'id' => $id,
+						'data' => $data
+					);
+
+					return $process_data;
+				}
+
+				$process_data = educare_save_settings($request);
+
+				$id = sanitize_text_field($process_data['id']);
+				// $data = json_encode($process_data['data']);
+				$data = educare_encrypt_data($process_data['data']);
+
+				if ($id) {
+					// now update desired data
+					$wpdb->update(
+						$table, 				//table
+						array( 					// data - we need to encode our data for store array/object into database
+							"data" => $data
+						),
+						array( 					//where
+							'ID' => $id
+						)
+					);
+				}
+				
+			}
+		}
+
 		echo educare_process_settings('Settings');
 		educare_settings_form();
-	} 
-	elseif (isset($_POST['educare_import_results'])) {
-		educare_import_result();
+	} elseif (isset($_POST['educare_import_results'])) {
+		if (function_exists('educare_import_data')) {
+			educare_import_data();
+		} else {
+			educare_default_import_data($action_for);
+		}
+
 	} else {
 		echo educare_process_settings('Exam');
 		echo educare_process_settings('Year');
@@ -5418,390 +6328,352 @@ function educare_process_content() {
 			educare_content('Extra_field');
 		}
 	}
-	
-	// Terminate script execution after processing content
-	// to prevent further output
+
 	die;
 }
 
-// Hook the AJAX action to the 'educare_process_content' function
 add_action('wp_ajax_educare_process_content', 'educare_process_content');
 
 
 
 /** 
- * ### Proccess add || update || delete [CRUD] students and results form
- * 
- * @since 1.4.0
- * @last-update 1.4.7
- * 
- * @return mixed
- */
-
-function educare_process_forms() {
-	// Check if the current user has the access this request as 'manage_options' capability (typically administrators).
-	educare_check_access();
-	
-	$action_for = sanitize_text_field($_POST['action_for']);
-	$data_for = sanitize_text_field($_POST['data_for']);
-	// $currenTab = sanitize_text_field($_POST['currenTab']);
-	wp_parse_str($_POST['form_data'], $_POST);
-	$_POST[$action_for] = $action_for;
-	$_POST['data_for'] = $data_for;
-
-	if (isset($_POST['data_for']) and $_POST['data_for'] == 'students') {
-		educare_crud_data(true);
-	} else {
-		educare_crud_data();
-	}
-
-	// Terminate script execution after processing form data
-	// to prevent further output
-	die;
-}
-
-// Hook the AJAX action to the 'educare_process_forms' function
-add_action('wp_ajax_educare_process_forms', 'educare_process_forms');
-
-
-
-/** 
- * ### Students and Results page tab management
+ * Students and Results page tab management
  * 
  * Show element for add, update, import - results or students
  * 
  * @since 1.4.0
- * @last-update 1.4.2
+ * @last-update 1.4.0
  * 
- * @param string $students		for specific data - Students or Results
+ * @param string $roles		for specific data - Students or Results
  * @return mixed
  */
+function educare_data_management($roles = null, $front = false) {
+	echo '<div id="educare-form">';
+	// Escape roles
+	$roles = sanitize_text_field( $roles );
+	$display_roles = $roles;
 
-function educare_data_management($students = null) {
-
-	if ($students == 'results') {
-		$status = false; 
-	} else {
-		$status = true;
+	if ($display_roles == 'teachers') {
+		$display_roles = 'Staff';
 	}
 
 	// get the slug of the page we want to display 
 	// then we include the page
+	// Add WP page value for control Ajax request
+	$_GET['page'] = 'educare-all-'.esc_attr($roles);
+
+	// Display data for specific page || tabe
 	if (isset($_GET['add-data'])) {
-		// include (EDUCARE_ADMIN."menu/view-results.php");
-		echo '<h1>Add '.esc_html($students).'</h1>';
-
-		echo educare_guide_for("Here you can add data and their details. Once, if you add and fill student details then you don't need to fill student details again while adding or publishing any result. If you miss something and need to update/edit, you can update a student's details from the <a href='admin.php?page=educare-all-".esc_html($students)."&update-data'>Update Menu</a>. Aslo, you can import unlimited students from <a href='admin.php?page=educare-all-".esc_html($students)."&import-data'>Import</a> tab.");
-		
-		// save forms data
-		echo '<div id="msgs">';
-		educare_crud_data($students);
-		echo '</div>';
-		
-		// get results forms for add result
-		echo '<div id="msgs_forms">';
-		educare_get_results_forms('', $status);
-		echo '</div>';
-		
+		echo educare_crud_data_new();
+		educare_get_forms($roles);
 	} elseif (isset($_GET['update-data'])) {
-		// include (EDUCARE_ADMIN."menu/view-results.php");
-		echo '<h1>Update '.esc_html($students).'</h1>';
-
-		echo educare_guide_for("Search student by roll, reg no, selecting class and year for update or remove specific data (All fields are requred)");
-
-		// save forms data
-    echo '<div id="msgs">';
-		educare_crud_data($students);
-		echo '</div>';
-		// Search form for edit/delete results
-		if (!isset($_POST['edit']) and !isset($_POST['edit_by_id'])) {
-			educare_get_search_forms();
+		echo educare_crud_data_new();
+		if(!isset($_POST['default']['id'])) {
+			educare_get_search_form($roles);
 		}
-		
 	} elseif (isset($_GET['import-data'])) {
-		// include (EDUCARE_ADMIN."menu/view-results.php");
-		echo '<h1>Import '.esc_html($students).'</h1>';
-
-		educare_import_result($students);
-		?>
-
-		<div class='demo'>
-			<strong>Optional Subject Selection Guide</strong>
-			<p>Educare add 1 before optional subject marks <code>1 [space] Marks</code>.</p>
-			<li style="font-size: small;">Exp: <code>1 85</code></li>
-			<li style="font-size: small;">Here <code>1</code> 	= Define optional subject</li> 
-			<li style="font-size: small;">and <code>85</code> 	= Marks</li>
-			<p>In this way educare define and identify optional subjects. So, when you add a result to the csv files - you need to add <code>1</code> symbol before the optional subject marks.</p>
-
-			
-			<div class="select add-subject">
-				
-				<div>
-					<p>Total <?php echo esc_html($students)?>:</p>
-					<select id="total_demo" name="total_demo" class="form-control">
-						<?php 
-						for ($i=5; $i < 105; $i+=5) {
-							// if ($i == 0) {
-							// 	echo '<option value="'.esc_attr( $i ).'">Head only</option>';
-							// 	continue;
-							// }
-
-							echo '<option value="'.esc_attr( $i ).'">'.esc_html( $i ).'</option>';
-						}
-						?>
-					</select>
-				</div>
-
-				<div>
-					<p>Select class for demo files:</p>
-					<select id="Class" name="educare-demo demoClass" class="form-control">
-						<option value="">Select Class</option>
-						<?php educare_get_options('Class', '');?>
-					</select>
-				</div>
-				
-			</div>
-			
-
-			<div id="result_msg"><br><p><a class='educare_button disabled' title='Download Import Demo.csv Error'><i class='dashicons dashicons-download'></i> Download Demo</a></p></div>
-
-		</div>
-
-		<!-- Default value -->
-		<div class="educare_data_field">
-			<div class="educareImportDemo_students" data-value="<?php echo esc_attr($students);?>"></div>
-		</div>
-		<?php
-		
-	} elseif (isset($_GET['profiles'])) {
-    echo '<div id="msgs">';
-		educare_show_student_profiles();
-		echo '</div>';
+		if (function_exists('educare_import_data')) {
+			educare_import_data($roles);
+		} else {
+			educare_default_import_data($roles);
+		}
 	} else {
-		echo '<h1>All '.esc_html($students).'</h1>';
-		echo educare_guide_for("Here you can add, edit, update data and ".esc_html($students)." details. For this you have to select the options that you see here. Options details: firt to last (All, Add, Update, Import ".esc_html(ucfirst($students)).")");
-
-		educare_all_view($students, 15);
+		educare_display_data($roles, null, $front);
 	}
+
+	echo '</div>';
 }
-
-
-
-/**
- * AJAX action to process data for data management tasks.
- *
- * The `educare_process_data` function is an AJAX callback used to process data for data management tasks within the Educare theme or plugin.
- * It is triggered when the corresponding AJAX action is called.
- *
- * The function first sanitizes and parses the necessary data from the AJAX request, including 'action_for' and 'form_data'.
- * It then calls the `educare_data_management` function with the sanitized 'action_for' as an argument to perform data management tasks
- * based on the specific action requested through AJAX.
- *
- * The `educare_data_management` function is expected to handle different data management tasks depending on the provided 'action_for' value.
- * The details of these data management tasks are defined within the `educare_data_management` function.
- *
- * After processing the data management tasks, the function terminates script execution with `die()` to prevent any further output.
- *
- * @return void The function processes data for data management tasks and terminates script execution.
- *
- * @since 1.4.0
- * @last-update 1.4.7
- * 
- * @example
- * This AJAX action is hooked to the 'educare_process_data' action.
- * add_action('wp_ajax_educare_process_data', 'educare_process_data');
- *
- * The function is triggered via AJAX when the 'educare_process_data' action is called.
- * It processes data for data management tasks based on the specific AJAX request.
- */
-function educare_process_data() {
-	// Check if the current user has the access this request as 'manage_options' capability (typically administrators).
-	educare_check_access();
-	
-	// Sanitize and parse necessary data from the AJAX request
-	$action_for = sanitize_text_field($_GET['action_for']);
-	wp_parse_str($_GET['form_data'], $_GET);
-
-	// Call the educare_data_management function to handle data management tasks based on the provided action_for value
-	educare_data_management($action_for);
-
-	// Terminate script execution after processing data management tasks
-	// to prevent further output
-	die();
-}
-
-// Hook the AJAX action to the 'educare_process_data' function
-add_action('wp_ajax_educare_process_data', 'educare_process_data');
-
 
 
 
 /** 
- * ### Get students
+ * Ajax responce for students and results page
+ * 
+ * @since 1.4.0
+ * @last-update 1.4.0
+ * 
+ * @return mixed
+ */
+function educare_process_data() {
+	// Check if the current user has the access this request as 'manage_options' capability (typically administrators).
+	educare_check_access();
+
+	$action_for = sanitize_text_field($_GET['action_for']);
+	// $currenTab = sanitize_text_field($_POST['currenTab']);
+	wp_parse_str($_GET['form_data'], $_GET);
+
+	educare_data_management($action_for);
+
+	die;
+}
+
+add_action('wp_ajax_educare_process_data', 'educare_process_data');
+
+
+
+/** 
+ * Get students
  * Get student by specific class, year, subject
  * 
  * @since 1.4.0
- * @last-update 1.4.2
+ * @last-update 1.4.0
  * 
  * @param string $Class 		for spicific class students
  * @param string|int $Year	for specific year students
  * @return mixed
  */
-
 function educare_get_students_list($Class = null, $Year = null) {
 	global $wpdb;
 	$educare_students = $wpdb->prefix."educare_students";
+	$educare_marks = $wpdb->prefix."educare_marks";
 
 	if (isset($_POST['students_list'])) {
-		$Class = sanitize_text_field($_POST['Class']);
-		$Exam = sanitize_text_field($_POST['Exam']);
-		$Subject = sanitize_text_field($_POST['Subject']);
-		$Year = sanitize_text_field($_POST['Year']);
-	
-		if (empty($Class) or empty($Exam) or empty($Subject) or empty($Year)) {
-			echo '<div class="notice notice-error is-dismissible"> 
-				<p>You must fill ';
+		// Requred fields to add marks
+		$requred_fields = array (
+			'Class',
+			'Exam',
+			'Year'
+		);
 
-				// notify if empty Class
-			if (empty($Class) ) {
-				echo '<b>Class</b>, ';
-			}
-			// notify if empty Exam
-			if (empty($Exam) ) {
-				echo '<b>Exam</b>, ';
-			}
-			// notify if empty Year
-			if (empty($Subject) ) {
-				echo '<b>Subject</b>, ';
-			}
-			// notify if empty Year
-			if (empty($Year) ) {
-				echo '<b>Year</b>, ';
-			}
-			
-			echo 'Please fill all required (<i>Name, Roll No, Regi No, Class, Exam</i>) fields carefully. thanks.</p><button class="notice-dismiss"></button></div>';
+		// Others fields to related with marks, for sort, search, group or subject wise student.
+		$default_fields = array (
+			'Group',
+			'Subject',
+			'order_by',
+			'order'
+		);
+
+		// Merge all in one
+		$default_fields = array_merge($requred_fields, $default_fields);
+		$default_fields = educare_combine_fields($default_fields, '', $_POST, true);
+		$requred_fields = educare_combine_fields($requred_fields, '', $default_fields, true);
+
+		foreach ($default_fields as $fields => $field_value) {
+			$$fields = sanitize_text_field($field_value);
+		}
+
+		// Check requred fields valid || filled or not
+		if (educare_is_empty($requred_fields)) {
+			echo educare_is_empty($requred_fields);
 		} else {
-			$search = $wpdb->get_results(
-				$wpdb->prepare(
-					"SELECT * FROM $educare_students WHERE Class=%s AND Year=%d",
-					$Class,
-					$Year
-				)
-			);
-		
+			$search_students = $default_fields;
+			// remove group if Empty || All Group
+			if (!$Group) {
+				unset($search_students['Group']);
+			}
 
-			if (count($search) > 0) {
+			// Also remove Subject and Exam
+			unset($search_students['Subject'], $search_students['Exam']);
+
+			$search_marks = $search_students;
+			unset($search_marks['Group']);
+			$search_marks = educare_dynamic_sql($search_marks, 'marks');
+			$search_students = educare_dynamic_sql($search_students, 'students');
+			$search_students = $wpdb->get_results("SELECT * FROM $educare_students $search_students");
+
+			if (count($search_students) > 0) {
+				$terms = educare_get_template_data('fields');
+				$marks = $wpdb->get_results("SELECT * FROM $educare_marks $search_marks");
+				$marks_data = array();
+
+				if(count($marks) > 0) {
+					foreach($marks as $print) {
+						$marks_data = $print->Marks;
+						$marks_data = json_decode($marks_data, true);
+					}
+				}
+				
 				?>
-				<div class="wrap-input">
-					<span class="input-for">Filter students for specific <i>Name, Roll No, Marks...</i></span>
-					<label for="searchBox" class="labels"></label>
-					<input type="search" id="searchBox" placeholder="Search Results" class="fields">
-					<span class="focus-input"></span>
-				</div>
-
-				<form method='post' action="" class="educareProcessMarksCrud">
+				<form method='post' action="">
 					<div class="educare_print">
 						<?php
+						echo '
+						<input type="hidden" name="Subject" value="'.esc_attr( $Subject ).'">
+						<input type="hidden" name="Class" value="'.esc_attr( $Class ).'">
+						<input type="hidden" name="Group" value="'.esc_attr( $Group ).'">
+						<input type="hidden" name="Exam" value="'.esc_attr( $Exam ).'">
+						<input type="hidden" name="Year" value="'.esc_attr( $Year ).'">
+						';
+
 						echo "<div class='notice notice-success is-dismissible'><p>
-							<b>Class:</b> ".esc_html($Class)."<br>
-							<b>Exam:</b> ".esc_html($Exam)."<br>
-							<b>Subject:</b> ".esc_html($Subject)."<br>
-							<b>Exam Year:</b> ".esc_html($Year)."<br>
-							<b>Total Students:</b> ".esc_html(count($search))."
+							<b>".esc_html__('Class', 'educare').":</b> ".esc_html__($Class, 'educare')."<br>
+							<b>".esc_html__('Group', 'educare')."Group:</b> ".esc_html__($Group, 'educare')."<br>
+							<b>".esc_html__('Exam', 'educare')."Exam:</b> ".esc_html__($Exam, 'educare')."<br>
+							<b>".esc_html__('Subject', 'educare')."Subject:</b> ".esc_html__($Subject, 'educare')."<br>
+							<b>".esc_html__('Year', 'educare').":</b> ".esc_html__($Year, 'educare')."<br>
+							<b>".esc_html__('Total Students', 'educare').":</b> ".esc_html(count($search_students))."
 						</p><button class='notice-dismiss'></button></div>";
 
-						$requred = educare_check_status('display');
-						$requred_title = educare_requred_data($requred, true);
-						?>
-						<table class="view_results">
-							<thead>
-								<tr>
-									<th>No</th>
-									<th>Photos</th>
-									<?php
-									foreach ($requred_title as $key => $value) {
-										if ($key == 'Name' || $key == 'Roll_No' || $key == 'Regi_No') {
-											echo '<th>'.esc_html($value).'</th>';
-										}
-									}
-									?>
-									<th>Marks</th>
-								</tr>
-							</thead>
+						echo '<input type="text" name="search" value="" placeholder="'._e('Type here for search', 'educare').'" width="100%">';
 
-							<?php
-							$count = 1;
-							$sub_in = 0;
-							$find_sub = str_replace(' ', '_', $Subject);
+						if ($Subject) {
+							?>
+							<div class="table_container">
+								<table class="grade_sheet list">
+									<thead>
+										<tr>
+											<th><?php _e('No.', 'educare')?></th>
+											<th><?php _e('Photos', 'educare')?></th>
+											<th><?php _e('Name', 'educare')?></th>
+											<th><?php _e('Roll No', 'educare')?></th>
+											<th><?php _e('Regi No', 'educare')?></th>
+											<?php
+											foreach ($terms as $term => $termInfo) {
+												$title = $subtitle = '';
 
-							foreach($search as $print) {
-								$id = $print->id;
-								$Details = json_decode($print->Details);
-								$sub = json_decode($print->Subject);
+												if (key_exists('title', $termInfo)) {
+													$title = $termInfo['title'];
+												}
+												
+												if (key_exists('subtitle', $termInfo)) {
+													$subtitle = $termInfo['subtitle'];
+													if ($subtitle) {
+														$subtitle = '<br><small>('.esc_html($subtitle).')</small>';
+													}
+												}
+												
+												echo '<th>'. esc_html($title) . $subtitle.'</th>';
+											}
+											?>
 
+											<th class="optional_sub">
+												<div class="action_menu"><i class="dashicons action_button dashicons-info"></i> <menu class="action_link msg text-black"><b><?php _e('Optional Subject</b><hr>If the student or your result system includes an optional subject, please indicate it. Otherwise, you may disregard this field.', 'educare')?></menu></div>
+											</th>
+										</tr>
+									</thead>
+								<?php
+						}
+
+						$serialNo = 1;
+						$sub_in = 0;
+
+						// Student data
+						foreach($search_students as $student) {
+							$id = $student->id;
+							$name = $student->Name;
+							$roll_no = $student->Roll_No;
+							$regi_no = $student->Regi_No;
+							$details = json_decode($student->Details);
+							$others = json_decode($student->Others);
+							$sub = json_decode($student->Subject);
+
+							if ($Subject) {
 								if ($sub) {
-
-									if (property_exists($sub, $find_sub)) {
+									if (property_exists($sub, $Subject)) {
 										$sub_in++;
 										echo '
-										<input type="hidden" name="id[]" value="'.esc_attr( $id ).'">
-										<input type="hidden" name="Class" value="'.esc_attr( $Class ).'">
-										<input type="hidden" name="Exam" value="'.esc_attr( $Exam ).'">
-										<input type="hidden" name="Subject" value="'.esc_attr( $Subject ).'">
-										<input type="hidden" name="Year" value="'.esc_attr( $Year ).'">
 										<tr>
-											<td>'.esc_html( $count++ ).'</td>
-											<td><img src="'.esc_url($Details->Photos).'" class="student-img" alt="IMG"/></td>';
-											foreach ($requred_title as $key => $value) {
-												if ($key == 'Name' || $key == 'Roll_No' || $key == 'Regi_No') {
-													echo '<td>'.esc_html( $print->$key ).'</td>';
+											<td>'.esc_html( $serialNo++ ).'</td>
+											<td><img src="'.esc_url(educare_get_attachment($others->Photos)).'" class="user-img" alt="IMG"/></td>
+											<td>'.esc_html( $name ).'</td>
+											<td>'.esc_html( $roll_no ).'</td>
+											<td>'.esc_html( $regi_no ).'</td>
+											';
+
+											foreach ($terms as $term => $termInfo) {
+												$value = '';
+												if (isset($marks_data[$id][$Subject][$term])) {
+													$value = $marks_data[$id][$Subject][$term];
 												}
+
+												echo '<td>';
+
+												// Select field
+												if ($termInfo['type'] == 'select') {
+													echo '<select name="marks['.esc_attr($term).'][]">';
+													foreach ($termInfo['value'] as $val) {
+														echo '<option value="'.esc_attr($val).'">' . esc_html($val) . '</option>';
+													}
+													echo '</select>';
+												} else {
+													// Input field
+													echo '<input type="' . esc_attr($termInfo['type']) . '" name="marks['.esc_attr($id).']['.esc_attr($Subject).']['.esc_attr($term).']" value="'.esc_attr($value).'">';
+												}
+
+												echo '</td>';
+						
 											}
 
-										echo '<td width="80px"><input type="number" name="marks[]" value="'.esc_attr( educare_get_marks_by_id($id) ).'" placeholder="'.esc_attr( educare_get_marks_by_id($id) ).'" class="full"></td>
-										</tr>
-										';
-									}
+											$value = '';
+											if (isset($marks_data[$id][$Subject]['optional'])) {
+												$value = $marks_data[$id][$Subject]['optional'];
+											}
 
+											echo '<td>
+											<input type="hidden" name="marks['.esc_attr($id).']['.esc_attr($Subject).'][optional]">
+											<input type="checkbox" value="yes" name="marks['.esc_attr($id).']['.esc_attr($Subject).'][optional]" '.checked($value, 'yes', false).'>
+											</td>';
+										echo '</tr>';
+									}
 								}
 
-							}
+							} else {
+								?>
+								<div class="educare-marks">
+									<div class="table_container">
+										<table class="grade_sheet list view_results">
+											<thead>
+												<tr>
+													<th><?php _e('No.', 'educare')?></th>
+													<th><?php _e('Photos', 'educare')?></th>
+													<th><?php _e('Name', 'educare')?></th>
+													<th><?php _e('Roll No', 'educare')?></th>
+													<th><?php _e('Regi No', 'educare')?></th>
+													<th><?php _e('Group', 'educare')?></th>
+												</tr>
+											</thead>
 
+											<tbody>
+												<tr>
+													<?php
+													echo'
+													<td class="student-no">'.esc_html( $serialNo++ ).'</td>
+													<td><img src="'.esc_url(educare_get_attachment($others->Photos)).'" class="user-img" alt="IMG"/></td>
+													<td>'.esc_html( $name ).'</td>
+													<td>'.esc_html( $roll_no ).'</td>
+													<td>'.esc_html( $regi_no ).'</td>
+													<td>'.esc_html( $group ).'</td>
+													';
+													?>
+												</tr>
+											</tbody>
+										</table>
+									</div>
+									<?php
+
+									if (key_exists($id, $marks_data)) {
+										$_POST['marks'][$id] = $marks_data[$id];
+									}
+									
+									// In the above, the $sub is an object. We use get_object_vars() to convert the object into an associative array, and then we apply array_keys() to retrieve the keys from the array. The resulting keys are stored in the $student_sub
+									$student_sub = array_keys(get_object_vars($sub));
+									educare_get_marks_fields('results', $student_sub, $id, 'marks');
+
+								echo '</div>';
+							}
+						}
+
+						if ($Subject) {
 							if (empty($sub_in)) {
-								echo '<tr><td colspan="5">Sorry, no student found in this subject <b>('.esc_html( $Subject++ ).')</b></td></tr>';
+								echo '<tr><td colspan="100">Sorry, no student found in this subject <b>('.esc_html( $Subject++ ).')</b></td></tr>';
 							} else {
 								echo "<div class='notice notice-success is-dismissible'><p># Total ".esc_html($sub_in)." students found in this subject</p><button class='notice-dismiss'></button></div>";
 							}
 
-							?>
-						</table>
-					</div>
-
-					<?php 
-					if ($sub_in) {
+							echo '</table>
+							</div>';
+						}
 						?>
-						<div class="button_container">
-							<input type="submit" name="add_marks" class="educare_button" value="Save Marks">
-							<input type="submit" name="publish_marks" class="educare_button" value="Publish">
-							<input type="button" id="print" class="educare_button" value="&#xf193 Print">
-							<div class="action_menu"><i class="dashicons action_button dashicons-info"></i> <menu class="action_link info"><strong>Mark not visible when print?</strong><br> Please, fill up students marks and save. Then, select <b>Students List</b> and print marksheet (Save then Print).</menu></div>
-						</div>
-						<?php
-
-						$add_marks_nonce = wp_create_nonce( 'add_marks' );
-						$publish_marks_nonce = wp_create_nonce( 'publish_marks' );
-						
-						echo '<input type="hidden" name="add_marks_nonce" value="'.esc_attr($add_marks_nonce).'">';
-						echo '<input type="hidden" name="publish_marks_nonce" value="'.esc_attr($publish_marks_nonce).'">';
-					}
-					?>
+					</div>
+					
+					<div class="button-container">
+						<input type="submit" name="add_marks" class="educare_button" value="Save Marks">
+						<input type="submit" name="publish_marks" class="educare_button" value="Publish">
+						<input type="button" id="print" class="educare_button" value="&#xf02f; Print">
+						<div class="action_menu"><i class="dashicons action_button dashicons-info"></i> <menu class="action_link info"><?php _e('<strong>Mark not visible when print?</strong><br> Please, fill up students marks and save. Then, select <b>Students List</b> again and print marksheet (Save then Print).', 'educare')?></menu></div>
+					</div>
 					
 				</form>
-
-				<script>
-					perPage = document.querySelector('#results_per_page').value; 
-					educarePagination(perPage);
-				</script>
 				<?php
 			} else {
 				echo '<div class="notice notice-error is-dismissible"><p> No student found in this class <b>('.esc_html($Class).')</b>. <a href="/wp-admin/admin.php?page=educare-all-students&add-data" target="_blank">click add students</a></p><button class="notice-dismiss"></button></div>';
@@ -5812,7 +6684,7 @@ function educare_get_students_list($Class = null, $Year = null) {
 
 
 /** 
- * ### Get students by id
+ * Get students by id
  * Get student by specific id
  * 
  * @since 1.4.0
@@ -5822,7 +6694,6 @@ function educare_get_students_list($Class = null, $Year = null) {
  * @param array $sql		for auto sql
  * @return object|array
  */
-
 function educare_get_students($id, $sql = null) {
 	global $wpdb;
 	// Table name
@@ -5842,291 +6713,49 @@ function educare_get_students($id, $sql = null) {
 }
 
 
-/** 
- * ### Students profiles
- * 
- * @since 1.4.0
- * @last-update 1.4.0
- * 
- * @return mixed
+
+/**
+ * Get user data based on ID and role.
+ *
+ * This function retrieves data for a specific user based on their ID and role.
+ * It constructs a database query to fetch the user data from the specified table
+ * corresponding to the given role.
+ *
+ * @param int $id The ID of the user whose data is being retrieved.
+ * @param string $roles The role of the user (default: 'students').
+ * @return object|null The retrieved user data as an object, or null if not found.
  */
+function educare_get_users_data($id, $roles = 'students') {
+	$select = array (
+		'table' => $roles,     			// SELECT * FROM $select
+		'row' => 'id',           		// WHERE $row (need to compare with value)
+		'value' => $id,       			// WHERE $row equal to $value ($row='$value')
+		'get_results' => 'get_row',
+	);
 
-function educare_show_student_profiles() {
-
-	if (isset($_POST['educare_results_by_id'])) {
-		$id = sanitize_text_field($_POST['id']);
-	} elseif (isset($_GET['profiles'])) {
-		$id = sanitize_text_field($_GET['profiles']);
-	} else {
-		$id = false;
-	}
-
-	if ($id and educare_get_students($id)) {
-		$students = educare_get_students($id);
-		$Mobile = $DoB = '';
-		if ($students) {
-			foreach ($students as $students) {
-				$Name = $students->Name;
-				$Roll_No = $students->Roll_No;
-				$Regi_No = $students->Regi_No;
-				$Class = $students->Class;
-				$Group = $students->Group;
-				$Year = $students->Year;
-				$Details = $students->Details;
-				$Details = json_decode($Details);
-				$Photos = $Details->Photos;
-				$Subject = json_decode($students->Subject);
-				$Student_ID = $students->Student_ID;
-
-				if (!$Student_ID) {
-					$Student_ID = $id;
-				}
-
-				if ($Photos == 'URL') {
-					$Photos = EDUCARE_STUDENTS_PHOTOS;
-				}
-
-				if (property_exists($Details, 'Date_of_Birth')) {
-					$DoB = $Details->Date_of_Birth;
-				}
-				if (property_exists($Details, 'Mobile_No')) {
-					$Mobile = $Details->Mobile_No;
-				}
-
-				echo '
-				<div class="educare-card">
-					<div class="card-head">
-						<h2><img src="'.esc_url( $Photos ).'">'.esc_html( educare_check_status('institute') ).'</h2>
-						<!-- <span>Educare School Management Systems</span> -->
-					</div>
-
-					<div class="card-body">
-						<div class="photos">
-							<img src="'.esc_url( $Photos ).'" alt="'.esc_url( $Name ).'">
-						</div>
-
-						<div class="deatails">
-							<li><b>Name</b> <span>'.esc_html( $Name ).'</span></li>
-							<li><b>Roll No</b> <span>'.esc_html( $Roll_No ).'</span></li>
-							<li><b>Reg No</b> <span>'.esc_html( $Regi_No ).'</span></li>
-							<li><b>Class</b> <span>'.esc_html( $Class ).'</span></li>
-							<li><b>Group</b> <span>'.esc_html( $Group ).'</span></li>
-							<li><b>Birthday</b> <span>'.esc_html( $DoB ).'</span></li>
-							<li><b>Mobile</b> <span>'.esc_html( $Mobile ).'</span></li>
-						</div>
-
-						<div class="id">
-							<li><b>ID.</b> <span>'.esc_html( $id ).'</span></li>
-						</div>
-
-						<div class="sign">
-							<small>Signathure</small>
-						</div>
-					</div>
-				</div>
-
-				'.educare_guide_for('<b>Card Title:</b> You can change card title from educare settings.<br><b>Analytics (Under Construction):</b> If you need these (Analytics and Print Card) features, please send your feedback on the Educare plugin forum. If we get recommendation, this feature will be added in the next update.').'
-				';
-
-				?>
-
-				<div class="educare_tabs">
-					<div class="tab_head form_tab">
-						<button class="tablink educare_button" data="Alalytics">Alalytics</button>
-						<button class="tablink" data="Details">Details</button>
-						<button class="tablink" data="Subject">Subject</button>
-						<button class="tablink" data="Old-Data">Old Data</button>
-					</div>
-					
-					<div id="Alalytics" class="section_name" style="display: block;">
-						<div class="add_results">
-							<div class="content">
-								<div class="analytics">
-									<h3>Analytics <div class="action_menu"><i class="dashicons action_button dashicons-info"></i> <menu class="action_link info"><strong>Under Construction</strong><hr> If you need these features, please send your feedback on the Educare plugin forum. If we get 2 requests, this feature will be added in the next update.</menu></div></h3>
-
-									<div class="select add-subject">
-										<div>
-											<b>Last Exam</b><br>
-											<p for="file">Average: 82</p>
-											<progress id="file" value="82" max="100"> 82% </progress><br>
-											<p for="file">Position: 10/85</p>
-											<progress class="position" id="file" value="10" max="85"> 10% </progress><hr>
-										</div><div>
-											<b>Curent Status</b><br>
-											<p for="file">Average: 76</p>
-											<progress id="file" value="76" max="100"> 76% </progress><br>
-											<p for="file">Position: 15/85</p>
-											<progress class="position" id="file" value="12" max="85"> 15 </progress><hr>
-										</div>
-									</div>
-
-									<div class="select add-subject">
-										<div>
-											<b>Exam Details</b><br>
-											<p for="file">Exam participation: 3/3</p>
-											<progress id="file" value="3" max="3"> 100% </progress>
-											<p for="file">Passed: 2/3</p>
-											<progress id="file" value="2" max="3"> 66% </progress><br>
-										</div>
-									</div>
-								</div>
-							</div>
-						</div>
-					</div>
-
-					<div id="Details" class="section_name" style="display: none;">
-						<div class="add_results">
-							<div class="content">
-								<table>
-									<?php
-									$count = 1; // for add specific tags (div/tr/ul) in every 4 foreach loop
-
-									foreach ($Details as $key => $value) {
-										if ($key == 'Photos') {
-											break;
-										}
-										if ($count%2 == 1) {  
-											echo "<tr>";
-										}
-											
-										echo "<td>".esc_html(str_replace('_', ' ', $key))."</td><td>".esc_html($value)."</td>";
-										
-										if ($count%2 == 0) {
-											echo "</tr>";
-										}
-
-										$count++;
-
-									}
-									?>
-								</table>
-								<br>
-								<ul>
-									<li>Class ID: <?php echo esc_html($id)?></li>
-									<li>Student ID: <?php echo esc_html($Student_ID)?></li>
-								</ul>
-
-							</div>
-						</div>
-					</div>
-
-					<div id="Subject" class="section_name" style="display: none;">
-						<div class="add_results">
-							<div class="content">
-								<table class="grade_sheet list">
-									<thead>
-										<tr>
-											<th>No</th>
-											<th>Subject</th>
-										</tr>
-									</thead>
-									<tbody>
-										<?php 
-										$no = 1;
-
-										if ($Subject) {
-											foreach ($Subject as $sub => $optional) {
-												if (strpos($optional, ' ')) {
-													$optional_check = '✓';
-												} else {
-													$optional_check = '';
-												}
-												echo '<tr?><td>'.esc_html($no++).'</td><td>'.esc_html($sub).' '.esc_html($optional_check).'</td></tr>';
-											}
-										} else {
-											echo '<tr><td colspan="2">Empty</td></tr>';
-										}
-										
-										?>
-									</tbody>
-								</table>
-							</div>
-						</div>
-					</div>
-
-					<div id="Old-Data" class="section_name" style="display: none;">
-						<div class="add_results">
-							<div class="content">
-								<table class="grade_sheet list">
-									<thead>
-										<tr>
-											<th>No</th>
-											<th>Class</th>
-											<th>Roll No</th>
-											<th>Regi No</th>
-											<th>Year</th>
-										</tr>
-									</thead>
-									<tbody>
-										<?php 
-										$no = 1;
-										
-										if ($Student_ID) {
-											$s_id = $Student_ID;
-										} else {
-											$s_id = $id;
-											$Student_ID = $id;
-										}
-
-										$sql = array (
-											'id' => $s_id,
-											'Student_ID' => $Student_ID
-										);
-
-										$old_class = educare_get_students($id, $sql);
-										
-										if ($old_class) {
-											foreach ($old_class as $old_data) {
-												$old_id = $old_data->id;
-												$old_class = $old_data->Class;
-												$old_year = $old_data->Year;
-												$old_Roll_No = $old_data->Roll_No;
-												$old_Regi_No = $old_data->Regi_No;
-												$url = admin_url() . 'admin.php?page=educare-all-students&profiles=' . $old_id;
-												
-												if ($old_id != $id) {
-													$old_class = '<a href="'.esc_url($url).'">'.esc_html($old_class).'</a>';
-												}
-
-												echo '<tr?><td>'.esc_html($no++).'</td><td>'.wp_kses_post($old_class).'</td><td class="center">'.esc_html($old_Roll_No).'</td><td class="center">'.esc_html($old_Regi_No).'</td><td class="center">'.esc_html($old_year).'</td></tr>';
-											}
-										} else {
-											echo '<tr><td colspan="5">No more data</td></tr>';
-										}
-													
-										?>
-									</tbody>
-								</table>
-							</div>
-						</div>
-					</div>
-				</div>
-				<?php
-			}
-		}
-	} else {
-		// save forms data
-    echo '<h1>Profiles</h1><div id="msgs" style="text-align:center;">';
-
-		echo '<span style="font-size:100px">&#9785;</span><br>
-		<b>Students Not Fount!</b>';
-
-		echo '</div>';
-	}
+	return educare_get_results($select);
 }
 
 
-/** 
- * ### Save marks from marks forms
- * 
- * @since 1.4.0
- * @last-update 1.4.3
- * 
- * @param bool $publish to publish the results
- * @return mixed|void
- */
 
+/**
+ * Save or publish student marks for a specific class, exam, subject, and year.
+ *
+ * This function handles the process of saving or publishing student marks based on the provided
+ * input data. It checks for access permissions, processes and updates marks data, and provides
+ * appropriate success/error messages. If the $publish parameter is set to true, the function will
+ * publish the marks and update the corresponding results table. If $publish is false, it will only
+ * save the marks to the marks table.
+ *
+ * @since 1.4.0
+ * @last-update 1.4.0
+ * @param bool|null $publish Whether to publish the marks and update results table (true) or save marks only (false).
+ * @return void
+ */
 function educare_save_marks($publish = null) {
+	// check if user access this request
+	educare_check_access('mark_sheet');
+
 	global $wpdb;
 	// Table name
 	$educare_marks = $wpdb->prefix."educare_marks";
@@ -6146,7 +6775,6 @@ function educare_save_marks($publish = null) {
 				$Year
 			)
 		);
-	
 
 		if(count($search) > 0) {
 			foreach($search as $print) {
@@ -6154,17 +6782,20 @@ function educare_save_marks($publish = null) {
 				$Class = $print->Class;
 				$Exam = $print->Exam;
 				$Year = $print->Year;
+				
 				$details = $print->Marks;
 				$details = json_decode($details, TRUE);
 			}
 		}
 
-		$count = $count_students = 0;
-		$students = array();
-		foreach ($_POST['id'] as $value) {
-			// $marks[$value]['Englis'] = $_POST['marks'][$count++];
-			$details[$value][$Subject] = sanitize_text_field($_POST['marks'][$count++]);
-			$students[$value] = educare_get_students($value);
+		foreach ($_POST['marks'] as $student_id => $marks) {
+			// for single subject
+			if ($Subject) {
+				$details[$student_id][$Subject] = $_POST['marks'][$student_id][$Subject];
+			} else {
+				// for multiple sublect
+				$details[$student_id] = $_POST['marks'][$student_id];
+			}
 		}
 
 		$data = array (
@@ -6175,75 +6806,90 @@ function educare_save_marks($publish = null) {
 			'Status' => 'pending'
 		);
 
-		if ($publish) { 
-			$count = 1;
-			$updated = $new = 0;
+		if ($publish) {
+			$count = $updated = $new = $error = 0;
+			$unset = array (
+				'id',
+				'Student_ID',
+				'Others'
+			);
 
-			// echo '<pre>';	
-			// print_r($students);	
-			// echo '</pre>';
-			
-			foreach ($details as $key => $value) {
-				if (key_exists($key, $students)) {
-					$print = $students[$key][0];
-
-					// $results_id = $print->id;
-					$Roll_No = $print->Roll_No;
-					$Regi_No = $print->Regi_No;
-
-					// remove id
-					unset($print->id);
-					unset($print->Others);
-					unset($print->Student_ID);
-					$print->Class = $Class;
-					$print->Exam = $Exam;
-					$print->Year = $Year;
-					$print->Subject = json_encode($value);
-					$print->Result = '';
-					$print->GPA = '';
-
-					$print = json_encode($print);
-					$print = json_decode( $print, TRUE );
+			foreach ($details as $student_id => $subject) {
+				$students = educare_get_users_data($student_id);
+				if ($students) {
+					$Roll_No = $students->Roll_No;
+					$Regi_No = $students->Regi_No;
+					
+					foreach ($unset as $key) {
+						if (property_exists($students, $key)) {
+							unset($students->$key);
+						}
+					}
+					
+					$students->Exam = $Exam;
+					$students->Subject = json_encode($subject);
+					$students = json_decode(json_encode($students), TRUE);
 
 					$requred = educare_check_status('display');
-					$requred_fields = educare_combine_fields($requred, array('Name'), $print);
+					$requred_fields = educare_combine_fields($requred, array('Name'), $students);
 					$requred_fields = educare_get_dynamic_sql('results', $requred_fields);
 
-					// $search_results = $wpdb->get_results("SELECT * FROM ".$educare_results." WHERE Regi_No='$Regi_No' AND Class='$Class' AND Exam='$Exam' AND Year='$Year'");
-					$search_results = $wpdb->get_results($requred_fields);
+					$find_results = $wpdb->get_results($requred_fields);
 
-					$coun++;
+					$count++;
 
-					if ($search_results) {
-						foreach ($search_results as $results) {
-							$results_id = $results->id;
-							$wpdb->update($educare_results, $print, array('ID' => $results_id));
-							$updated++;
+					if ($find_results) {
+						foreach ($find_results as $results_data) {
+							// Define the where condition
+							$where = array(
+								// replace with the ID of the row to update
+								'id' => $results_data->id,
+							);
+							// request to processing update
+							$process = $wpdb->update($educare_results, $students, $where);
+							// Check if the update was successful
+							if ( $process === false ) {
+								$error++;
+								// handle error
+							} elseif ( $process == 0 ) {
+								// no rows were updated, handle accordingly (No channges for your update)
+							} else {
+								$updated++;
+								// update was successful, handle accordingly
+							}
 						}
-						
 					} else {
-						$wpdb->insert($educare_results, $print);
-						$new++;
+						$insert = $wpdb->insert($educare_results, $students);
+						if ($insert === false) {
+							$error++;
+							// Error occurred, handle it
+						} else {
+							$new++;
+							// Data inserted successfully
+						}
 					}
 				}
+
 			}
 
 			$data['Status'] = 'published';
 
-			if($coun == $updated) {
+			if($count == $updated) {
 				$msgs = 'updated';
 			} else {
 				$msgs = 'publish';
 			}
 
 			$msgs = "<div class='notice notice-success is-dismissible'><p>
-			Successfully ".esc_html( $msgs )." all (".esc_html( $coun ).") results. <br>
-			<b>Total Students:</b> ".esc_html( $coun )." <br>
-			<b>Updated Students:</b> ".esc_html( $updated )." <br>
-			<b>New Students:</b> ".esc_html( $new )." <br>
+			Successfully ".esc_html( $msgs )." all (".esc_html( $count ).") results. <br>
+			<b>Total Students:</b> ".esc_html( $count )." <br>
+			<b>Updated Results:</b> ".esc_html( $updated )." <br>
+			<b>New Results:</b> ".esc_html( $new )." <br>
+			<b>Error:</b> <span class='error'>".esc_html( $error )."</span> <br>
 			</p><button class='notice-dismiss'></button></div>";
+
 		}
-		
+
 		if ($search) {
 			$wpdb->update($educare_marks, $data, array('ID' => $id));
 		} else {
@@ -6265,41 +6911,18 @@ function educare_save_marks($publish = null) {
 
 
 
-/**
- * Retrieve marks for a specific subject and student ID from the database.
- *
- * The `educare_get_marks_by_id` function is used to retrieve marks for a specific subject and student ID from the database
- * within the Educare theme or plugin. It takes the student ID as a parameter and queries the database to fetch marks based
- * on the provided student ID, class, exam, year, and subject.
- *
- * The function first sanitizes the class, exam, year, and subject values from the `$_POST` array. It then executes a database query
- * to fetch the marks from the table with the prefix 'educare_marks' (assuming it is the correct table name) based on the provided class,
- * exam, and year. The fetched data is stored in the `$marks` variable.
- *
- * If marks are found for the provided student ID and subject combination, the function extracts the marks for that specific subject
- * from the decoded 'Marks' data stored in the database. It returns the marks as a result.
- *
- * @param int $id The student ID for which marks need to be retrieved.
- *
- * @return mixed|null The marks for the specific subject and student ID, if available; otherwise, returns null.
- *
+/** 
+ * Get mark for specific student
+ * 
  * @since 1.4.0
  * @last-update 1.4.0
- * 
- * @example
- * To retrieve marks for a student with ID 123 for a specific subject (e.g., 'Math'):
- * $student_id = 123;
- * $subject = 'Math';
- * $marks = educare_get_marks_by_id($student_id);
- * $math_marks = $marks[$subject];
- *
- * The function will return the marks for the 'Math' subject for the student with ID 123, if available.
+ * @param int $id				select specific students
+ * @return mixed|void
  */
 function educare_get_marks_by_id($id) {
 	global $wpdb;
-	$educare_marks = $wpdb->prefix . "educare_marks";
+	$educare_marks = $wpdb->prefix."educare_marks";
 
-	// Sanitize class, exam, year, and subject values from the $_POST array
 	$Class = sanitize_text_field($_POST['Class']);
 	$Exam = sanitize_text_field($_POST['Exam']);
 	$Year = sanitize_text_field($_POST['Year']);
@@ -6315,26 +6938,17 @@ function educare_get_marks_by_id($id) {
     )
 	);
 
-	if (count($marks) > 0) {
-		// Extract marks for the specific subject and student ID from the decoded 'Marks' data
-		foreach ($marks as $print) {
+	if(count($marks) > 0) {
+		foreach($marks as $print) {
 			$details = $print->Marks;
 			$details = json_decode($details, true);
 		}
-
-		// Check if marks are available for the provided student ID and subject
+		
 		if (isset($details[$id][$Subject])) {
 			return $details[$id][$Subject];
 		}
 	}
-
-	// If no marks found for the provided student ID and subject combination, return null
-	return null;
 }
-
-
-
-
 
 /**
  * AJAX action to process marks for a specific class, group, subject, exam, and year combination.
@@ -6364,7 +6978,7 @@ function educare_get_marks_by_id($id) {
  * @return void The function processes marks for a specific class, group, subject, exam, and year combination and terminates script execution.
  *
  * @since 1.4.0
- * @last-update 1.4.8
+ * @last-update 1.4.0
  * 
  * @example
  * This AJAX action is hooked to the 'educare_process_marks' action.
@@ -6374,14 +6988,9 @@ function educare_get_marks_by_id($id) {
  * It processes marks and performs actions based on the specific AJAX request.
  */
 function educare_process_marks() {
-	// Check user capability to manage options
-	if (!current_user_can('manage_options')) {
-		exit;
-	}
-	
 	// Sanitize and parse necessary data from the AJAX request
 	$action_for = sanitize_text_field($_POST['action_for']);
-	$data_for = sanitize_text_field($_POST['data_for']);
+	$data_for = isset($_POST['data_for']) ? sanitize_text_field($_POST['data_for']) : '';
 	// Remove the backslash
 	$_POST['form_data'] = stripslashes($_POST['form_data']);
 	// parses query strings and sets the parsed values into the $_POST array.
@@ -6392,124 +7001,74 @@ function educare_process_marks() {
 	// Verify the nonce to ensure the request originated from the expected source
 	educare_verify_nonce($action_for, $action_for.'_nonce');
 
-	// Sanitize other data for marks processing
-	$Class = sanitize_text_field($_POST['Class']);
-	$Group = sanitize_text_field($_POST['Group']);
-	$Subject = sanitize_text_field($_POST['Subject']);
-	$Exam = sanitize_text_field($_POST['Exam']);
-	$Year = sanitize_text_field($_POST['Year']);
+	$Class   = isset($_POST['Class']) ? sanitize_text_field($_POST['Class']) : '';
+	$Group   = isset($_POST['Group']) ? sanitize_text_field($_POST['Group']) : '';
+	$Subject = isset($_POST['Subject']) ? sanitize_text_field($_POST['Subject']) : '';
 
-	// Check the specific action requested through AJAX
 	if (isset($_POST['get_Class'])) {
-		// Retrieve options for the 'Class' field based on the selected subject
 		educare_get_options_for_subject('Class', $Class, $Subject);
 	} elseif (isset($_POST['get_Group'])) {
-		// Retrieve options for the 'Group' field based on the selected subject
 		educare_get_options_for_subject('Group', $Group, $Subject);
 	} elseif (isset($_POST['publish_marks'])) {
-		// Publish marks and get updated students' list
 		educare_save_marks(true);
 		educare_get_students_list();
 	} else {
-		// Save marks and get updated students' list
 		educare_save_marks();
 		educare_get_students_list();
 	}
 
-	// Terminate script execution after processing marks and retrieving the students' list
-	// to prevent further output
-	die();
+	die;
 }
 
-// Hook the AJAX action to the 'educare_process_marks' function
 add_action('wp_ajax_educare_process_marks', 'educare_process_marks');
 
 
 
-
-/**
- * AJAX action to process options based on a target field and a specific subject.
- *
- * The `educare_process_options_by` function is an AJAX callback used to process options based on a target field and a specific subject
- * within the Educare theme or plugin. It is triggered when the corresponding AJAX action is called.
- *
- * If the AJAX request is initiated to add a new subject ('add_subject' parameter exists in the form data), the function parses the form data.
- * Otherwise, it retrieves the 'data_for' and 'subject' parameters from the AJAX request and calls the `educare_show_options` function to display
- * the available options for the specified 'data_for' (target field) and 'subject' combination, specifically for the 'Group' field.
- *
- * The function terminates script execution with `die()` after processing the options to prevent any further output.
- *
- * @return void The function processes options based on a target field and a specific subject and terminates script execution.
- *
- * @example
- * This AJAX action is hooked to the 'educare_process_options_by' action.
- * add_action('wp_ajax_educare_process_options_by', 'educare_process_options_by');
- *
- * The function is triggered via AJAX when the 'educare_process_options_by' action is called.
- * It processes options based on a target field and a specific subject.
+/** 
+ * Ajax responce when request for class or group options
+ * 
+ * @since 1.4.0
+ * @last-update 1.4.0
+ * @return mixed
  */
 function educare_process_options_by() {
 	// Check if the current user has the access this request as 'manage_options' capability (typically administrators).
 	educare_check_access();
 
-	// Check if the AJAX request is to add a new subject
-	if (isset($_POST['add_subject'])) {
-		// Parse the form data from the AJAX request
-		wp_parse_str($_POST['form_data'], $_POST);
-	} else {
-		// Retrieve the 'data_for' and 'subject' parameters from the AJAX request
-		$data_for = sanitize_text_field($_POST['data_for']);
-		$subject = sanitize_text_field($_POST['subject']);
-
-		// Call the function to display available options for the specified 'data_for' and 'subject' combination
-		// Specifically, for the 'Group' field
-		educare_show_options($data_for, $subject, 'Group');
-	}
-
-	// Terminate script execution after processing options to prevent further output
-	die();
+	// Verify the nonce to ensure the request originated from the expected source
+	educare_verify_nonce('educare_crud_data');
+	
+	$data_for = isset($_POST['data_for']) ? sanitize_text_field($_POST['data_for']) : '';
+	$subject = isset($_POST['subject']) ? sanitize_text_field($_POST['subject']) : '';
+	
+	educare_show_options($data_for, $subject, 'Group');
+	
+	die;
 }
 
-// Hook the AJAX action to the 'educare_process_options_by' function
 add_action('wp_ajax_educare_process_options_by', 'educare_process_options_by');
 
 
 
-
 /**
- * Generates HTML markup for select options based on a target field and a specific value.
+ * Display options for a given target based on a selected value.
  *
- * The `educare_options_by` function is used to generate HTML markup for select options in the Educare theme or plugin.
- * It takes a 'target' field and a specific 'val' value as parameters and generates a select dropdown with options.
- *
- * The function generates the select dropdown with options by calling the `educare_get_options` function, which retrieves
- * options for the specified target field. The dropdown includes a default 'None (Default)' option and additional options
- * obtained from the `educare_get_options` function.
- *
- * If the target is 'Class', the function also generates an additional select dropdown with ID '[target]_list' for selecting
- * subjects on the 'class/add marks' page. This additional dropdown includes an option 'Select Subject' by default.
- *
- * The function also creates a hidden input field with ID 'old-[target]' to store the original value of the target field.
- *
- * @param string $target The target field for which options are generated (e.g., 'Class', 'Year', 'Group', etc.).
- * @param string $val    The specific value to be selected in the generated dropdown.
- *
- * @return void The function outputs the generated HTML markup for the select dropdown and hidden input field.
+ * This function generates HTML markup to display a select dropdown element containing
+ * options for a specific target, based on a selected value. It is commonly used for generating
+ * dropdowns for classes and subjects, and includes an option to select "None (Default)".
+ * Additionally, it includes an input field to store the old value for comparison.
  *
  * @since 1.4.0
  * @last-update 1.4.0
- * 
- * @example
- * To generate a select dropdown for the 'Class' field with the value '10A':
- * educare_options_by('Class', '10A');
- *
- * The function will generate the select dropdown and hidden input field for the 'Class' field.
+ * @param string $target The target for which options are being generated (e.g., "Class", "Group").
+ * @param string $val The selected value to determine options based on.
+ * @return void
  */
 function educare_options_by($target, $val) {
 	?>
 	<div class="select">
 		<select id="<?php echo esc_attr($target);?>" name="Group" class="form-control">
-			<option value="">None (Default)</option>
+			<option value=""><?php _e('None (Default)', 'educare')?></option>
 			<?php educare_get_options($target, $val);?>
 		</select>
 
@@ -6527,295 +7086,36 @@ function educare_options_by($target, $val) {
 
 
 
-
 /**
- * Displays student results based on specific criteria and handles AJAX requests for result viewing.
+ * Promote students to a new class/year/group based on specified criteria.
  *
- * The `educare_view_results` function is responsible for displaying student results within the Educare theme or plugin.
- * It can be used for both standard result displays and custom result displays (if custom results are enabled and registered).
- *
- * If called through AJAX, the function first checks for reCAPTCHA validation (if enabled) to ensure the request is not from a robot.
- * It then retrieves the required fields for result display and the custom results status. After parsing the form data from the AJAX request,
- * the function generates an SQL query to fetch the matching student results from the database.
- *
- * If results are found, the function either executes the custom result action (if defined) or displays the default result view.
- * If custom results are enabled and an action hook 'educare_custom_results' is registered, it is executed for the custom result view.
- * Otherwise, the function displays the results using the default result view function `educare_default_results`.
- *
- * If no results are found or required fields are missing in the form data, appropriate error messages are displayed.
- * If the function is called through AJAX, it sends a JSON response containing the error message back to the client-side.
- * Otherwise, it displays the error message along with the student search form using `educare_get_search_forms`.
- *
- * @param bool|null $ajax (optional) Indicates if the function is called through AJAX. Default is null.
- *
- * @return void The function displays student results or appropriate error messages based on the form data.
- *
- * @since 1.4.0
- * @last-update 1.4.1
- * 
- * @example
- * To display standard student results:
- * educare_view_results();
- *
- * To handle AJAX requests for result viewing (called through AJAX with $ajax = true):
- * educare_view_results(true);
- *
- * The function is responsible for displaying student results based on specific criteria and handling AJAX requests.
- */
-function educare_view_results($ajax = null) {
-	global $wpdb, $requred_fields, $requred_data, $requred_title;
-	$table_name = $wpdb->prefix . 'educare_results';
-
-	$ignore = array(
-		'Name'
-	);
-
-	$requred = educare_check_status('display');
-	$requred_title = educare_requred_data($requred, true, true);
-	$requred_fields = educare_combine_fields($requred, $ignore);
-	$requred_data = educare_combine_fields($requred);
-	$custom_results = educare_check_status('custom_results');
-
-	
-
-	if (isset($_POST['educare_results']) or isset($_POST['id'])) {
-		// Verify the nonce to ensure the request originated from the expected source
-		educare_verify_nonce();
-
-		// check educare re_captcha status and execute
-		if (educare_check_status('re_captcha') == 'checked') {
-			if (isset($_POST['educare_results'])) {
-				
-				if (isset($_POST['g-recaptcha-response']) and $_POST['g-recaptcha-response'] != "") {
-					$secret = educare_check_status('secret_key');
-					$verifyResponse = file_get_contents('https://www.google.com/recaptcha/api/siteverify?secret=' . $secret . '&response=' . $_POST['g-recaptcha-response']);
-					$responseData = json_decode($verifyResponse);
-					
-					if (! $responseData->success) {
-						$msgs = 'Invalid request!';
-
-						if ($ajax) {
-							$message = array ('message' => $msgs);
-							return wp_send_json($message);
-						} else {
-							echo '<div class="results_form error_notice error">'.esc_html($msgs).'</div>';
-							return educare_get_search_forms(true);
-						}
-					}
-				} else {
-					$msgs = 'Make sure you are not a robot!';
-
-					if ( current_user_can( 'manage_options' ) and educare_check_status('site_key') == '' ) {
-						$msgs .= '<br><br><p class="left-text"><small>Site key is missing! Currently, you have not entered or paste your google recaptcha site key at - <br><a href="'.esc_url( admin_url() ).'/admin.php?page=educare-settings&menu=Security" target="_blank"><code>Educare > Settings > Security > Site Key</code></a><br><br>To ignore these messages, please enter/paste google recaptcha key or disable Google Recaptcha options from educare settings<br><br>(Only admin can view these messages)</small></p>';
-					}
-
-					if ($ajax) {
-						$message = array ('message' => $msgs);
-						return wp_send_json($message);
-					} else {
-						echo '<div class="results_form error_notice error">'.wp_kses_post($msgs).'</div>';
-						return educare_get_search_forms(true);
-					}
-				}
-			}
-		}
-
-		// if everything is ok
-		if (isset($_POST['id'])) {
-			$id = sanitize_text_field($_POST['id']);
-
-			// check if users is admin and can manage_options or not. Beacause, only admin can accsess results by ID
-			if ( current_user_can( 'manage_options' ) ) {
-				$sql = "id='$id'";
-			} else {
-				echo '<div class="results_form error_notice error"><p><h4>Sorry, you are not allowed to access this page.!</h4></p><br><p>Please reload or open this page and try again</p></div>';
-				return;
-			}
-			
-		} else {
-			$sql = educare_get_sql($requred_fields);
-			$id = '';
-		}
-		
-		if (!educare_is_empty($requred_fields) or $id) {
-			$select = "SELECT * FROM $table_name WHERE $sql";
-			$results = $wpdb->get_results($select);
-
-			if ($results) {
-				foreach($results as $print) {
-
-					if ($custom_results == 'checked' and has_action('educare_custom_results')) {
-						return do_action( 'educare_custom_results', $print );
-					} else {
-						return educare_default_results($print);
-					}
-				}
-			} else {
-				$msgs = 'Result not found. Please try again';
-
-				if ($ajax) {
-					$message = array ('message' => $msgs);
-				return wp_send_json($message);
-				} else {
-					echo '<div class="results_form error_notice error">'.esc_html($msgs).'</div>';
-					return educare_get_search_forms(true);
-				}
-			}
-		} else {
-			$msgs = educare_is_empty($requred_fields, 'display', true);
-
-			if ($ajax) {
-				$message = array ('message' => $msgs);
-				return wp_send_json($message);
-			} else {
-				echo '<div class="results_form error_notice error">'.wp_kses_post($msgs).'</div>';
-				return educare_get_search_forms(true);
-			}
-		}
-	} else {
-		educare_get_search_forms(true);
-	}
-}
-
-
-
-
-/**
- * AJAX action to process the viewing of student results.
- *
- * The `educare_proccess_view_results` function is an AJAX callback that handles the request to view student results
- * within the Educare theme or plugin. It is triggered when the corresponding AJAX action is called.
- *
- * The function first verifies the nonce to ensure the request originated from the expected source and to prevent CSRF attacks.
- * After nonce verification, it parses the form data from the AJAX request and sets the 'educare_results' flag to 'educare_results'.
- * Then, it calls the `educare_view_results` function to display the student results based on the provided data.
- *
- * The function terminates script execution with `die()` after calling the view results function to prevent any further output.
- *
- * @return void The function processes the viewing of student results and terminates script execution.
+ * This function handles the process of promoting students to a new class, year, and/or group
+ * based on the provided criteria. It verifies user access, retrieves necessary data, performs
+ * checks, and updates student records as needed.
  * 
  * @since 1.4.0
- * @last-update 1.4.0
- *
- * @example
- * This AJAX action is hooked to the 'educare_proccess_view_results' action for both logged-in and non-logged-in users.
- * add_action('wp_ajax_nopriv_educare_proccess_view_results', 'educare_proccess_view_results');
- * add_action('wp_ajax_educare_proccess_view_results', 'educare_proccess_view_results');
- *
- * The function is triggered via AJAX when the 'educare_proccess_view_results' action is called.
- * It verifies the nonce, processes form data, and displays student results.
- */
-function educare_proccess_view_results() {
-	// Parse the form data from the AJAX request
-	wp_parse_str($_POST['form_data'], $_POST);
-	// Set the 'educare_results' flag to 'educare_results' to indicate viewing results
-	$_POST['educare_results'] = 'educare_results';
-	// Call the function to display the student results based on the provided data
-	educare_view_results(true);
-	
-	// Terminate script execution after displaying student results to prevent further output
-	die();
-}
-
-// Hook the AJAX action to the 'educare_proccess_view_results' function for both logged-in and non-logged-in users
-add_action('wp_ajax_nopriv_educare_proccess_view_results', 'educare_proccess_view_results');
-add_action('wp_ajax_educare_proccess_view_results', 'educare_proccess_view_results');
-
-
-
-
-/**
- * AJAX action to process the promotion of students to a new class.
- *
- * The `educare_proccess_promote_students` function is an AJAX callback that handles form submissions for promoting students
- * to a new class within the Educare theme or plugin. It is triggered when the corresponding AJAX action is called.
- *
- * The function parses the form data from the AJAX request, sets the 'promote' flag to true, and then calls the main promotion
- * function `educare_promote_students()` to process the promotion based on the provided data.
- *
- * The function terminates script execution with `die()` after calling the promotion function to prevent any further output.
- *
- * 
- * @return void The function processes the promotion of students to a new class and terminates script execution.
- * 
- * @since 1.4.0
- * @last-update 1.4.8
- *
- * @example
- * This AJAX action is hooked to the 'educare_proccess_promote_students' action.
- * add_action('wp_ajax_educare_proccess_promote_students', 'educare_proccess_promote_students');
- *
- * The function is triggered via AJAX when the 'educare_proccess_promote_students' action is called.
- * It processes form data and promotes students to a new class.
- */
-function educare_proccess_promote_students() {
-	// Remove the backslash
-	$_POST['form_data'] = stripslashes($_POST['form_data']);
-	// parses query strings and sets the parsed values into the $_POST array.
-	wp_parse_str($_POST['form_data'], $_POST);
-
-	// Set the 'promote' flag to true to initiate the promotion process
-	$_POST['promote'] = true;
-
-	// Call the main promotion function to process the promotion
-	educare_promote_students();
-
-	// Terminate script execution after promotion to prevent further output
-	die();
-}
-
-// Hook the AJAX action to the 'educare_proccess_promote_students' function
-add_action('wp_ajax_educare_proccess_promote_students', 'educare_proccess_promote_students');
-
-
-
-
-
-/**
- * Promotes students to a new class based on specific criteria and displays the promotion results.
- *
- * The `educare_promote_students` function handles the promotion of students to a new class.
- * It processes form submissions and promotes students based on provided criteria, such as the current class, year, and exam results.
- *
- * If the form is submitted with the 'promote' action, the function performs the following steps:
- * 1. Sanitizes and extracts the submitted data for processing.
- * 2. Checks for required fields, such as 'Class' and 'Year', and optionally, 'Group' and 'Promoted_Exam'.
- * 3. Retrieves the list of students that match the specified criteria.
- * 4. Evaluates exam results and checks if students are eligible for promotion based on their results (optional).
- * 5. Updates the student records with the new class, year, and group (if changed) if they meet the promotion criteria.
- * 6. Displays the promotion results with the number of students promoted, already existing students, and failed promotions.
- *
- * The function utilizes various utility functions like `educare_combine_fields`, `educare_check_status`, `educare_check_settings`,
- * `educare_get_sql`, and `educare_guide_for` for processing and displaying the promotion results.
- *
- * @since 1.4.0
- * @last-update 1.4.0
- * 
- * @return void The function processes form submissions, performs promotions, and displays the results accordingly.
- *
- * @example
- * educare_promote_students();
- *
- * The function will process form submissions and display the promotion results accordingly.
+ * @last-update 1.6.0
+ * @return void
  */
 function educare_promote_students() {
-	global $wpdb;
-	$students_table = $wpdb->prefix . 'educare_students';
-	$results_table = $wpdb->prefix . 'educare_results';
-	$status = '';
+	// check if user access this request
+	educare_check_access('performance');
+	// Show banner
+	educare_show_school_banner();
+
+	$status = $Class = $Group = $Exam = $Year = $Promoted_Class = $Promoted_Group = $Promoted_Exam = $Promoted_Year = '';
 
 	if (isset($_POST['promote'])) {
-		// Check user capability to manage options
-		if (!current_user_can('manage_options')) {
-			exit;
-		}
-
 		// Verify the nonce to ensure the request originated from the expected source
 		educare_verify_nonce('educare_promote_nonce');
+		
+		global $wpdb;
+		$students_table = $wpdb->prefix . 'educare_students';
+		$results_table = $wpdb->prefix . 'educare_results';
 
 		$requred = array (
 			'Class',
-			'Year',
+			'Year'
 		);
 		
 		foreach ($_POST as $key => $val) {
@@ -6845,7 +7145,7 @@ function educare_promote_students() {
 			$select = "SELECT * FROM $students_table WHERE $sql";
 			$students = $wpdb->get_results($select);
 			
-			$total = $promoted = $failed = $exist =  0;
+			$total = $promoted = $failed = $no_results_data = $exist =  0;
 
 			if ($students) {
 				$total = count($students);
@@ -6866,15 +7166,28 @@ function educare_promote_students() {
 				$requred_fields = array();
 
 				foreach ($students as $print) {
+					$promote = false;
+					$students_id = $print->id;
 					$id = $print->id;
 					$Student_ID = $print->Student_ID;
 					$Roll_No = $print->Roll_No;
 					$Regi_No = $print->Regi_No;
+					$Group = $print->Group;
+					$School = $print->School;
+
 					$_POST['Promoted_Roll_No'] = $Roll_No;
 					$_POST['Promoted_Regi_No'] = $Regi_No;
 
 					foreach ($requred as $key => $value) {
-						$requred_fields[$key] = $_POST['Promoted_'.$key];
+						if (key_exists('Promoted_'.$key, $_POST)) {
+							$requred_fields[$key] = $_POST['Promoted_'.$key];
+						} else {
+							if (property_exists($print, $key)) {
+								$requred_fields[$key] = sanitize_text_field($print->$key);
+							} else {
+								$requred_fields[$key] = '';
+							}
+						}
 					}
 
 					$sql = educare_get_sql($requred_fields);
@@ -6884,43 +7197,43 @@ function educare_promote_students() {
 					if ($students) {
 						$exist++;
 					} else {
-
 						if ($Exam) {
-							$requred_fields['Exam'] = $Exam;
 							$find_results = array (
 								'Roll_No' => $Roll_No,
 								'Regi_No' => $Regi_No,
 								'Class' => $Class,
 								'Exam' => $Exam,
-								'Year' => $Year,
+								'Year' => $Year
 							);
 
-							$requred = educare_check_status('display');
-							$requred = educare_combine_fields($requred, array('Name'), $find_results);
+							$requred_results_fields = educare_check_status('display');
+							$requred_results_fields = educare_combine_fields($requred_results_fields, array('Name'), $find_results);
 
 							$sql = educare_get_sql($find_results);
 							$select = "SELECT * FROM $results_table WHERE $sql";
 							$results = $wpdb->get_results($select);
 
 							if ($results) {
-
 								if ($status == 'passed') {
 									foreach ($results as $show) {
 										$id = $show->id;
-										$subject = json_decode($show->Subject, true);
-										$promote =  educare_results_status($subject, $id, '', true);
+										// $subject = json_decode($show->Subject, true);
+										$results_status = educare_results_status($show);
+										$results_status = $results_status->GPA;
 
-										if (!$promote) {
+										if ($results_status) {
+											$promote = true;
+										} else {
 											$failed++;
 										}
 									}
 								} else {
 									$promote = true;
 								}
-
+								
 							} else {
 								$promote = false;
-								$failed++;
+								$no_results_data++;
 							}
 
 						} else {
@@ -6929,17 +7242,19 @@ function educare_promote_students() {
 
 						if ($promote) {
 							unset($print->id);
+
 							if ($Student_ID) {
 								$print->Student_ID = $Student_ID;
 							} else {
 								$print->Student_ID = $id;
 							}
+
 							$print->Year = sanitize_text_field($_POST['Promoted_Year']);
 							$new_class = sanitize_text_field($_POST['Promoted_Class']);
 							$print->Class = $new_class;
 
 							// if request to change group
-							$subject = json_decode($print->Subject, true);
+							$subject = json_decode($print->Subject);
 
 							if (isset($_POST['Promoted_Group'])) {
 								$group = sanitize_text_field($_POST['Promoted_Group']);
@@ -6948,59 +7263,53 @@ function educare_promote_students() {
 								$group = $print->Group;
 							}
 
-							$new_group = array();
-							
+							$new_sub = educare_check_settings('Class', $new_class);
+							$add_new_sub = array();
+
+							// add new class subject
+							if ($new_sub) {
+								foreach ($new_sub as $sub) {
+									if (isset($subject->$sub->optional)) {
+										$add_new_sub[$sub]['optional'] = 'yes';
+									} else {
+										$add_new_sub[$sub]['optional'] = '';
+									}
+								}
+							}
+
+							// add new group subject
 							if ($group) {
-								$group = educare_check_settings('Group', $group);
-
-								foreach ($group as $sub) {
-									if (key_exists($sub, $subject)) {
-										array_push($new_group ,$sub);
-									}
-								}
-							}
-
-							$sub = educare_check_settings('Class', $new_class);
-
-							if ($new_group) {
-								$sub = array_merge($sub, $new_group);
-							}
-							
-							$optional = false;
-							if ($subject) {
-								foreach ($subject as $new_sub => $op) {
-									if (strpos($op, ' ')) {
-										$optional = $new_sub;
+								$new_group = educare_check_settings('Group', $group);
+								
+								if ($new_group) {
+									foreach ($new_group as $sub) {
+										if (isset($subject->$sub->optional)) {
+											$add_new_sub[$sub]['optional'] = 'yes';
+										} else {
+											$add_new_sub[$sub]['optional'] = '';
+										}
 									}
 								}
 							}
 							
-							$procces_sub = array();
-							foreach ($sub as $key => $value) {
-								if ($value == $optional) {
-									$procces_sub[$value ] = '1 ';
-								} else {
-									$procces_sub[$value ] = '';
-								}
-							}
-							
-							$print->Subject = json_encode($procces_sub);
-
+							// convert object to json for insert data
+							$print->Subject = json_encode($add_new_sub);
 							// Insert data
 							$print = json_decode(json_encode($print), TRUE);
-							
-							$old_data = sanitize_text_field($_POST['old_data']);
 
-							if ($old_data) {
-								$wpdb->insert($students_table, $print);
-								$modify_msgs = 'promoted';
+							if (isset($_POST['old_data']) && $_POST['old_data'] == 'on') {
+								$modify_msgs = false;
 							} else {
-								$wpdb->update($students_table, $print, array('ID' => $id));
+								// Clean student data
+								$insert_data = $wpdb->update($students_table, $print, array('ID' => $students_id));
 								$modify_msgs = 'update';
 							}
 							
-							// Count promoted data/students
-							$promoted++;
+							if ($insert_data) {
+								// Count promoted data/students
+								$promoted++;
+							}
+							
 						}
 
 					}
@@ -7008,29 +7317,35 @@ function educare_promote_students() {
 				}
 
 				if ($promoted) {
-					$msgs = 'Successfully '.$modify_msgs.' ' . $promoted . ' students';
+					$msgs = sprintf(__('Successfully %s %d students', 'educare'), esc_html($modify_msgs), esc_html($promoted));
 					$success = 'success';
 				} else {
-					$msgs = 'No students found for promote';
+					$msgs = __('No students were found for promotion.', 'educare');
 					$success = 'error';
 				}
 
 				if ($Exam) {
 					$failed = $failed . ' students';
 				} else {
-					$failed = 'Not requred';
+					$failed = 'Not required';
+				}
+				
+				$info = esc_html($msgs) . '<br>';
+				$info .= sprintf(__('Total: %d students', 'educare'), esc_html($total))."<br>
+				".sprintf(__('Promote: %d students', 'educare'), esc_html($promoted));
+
+				if ($exist) {
+					$info .= '<br>'.sprintf(__('Already exist: %d students', 'educare'), esc_html($exist));
+				}
+				if ($Exam) {
+					$info .= '<br>'.sprintf(__('Not Participate: %s', 'educare'), esc_html($no_results_data));
+					$info .= '<br>'.sprintf(__('Failed: %s', 'educare'), esc_html($failed));
 				}
 
-				echo "<div class='notice notice-".esc_html($success)." is-dismissible'><p>
-					".esc_html($msgs)." <br>
-					<b>Total:</b> ".esc_html($total)." students<br>
-					<b>Promote:</b> ".esc_html($promoted)." students<br>
-					<b>Already exist:</b> ".esc_html($exist)." students<br>
-					<b>Failed:</b> ".esc_html($failed)."
-				</p><button class='notice-dismiss'></button></div>";
+				echo educare_show_msg($info);
 				
 			} else {
-				echo educare_guide_for('Students not found');
+				echo educare_show_msg(sprintf(__('%s not found', 'educare'), __('Students', 'educare')));
 			} 
 		} else {
 			echo educare_is_empty($_POST, true);
@@ -7038,67 +7353,125 @@ function educare_promote_students() {
 		
 	}
 	
+	$old_data = 'on';
+	$required = educare_check_status('display');
+	$required_title = educare_requred_data($required, true);
+	
 	?>
-		<div id="educare-form">
+	<div id="educare-form">
 		<form class="add_results" action="" method="post">
 			<div class="content">
 				<?php
-					$nonce = wp_create_nonce( 'educare_promote_nonce' );
-					echo '<input type="hidden" name="nonce" value="'.esc_attr($nonce).'">';
+				// Show page title
+				echo educare_get_page_title('Students', 'promote');
+
+				if (educare_check_status('show_cover_photos') === 'checked') {
+					echo '<div class="cover"><img src="'.esc_url(EDUCARE_URL.'assets/img/achivement.svg').'" alt="Achivement" title="Achivement"/></div>';
+				}
+
+				echo educare_guide_for(__('Here, you can update multiple students\' class, year, group or school with a single click! This feature is especially useful for promoting students from one class to another or making bulk updates.', 'educare'));
 				?>
-				
-				<div class="select">
-					<div>
-						<div>Promote From (Old)</div>
+
+				<div class="row gy-3 mt-3">
+					<div class="col-5 mb-2">
+						<div class="text-center">From</div>
+					</div>
+					<div class="col-2 mb-2">
+						<div class="text-center">
+							<span class="dashicons dashicons-arrow-left-alt"></span>
+							<span class="dashicons dashicons-arrow-right-alt"></span>
+						</div>
+					</div>
+					<div class="col-5 mb-2">
+						<div class="text-center">To</div>
+					</div>
+
+					<!-- Class -->
+					<div class="col-6">
+						<label for="Class" class="form-label"><?php echo sprintf(__('Select %s', 'educare'), __('Class', 'educare'));?></label>
 						<select id="Class" name="Class" class="form-control">
 							<?php educare_get_options('Class', $Class);?>
 						</select>
-
-						<select id="Year" name="Year" class="fields">
-							<?php educare_get_options('Year', $Year);?>
-						</select>
-
-						<select id="Group" name="Group" class="fields">
-						<option value="">All Group</option>
-							<?php educare_get_options('Group', $Group);?>
-						</select>
-
-						<select id="status" name="status" class="fields">
-						<option value="passed" <?php if($status == 'passed') echo 'selected' ?>>Students have passed</option>
-						<option value="participated" <?php if($status == 'participated') echo 'selected' ?>>Participated in the exam</option>
+					</div>
+					<div class="col-6">
+						<label for="Promoted_Class" class="form-label"><?php echo sprintf(__('New %s', 'educare'), __('Class', 'educare'));?></label>
+						<select id="Promoted_Class" name="Promoted_Class" class="form-control">
+							<?php educare_get_options('Class', $Promoted_Class);?>
 						</select>
 					</div>
 
-					<div>
-					<div>To Selected Term (New)</div>
-						<select id="Promoted_Class" name="Promoted_Class" class="form-control">
-							<option value="">Select Class</option>
-							<?php educare_get_options('Class', $Promoted_Class);?>
+					<!-- Year -->
+					<div class="col-6">
+						<label for="Year" class="form-label"><?php echo sprintf(__('Select %s', 'educare'), __('Year', 'educare'));?></label>
+						<select id="Year" name="Year" class="form-control">
+							<?php educare_get_options('Year', $Year);?>
 						</select>
-
-						<select id="Promoted_Year" name="Promoted_Year" class="fields">
-						<option value="">Select Year</option>
+					</div>
+					<div class="col-6">
+						<label for="Promoted_Year" class="form-label"><?php echo sprintf(__('New %s', 'educare'), __('Year', 'educare'));?></label>
+						<select id="Promoted_Year" name="Promoted_Year" class="form-control">
 							<?php educare_get_options('Year', $Promoted_Year);?>
 						</select>
+					</div>
 
-						<select id="Promoted_Group" name="Promoted_Group" class="fields">
-						<option value="">Select Group</option>
-							<?php educare_get_options('Group', $Promoted_Group);?>
+					<!-- Group -->
+					<?php
+					if (key_exists('Group', $required_title)) {
+					?>
+						<div class="col-6">
+							<label for="Group" class="form-label"><?php echo sprintf(__('Select %s', 'educare'), __('Group', 'educare'));?></label>
+							<select id="Group" name="Group" class="form-control">
+								<option value=""><?php echo sprintf(__('All %s', 'educare'), __('Group', 'educare'));?></option>
+								<?php educare_get_options('Group', $Group);?>
+							</select>
+						</div>
+						<div class="col-6">
+							<label for="Promoted_Group" class="form-label"><?php echo sprintf(__('New %s', 'educare'), __('Group', 'educare'));?></label>
+							<select id="Promoted_Group" name="Promoted_Group" class="form-control">
+								<option value=""><?php echo sprintf(__('All %s', 'educare'), __('Group', 'educare'));?></option>
+								<?php educare_get_options('Group', $Promoted_Group);?>
+							</select>
+						</div>
+						<?php
+					}
+					?>
+
+					<!-- Condition -->
+					<div class="col-6">
+						<label for="status" class="form-label"><?php echo sprintf(__('Select %s', 'educare'), __('Condition', 'educare'));?></label>
+						<select id="status" name="status" class="fields">
+							<option value="passed" <?php selected( $status, 'passed' ); ?>><?php _e('Students have passed', 'educare')?></option>
+							<option value="participated" <?php selected( $status, 'participated' ); ?>><?php _e('Participated in the exam', 'educare')?></option>
 						</select>
-
-						<select id="Promoted_Exam" name="Promoted_Exam" class="fields">
-							<option value="">Not Requred</option>
-							<option value="all" disabled>All Exam</option>
+					</div>
+					<div class="col-6">
+						<label for="Promoted_Exam" class="form-label"><?php _e('Requred condition', 'educare');?></label>
+						<select id="Promoted_Exam" name="Promoted_Exam" class="form-control">
+							<option value=""><?php _e('Not required', 'educare');?></option>
+							<option value="all" disabled><?php echo sprintf(__('All %s', 'educare'), __('Exam', 'educare'));?></option>
 							<?php educare_get_options('Exam', $Promoted_Exam);?>
 						</select>
 					</div>
 				</div>
 				
-				<br>
-				<input type="checkbox" name="old_data" checked> Keep old (Class) data
-				<br><br>
+				<div class="p-2 my-3 rounded <?php echo educare_advance_fields();?>">
+					<input type="hidden" name="old_data" value="off">
+					<input id="old_data" type="checkbox" name="old_data" value="on" <?php checked($old_data, 'on' );?> disabled>
+					<label for="old_data"><?php _e('Keep old data', 'educare');?></label>
+					<?php echo educare_advance_fields_badge(false);?>
 
-				<input type="submit" id="promote" name="promote" class="educare_button" value="&#xf118 Promote">
+					<div class="action_menu">
+						<i class="dashicons action_button dashicons-info"></i> <menu class="action_link info"><b>Archive Data</b><hr>Enable this option to archive old data, allowing students and authorities to access past records. Otherwise, the current students data will be removed permanently.</menu>
+					</div>
+				</div>
+
+				<?php
+				// Nonce for this form
+				$nonce = wp_create_nonce( 'educare_promote_nonce' );
+				echo '<input type="hidden" name="nonce" value="'.esc_attr($nonce).'">';
+				?>
+				
+				<button type="submit" name="promote" id="promote" class="btn btn-success"><span class="dashicons dashicons-star-half"></span> <?php echo __('Promote', 'educare');?></button>
 
 			</div>
 		</form>
@@ -7107,40 +7480,293 @@ function educare_promote_students() {
 }
 
 
-/**
- * Enqueues the AJAX script and sets up AJAX parameters for the Educare theme or plugin.
- *
- * The `educare_enqueue_ajax_script` function is responsible for loading the AJAX script required for handling
- * asynchronous requests in the Educare theme or plugin. It also sets up AJAX parameters, such as the URL for
- * the WordPress AJAX handler and a security nonce, which are used for secure communication between the client
- * and server during AJAX requests.
- *
- * The script is enqueued with the handle 'educare-ajax-script' and depends on jQuery, ensuring that jQuery is
- * loaded before this script to prevent compatibility issues.
- *
- * @return void The function enqueues the AJAX script and localizes it with the required AJAX parameters.
- *
- * @example
- * educare_enqueue_ajax_script();
- *
- * The script will be loaded with the following parameters available:
- * - educareAjax.url: The URL to the WordPress AJAX handler (admin-ajax.php) used for AJAX requests.
- * - educareAjax.nonce: A security nonce generated using 'educare_form_nonce', used for verifying the
- * authenticity of AJAX requests and preventing CSRF attacks.
- */
-function educare_enqueue_ajax_script() {
-	// Enqueue the AJAX script and specify its dependencies (jQuery) with version '1.0'.
-	wp_enqueue_script( 'educare-wp', EDUCARE_URL.'assets/js/educare-wp.js', array( 'jquery' ), '1.0', true );
 
-	// Localize the AJAX script with necessary parameters.
-	wp_localize_script( 'educare-wp', 'educareAjax', array(
-			'url'   => admin_url( 'admin-ajax.php' ), // URL to the WordPress AJAX handler.
-			'nonce' => wp_create_nonce( 'educare_form_nonce' ), // Security nonce for AJAX requests.
-	) );
+/** 
+ * Ajax response for promote students form
+ * 
+ * @since 1.4.0
+ * @last-update 1.4.0
+ * 
+ * @return mixed
+ */
+ function educare_proccess_promote_students() {
+	// Remove the backslash
+	$_POST['form_data'] = stripslashes($_POST['form_data']);
+	// parses query strings and sets the parsed values into the $_POST array.
+	wp_parse_str($_POST['form_data'], $_POST);
+	$_POST['promote'] = true;
+	educare_promote_students();
+	die;
 }
 
-add_action( 'admin_enqueue_scripts', 'educare_enqueue_ajax_script' );
-add_action( 'wp_enqueue_scripts', 'educare_enqueue_ajax_script' );
+add_action('wp_ajax_educare_proccess_promote_students', 'educare_proccess_promote_students');
+
+
+
+/**
+ * Check user access based on capabilities.
+ *
+ * This function checks if the current logged-in user has the required capabilities to access a specific feature or page.
+ * It takes an array of capabilities as a parameter and verifies whether the user has the necessary permissions.
+ * If the user does not have the required capabilities, an error message is displayed, and the script execution is terminated.
+ *
+ * @param array $capabilities An array of capabilities required to access the feature or page.
+ * @return void
+ */
+function educare_check_access($capabilities = '') {
+	if ($capabilities) {
+		$capabilities = 'access_educare_'.$capabilities;
+	} else {
+		$capabilities = 'manage_options';
+	}
+
+	// Check if user is admin then no need to check capability
+	if (current_user_can('manage_options')) {
+		return;
+	}
+
+	if (!current_user_can( $capabilities )) {
+		echo educare_guide_for('Sorry, you are not allowed to access this. You need a higher-level permission.', false);
+		die;
+	}
+}
+
+
+
+/**
+ * Retrieve all functions hooked to a specific action.
+ *
+ * Usage
+ * $action_name = 'educare_results_card_template';
+ * $hooked_functions = educare_get_hooked_functions($action_name);
+ * 
+ * Display hooked functions
+ * echo '<pre>';
+ * print_r($hooked_functions);
+ * echo '</pre>';
+
+ * This function retrieves all functions hooked to a specific WordPress action. It accesses the global
+ * `$wp_filter` variable to get the list of hooked functions for the provided action name. The function
+ * returns an array of hooked functions or, if the `$only_function` parameter is set to `true`, it returns
+ * an array containing only the names of the hooked functions without any additional information.
+ *
+ * @param string  $action_name   The name of the WordPress action to retrieve hooked functions for.
+ * @param boolean $only_function Optional. Whether to return only the names of the hooked functions. Default is `false`.
+ * @return array An array of hooked functions or their names.
+ */
+function educare_get_hooked_functions($action_name, $only_function = false) {
+  global $wp_filter;
+  
+  $hooked_functions = array();
+  
+  // Check if the action has hooks
+  if (isset($wp_filter[$action_name]) && !empty($wp_filter[$action_name])) {
+    $hooked_functions = $wp_filter[$action_name];
+  }
+
+	if ($only_function) {
+		$hooked_functions_all = array();
+		$i = 0;
+
+		foreach ($hooked_functions as $priority => $callbacks) {
+			foreach ($callbacks as $callback) {
+				$function_name = '';
+				$is_class_method = is_array($callback['function']) && is_object($callback['function'][0]);
+				
+				// Get the function name or class method name
+				if ($is_class_method) {
+					$function_name = get_class($callback['function'][0]) . '->' . $callback['function'][1];
+				} else {
+					$function_name = $callback['function'];
+				}
+
+				$hooked_functions_all[$i++] = $function_name;
+
+			}
+		}
+
+		return $hooked_functions_all;
+	}
+  
+  return $hooked_functions;
+}
+
+
+
+/**
+ * Displays a list of available template options for a specific template type.
+ *
+ * usage:
+ * educare_show_template('educare_results_card_template');
+ * 
+ * This function generates and displays a list of available template options for a given template type. It is typically used
+ * in the admin panel to allow users to select a template for a specific purpose. The function retrieves hooked functions for
+ * the provided template type, retrieves template information such as title and thumbnail from these functions, and generates
+ * image radio buttons for each template option. Users can then select the desired template option from the list.
+ *
+ * @param string $template The template type to display options for.
+ * @return void
+ */
+function educare_show_template($template = 'educare_results_card_template') {
+	$template_for = sanitize_text_field( str_replace('educare_', '', $template) );
+
+	echo '<div class="template_list">
+		<div class="m-4 text-center">
+			<b>'.esc_html__(ucwords(str_replace('_', ' ', $template_for)), 'educare').'</b>
+			<small class="d-block">'.sprintf(__('You can find more template from <a href="%s" target="_blank">Here</a>', 'educare'), esc_url(EDUCARE_SVR.'/plugins/educare/templates')).'</small>
+		</div>
+		
+		<div class="radio-container">';
+
+			// Replace with the action name you want to retrieve hooked functions for
+			$hooked_functions = educare_get_hooked_functions($template);
+			// Loop through hooked functions and generate image radio buttons
+			// Check active template
+			$active_template = educare_check_status($template_for);
+			
+			foreach ($hooked_functions as $priority => $callbacks) {
+				foreach ($callbacks as $callback) {
+					$function_name = '';
+					$is_class_method = is_array($callback['function']) && is_object($callback['function'][0]);
+					
+					// Get the function name or class method name
+					if ($is_class_method) {
+						$function_name = get_class($callback['function'][0]) . '->' . $callback['function'][1];
+					} elseif ($callback['function'] instanceof Closure) {
+						// $function_name = 'Closure';
+					} else {
+						$function_name = $callback['function'];
+					}
+
+					// Retrieve template details (call the function)
+					$template_info = $template_callback = null;
+
+					if ($callback['function'] instanceof Closure) {
+						// If it's a closure, execute it directly
+						$template_info = $callback['function']('', true);
+					} elseif ($is_class_method) {
+						// If it's a class method, use call_user_func
+						$template_info = call_user_func($callback['function'], '', true);
+					} elseif (is_string($callback['function']) && function_exists($callback['function'])) {
+						// If it's a regular function, call it normally
+						$template_callback = sanitize_text_field($callback['function']);
+						$template_info = $template_callback('', true);
+					}
+
+					// Now $template_info holds the template details
+
+					if (is_array($template_info)) {
+						// get title from hoocked function
+						$advance = key_exists('advance', $template_info) ? $template_info['advance'] : false;
+						$template_title = key_exists('title', $template_info) ? $template_info['title'] : $function_name;
+						// get thumbnail from hoocked function
+						$template_thumbnail = key_exists('thumbnail', $template_info) ? $template_info['thumbnail'] : EDUCARE_TEMPLATE_THUMBNAIL;
+					} else {
+						// get title from hoocked function
+						$template_title = $function_name;
+						
+						// get thumbnail from hoocked function
+						$template_thumbnail = EDUCARE_TEMPLATE_THUMBNAIL;
+					}
+
+					$advance_fields = $advance_badge = '';
+					$template_id = $function_name;
+
+					$template_callback = isset($template_info['callback']) ? sanitize_text_field($template_info['callback']) : $template_callback;
+
+					if (function_exists($template_callback)) {
+						$INSTALLED = 'Activate';
+						$template_status = 'activate';
+					} else {
+						$INSTALLED = 'Install';
+						$template_status = 'install';
+					}
+
+					if ($template_id == $active_template) {
+						$INSTALLED = 'Active';
+						$template_status = 'active';
+					}
+					
+					if ($advance) {
+						$advance_fields = educare_advance_fields();
+						$advance_badge = educare_advance_fields_badge();
+						$INSTALLED = 'Unlock To Premium';
+						$template_status = 'advance-template';
+						$template_id = '';
+					}
+					
+					// Output the image radio button with the function name as the value
+					echo '<input type="radio" id="' . esc_attr($template_id) . '" name="' . esc_attr($template_for) . '" value="' . esc_attr($template_id) . '" '.checked($template_id, $active_template, false).'>';
+					// echo wp_kses_post($advance_badge);
+					echo '<label class="template-info-container" for="' . esc_attr($template_id) . '">
+						<div class="template-item '.esc_attr($advance_fields).'">
+							<img class="template-img" src="'.esc_url($template_thumbnail).'" alt="' . esc_attr($template_title) . '">
+							<div class="template-details">
+								'.wp_kses_post($advance_badge).'
+								<div class="template-info">
+									<b>'.esc_html__( str_replace('_',  ' ', $template_title), 'educare' ).'</b>
+									<p class="pt-3"><span class="template-status py-2 px-3 rounded '.esc_attr($template_status).'">'.esc_html__($INSTALLED, 'educare').'</span></p>
+								</div>
+							</div>
+						</div>
+					</label>';
+				}
+			}
+		echo '</div>';
+	echo '</div>';
+}
+
+
+
+/**
+ * Change event thought Ajax request
+ */
+function educare_change_event() {
+	// parses query strings and sets the parsed values into the $_GET array.
+	wp_parse_str($_POST['form_data'], $_GET);
+	educare_show_attendance(13);
+	die;
+}
+
+add_action('wp_ajax_nopriv_educare_change_event', 'educare_change_event');
+add_action('wp_ajax_educare_change_event', 'educare_change_event');
+
+
+
+/**
+ *  Function to sort array by key
+* @since 1.4.2
+ * @last-update 1.4.2
+ * 
+ * @param $array array for sort
+ * @param $sort_key specific key for sort
+ * @return str
+ */
+function educare_sort_array_by_key($array, $sort_key) {
+  // Find all unique keys across all sub-arrays
+  $allKeys = array();
+  foreach ($array as $item) {
+    $allKeys = array_merge($allKeys, array_keys($item));
+  }
+	
+  $allKeys = array_unique($allKeys);
+
+  // Loop through each sub-array and add missing keys with empty values
+  foreach ($array as &$item) {
+    foreach ($allKeys as $key) {
+      if (!isset($item[$key])) {
+        $item[$key] = 0;
+      }
+    }
+  }
+
+  $key_array = array_column($array, $sort_key);
+  // or SORT_ASC or SORT_DESC
+  array_multisort($key_array, SORT_DESC, $array); 
+  return $array;
+}
+
+
 
 
 /**
@@ -7164,16 +7790,36 @@ add_action( 'wp_enqueue_scripts', 'educare_enqueue_ajax_script' );
  * Your form submission processing code comes here
  * ...
  */
-function educare_verify_nonce($nonce = 'educare_form_nonce', $nonce_field = 'nonce') {
+function educare_verify_nonce($nonce = 'educare_form_nonce', $nonce_field = 'nonce', $get_method = false) {
 	$nonce = sanitize_text_field( $nonce );
 	$nonce_field = sanitize_text_field( $nonce_field );
 
+	$method = $_POST;
+
+	if ($get_method) {
+		$method = $_GET;
+	}
+
 	// check_ajax_referer( 'educare_form_nonce', 'nonce' );
-	if ( ! isset( $_POST[$nonce_field] ) || ! wp_verify_nonce( $_POST[$nonce_field], $nonce ) ) {
+	if ( ! isset( $method[$nonce_field] ) || ! wp_verify_nonce( $method[$nonce_field], $nonce ) ) {
     // Nonce is not valid, handle error or unauthorized access
 		echo educare_show_msg('Invalid Request', false);
 		die;
 	}
+}
+
+
+
+function educare_get_page_title($roles, $page = null) {
+	$display_roles = $roles;
+
+	if ($display_roles == 'teachers') {
+		$display_roles = 'Staff';
+	}
+
+	$display_roles = sprintf(__(ucwords($page).' %s', 'educare'), esc_html__($display_roles, 'educare'));
+	
+	return '<h4 class="mb-4 p-2 text-center">'.esc_html($display_roles).'</h4>';
 }
 
 

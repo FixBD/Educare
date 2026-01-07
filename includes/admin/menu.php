@@ -1,69 +1,81 @@
 <?php
 // Prevent direct access to the file
 if (!defined('ABSPATH')) {
-	exit; // Exit if accessed directly
+  exit; // Exit if accessed directly
 }
 
 /**
- * ### Add menu in admin dashboard
+ * Add menu in admin dashboard
  * 
- * Valited menu are:
+ * == Valited menu are ==
  * - All Students 					(@since 1.2.4)
+ * - All Teachers 					(@since 1.6.0)
  * - All Results 						(@since 1.0.0)
- * - Mark Sheed							(@since 1.2.4)
+ * - Mark Sheet							(@since 1.2.4)
+ * - Attendance							(@since 1.6.0)
  * - Performance						(@since 1.4.0)
  * - Management							(@since 1.4.0)
  * - Settings 							(@since 1.0.0)
  * - About Us								(@since 1.0.0)
  * 
  * @since 1.0.0
- * @last-update 1.4.0
- *
+ * @last-update 1.6.0
  * @return void
  */
 
 function educare_menu() {
-	// make educare main menu and sub menu global for Enqueue style & script (educare_enqueue_styles)
-	global $educare_main_menu, $sub_menu, $slug_hook;
-
-	// main menu
-	// $educare_main_menu = add_menu_page('View Results', 'Educare', 'manage_options','educare-view-results','view_results',plugins_url('/Educare/assets/img/icon.svg'), 2 /*56*/);
+	global $educare_main_menu, $educare_sub_menu, $educare_slug_hook;
 	
-	// Register and render admin bar menu items.
-	$educare_main_menu = add_menu_page('All Students', 'Educare', 'manage_options','educare-all-students','educare_admin_menu','data:image/svg+xml;base64,' . base64_encode( '<svg width="12px" height="16px" viewBox="70 400 470 170" xmlns="http://www.w3.org/2000/svg"><g style="fill:rgb(3,62,68);"><path d="M418.44467,317.9751L418.44467,317.9761C418.31454,317.9751,418.18362,318.0045,418.0635,318.06296L417.35266,318.40884L417.3526,318.40985C365.32846,343.71997,313.3797,368.98102,271.30032,386.8293C229.04695,404.75143,196.74103,415.20093,164.41444,425.65497L164.41443,425.65598C164.00667,425.78683,163.75537,426.19574,163.82216,426.61923L163.82985,426.657L163.82898,426.65802C163.83763,426.69968,163.84933,426.74106,163.86386,426.78107L163.86223,426.78207L256.37198,770.7242C256.436,770.9622,256.59756,771.1617,256.81705,771.2737L256.81738,771.2738C256.86386,771.2975,256.90964,771.31586,256.95883,771.33093L256.95966,771.33124C256.99786,771.34283,257.03592,771.3516,257.07462,771.3578L257.07205,771.35876C261.78156,772.4554,266.05475,773.34814,269.48087,773.84705L269.4881,773.848L269.49045,773.849C269.49478,773.84875,269.49915,773.8495,269.50354,773.8501L269.50256,773.8511C272.11896,774.23016,274.238,774.38074,276.05063,774.38074C279.33698,774.38074,281.5517,773.8826,283.70468,773.399L283.72815,773.393L283.77438,773.3799L283.79715,773.37274L283.8,773.37177L283.81528,773.3662L283.84576,773.35443L283.86096,773.3482L512.7343,674.84485L512.7344,674.8458C513.05396,674.7073,513.2609,674.39294,513.2609,674.0449L513.2609,674.04395L513.2573,673.9877L513.2428,673.87616L513.2319,673.8209L489.66898,584.8936L489.6687,584.8914L489.6684,584.8924L489.66827,584.8909L489.66858,584.8919C489.66064,584.86084,489.6511,584.83136,489.64047,584.80347C489.5751,584.63165,489.4556,584.4819,489.29623,584.37976L489.2961,584.37964C489.1703,584.2991,489.0291,584.25385,488.88504,584.2441L488.88556,584.24506C488.8635,584.24255,488.84665,584.24207,488.82632,584.24207C488.75214,584.24207,488.67755,584.2516,488.6053,584.27057L488.60474,584.27075C488.5572,584.28326,488.50848,584.30066,488.4626,584.3217L488.46228,584.32184L333.14273,655.8152L323.7754,620.2788L479.2356,546.93634C479.54037,546.79254,479.73492,546.4859,479.73492,546.14874L479.73492,546.14777L479.73114,546.0906L479.71613,545.97723L479.7049,545.9211L455.08875,454.59793L455.08902,454.59894C455.0848,454.58215,455.07983,454.5656,455.07465,454.5499L455.07452,454.54953C455.01218,454.36163,454.8867,454.19757,454.71448,454.0883L454.71448,454.08826C454.57263,453.99826,454.41046,453.9527,454.24783,453.9527C454.12143,453.9527,453.9947,453.98022,453.87695,454.03564L299.03003,526.92786L289.7757,492.42322L444.17123,419.1143L444.18542,419.10428L444.17133,419.11423C444.54745,418.93564,444.74448,418.516,444.6416,418.11252L444.64163,418.11353L419.28854,318.63092L419.28854,318.63098C419.22498,318.38138,419.05417,318.17297,418.82257,318.0614L418.82236,318.0624L418.80905,318.05502L418.80685,318.05402L418.80624,318.05374C418.69168,318.00146,418.56778,317.9751,418.44467,317.9751L418.44467,317.9761 Z M299.15012,202.52373C299.12158,202.52373,299.09457,202.53683,299.0769,202.5593L153.61266,387.56842C153.59062,387.59647,153.58652,387.6346,153.6021,387.6667C153.61768,387.69876,153.6502,387.71912,153.68587,387.71912L153.74205,387.70026L335.4563,250.25354C335.47604,250.2386,335.489,250.21642,335.49237,250.19188C335.49573,250.16734,335.4892,250.14249,335.47418,250.1228L299.22418,202.5604C299.20673,202.53748,299.17963,202.52394,299.15082,202.52373 Z M175.00084,399.93527L175.00162,399.93567L175.00133,399.9361L175.00084,399.93527 Z M386.5605,242.71208C386.54074,242.71208,386.52118,242.71835,386.50488,242.73047L174.99736,399.92923C174.97356,399.94693,174.96011,399.97443,174.9598,400.00293L174.95804,400.00394L174.95639,400.0055L174.95639,400.0065C174.95639,400.04172,174.97626,400.0739,175.00772,400.08972C175.02094,400.09637,175.03525,400.09964,175.0495,400.09964C175.06464,400.09964,175.0797,400.09595,175.09329,400.08868L175.09155,400.0897L397.36996,300.8017L397.42352,300.69965L386.65198,242.78818C386.6461,242.75658,386.62436,242.73024,386.59445,242.7185C386.58347,242.71419,386.57193,242.71208,386.5605,242.71208 Z M195.48666,195.87526C195.48425,195.87526,195.48181,195.87535,195.47937,195.87555C195.44275,195.87842,195.41124,195.90256,195.39893,195.93716L130.84758,377.26355C130.83235,377.30634,130.8502,377.35385,130.88985,377.37604C130.90416,377.38403,130.9198,377.3879,130.93529,377.3879C130.96269,377.3879,130.98961,377.37582,131.00783,377.3532L228.45763,256.4289L228.47824,256.37045L228.47824,256.36945L228.4669,256.3249L195.56845,195.92386C195.55206,195.89375,195.52057,195.87526,195.48666,195.87526 Z"/><path d="M241.50781,414.64383L241.50781,414.64383C218.82147,421.0603,194.89359,427.8817,172.95348,427.8817L172.95348,427.8817C167.60866,427.8817,162.32112,427.48068,157.1406,426.55792L157.14058,426.55792C130.74681,421.8565,108.51447,403.81027,100.10656,385.8829L100.10656,385.8829C91.31412,367.13565,98.15517,349.59073,103.47302,335.28223L115.339874,342.00574C107.51638,351.77734,101.0783,360.02,98.9522,369.55496L98.9522,369.55496C96.78854,379.2584,98.90639,390.98636,101.51134,404.662L101.40205,404.18198L177.40723,690.4541L176.9405,689.2008L176.97914,689.2801L176.97849,689.27875C186.47623,708.7587,195.19281,726.33435,208.5177,737.27637L208.51772,737.27637C221.82913,748.20734,240.30814,752.9766,260.82526,758.12885C264.52524,759.058,266.77145,762.81067,265.84232,766.5106C264.91318,770.2106,261.16055,772.4568,257.46057,771.52765L257.46057,771.52765C237.70453,766.5665,215.90948,761.22217,199.7505,747.9529L199.75052,747.9529C183.64603,734.72833,173.70474,714.08716,164.56094,695.33307L164.56029,695.3317L164.52165,695.25244C164.32626,694.8517,164.16972,694.4315,164.05493,693.99915L164.05493,693.99915L88.04977,407.72702C88.007645,407.56836,87.97119,407.40826,87.940475,407.247L87.940475,407.247C85.4929,394.39755,82.55814,379.6004,85.46847,366.54837L85.46847,366.54837C88.41636,353.32785,97.17857,342.58545,104.55562,333.37146C106.67499,330.72437,110.402435,330.00714,113.3528,331.67874C116.30316,333.35034,117.603806,336.91638,116.42247,340.09497L116.42247,340.09497C110.76952,355.30505,106.639915,367.2786,112.61416,380.01688L112.61416,380.01688C118.973015,393.57523,137.24487,408.9817,159.56322,412.95715L159.5632,412.95715C163.82861,413.71692,168.29494,414.06683,172.95348,414.06683L172.95348,414.06683C192.59685,414.06683,214.55179,407.9111,237.74799,401.35043C241.41885,400.3122,245.23636,402.44635,246.2746,406.11722C247.31284,409.7881,245.17868,413.6056,241.50781,414.64383 Z"/></g></svg>' ), 4 );
+	// Register and render educare main menu items for admin dashboard.
+	$educare_main_menu = add_menu_page(
+		__('All Students', 'educare'),
+		'Educare',
+		'manage_options',
+		'educare-all-students',
+		'educare_admin_menu',
+		'data:image/svg+xml;base64,' . base64_encode( '<svg xmlns="http://www.w3.org/2000/svg" width="300" height="300"><g fill="#033e44"><path d="M208.1 63.8q-.1 0-.2.1l-.3.1-75.2 35.2c-21.8 9.3-38.4 14.6-55 20q-.1 0-.2.1 0 0-.1.1 0 .1 0 .1 0 .1 0 .2 0 0 0 .1l47.6 177q0 0 0 .1.1 0 .1 0 0 .1.1.1 0 0 0 .1 0 0 .1 0 0 0 0 0 0 0 .1 0c2.4.6 4.6 1 6.4 1.3 1.3.2 2.4.3 3.3.3 1.7 0 2.9-.3 4-.6h.1l117.7-50.7q.3-.1.3-.4v-.1l-12.1-45.8q0 0-.1 0 0-.1 0-.1 0 0 0 0 0-.1-.1-.1 0 0 0 0-.1 0-.1-.1 0 0 0 0-.1 0-.1 0 0 0 0 0 0 0-.1 0 0 0 0 0 0 0 0 0-.1 0-.1 0 0 0 0 0l-80 36.8-4.8-18.2 80-37.8q0 0 .1-.1 0 0 .1-.1 0 0 0-.1 0 0 0-.1v-.1l-12.6-47q-.1-.1-.1-.1 0-.1 0-.1 0 0-.1 0 0-.1 0-.1-.1 0-.1 0-.1 0-.1 0-.1-.1-.1 0-.1 0-.1 0l-79.7 37.5-4.8-17.7 79.5-37.8q0 0 .1-.1 0 0 .1-.1 0 0 0-.1 0-.1 0-.2l-13-51.2q0 0-.1 0 0-.1 0-.1 0-.1-.1-.1 0 0-.1 0-.1-.1-.2-.1z"/><path d="M117.1 113.5c-11.7 3.4-24 6.9-35.3 6.9q-4.1 0-8.2-.7c-13.5-2.4-25-11.7-29.3-21-4.5-9.6-1-18.6 1.8-26l6 3.5c-4 5-7.3 9.2-8.4 14.2s0 11 1.3 18v-.2l39.1 147.3-.3-.7.1.1c4.9 10 9.3 19 16.2 24.7 6.8 5.6 16.3 8.1 26.9 10.7q.7.2 1.3.6.6.4.9 1 .4.6.5 1.3.1.7-.1 1.4-.2.7-.6 1.2-.4.6-1 1-.6.4-1.3.5-.7.1-1.4-.1c-10.2-2.6-21.4-5.3-29.7-12.1-8.3-6.9-13.4-17.5-18.1-27.1h-.1q-.1-.4-.2-.7L38.1 110q0-.1-.1-.3c-1.2-6.6-2.7-14.2-1.2-20.9 1.5-6.8 6-12.3 9.8-17.1.5-.6 1.3-1.1 2.1-1.3.9-.1 1.7 0 2.4.5a3.14 3.14 0 0 1 1.6 1.8c.3.8.3 1.7 0 2.5-2.9 7.8-5 14-2 20.5 3.3 7 12.7 14.9 24.2 17q3.3.6 6.9.6c10.1 0 21.4-3.2 33.3-6.6q.7-.2 1.4-.1.7.1 1.3.4.7.3 1.1.9.4.6.6 1.2.2.7.1 1.4-.1.8-.4 1.4-.3.6-.9 1-.6.5-1.2.6z"/></g><path d="M146.7 4.4q0 0 0 0L71.8 99.6q0 0 0 .1 0 0 .1 0L165.4 29q0-.1 0-.1 0 0 0 0L146.8 4.4q0 0-.1 0z" fill="#d10f0f"/><path fill-rule="evenodd" d="M191.7 25.1q0 0 0 0L82.8 106q0 0 0 0 0 .1 0 .1.1 0 .1 0L197.3 55v-.1l-5.6-29.8q0 0 0 0zM82.8 106z" fill="#f80000"/><path d="M93.4 1q-.1 0-.1 0L60.1 94.3q0 0 .1.1 0 0 0 0l50.2-62.3L93.4 1q0 0 0 0z" fill="#b40c0c"/></svg>' ),
+		4
+	);
 	
-	$slug_hook = array();
+	$educare_slug_hook = array();
 	// Create submenu
-	$sub_menu = array(
+	$educare_sub_menu = array(
 		'All Students',
+		'All Teachers',
 		'All Results',
-		'Mark Sheed',
+		'Mark Sheet',
+		'Attendance',
 		'Performance',
 		'Management',
 		'Settings',
+		'License Key',
 		'About Us'
 	);
 
 	// Apply submenu
-	foreach ($sub_menu as $value) {
+	foreach ($educare_sub_menu as $value) {
 		$slug = 'educare-'.str_replace(' ', '-', strtolower($value));
-		// $callback = str_replace(' ', '_', strtolower($value));
+		$menu_title = $value;
+
+		if ($value == 'All Teachers') {
+			$menu_title = 'All Staff List';
+		}
 		
 		add_submenu_page(
 			'educare-all-students',           // parent slug
-			$value,            								// page title
-			$value,         									// menu title
+			__($value, 'educare'),            // page title
+			__($menu_title, 'educare'),       // menu title
 			'manage_options',         				// capability
 			$slug,		 												// slug
 			'educare_admin_menu'        			// callback
 		);
 		
-		array_push($slug_hook, 'educare_page_'.$slug);
+		array_push($educare_slug_hook, 'educare_page_'.$slug);
 	}
-
 }
 
 add_action("admin_menu", "educare_menu");
+
 
 /**
  * ### Function for menu callback
@@ -77,21 +89,25 @@ add_action("admin_menu", "educare_menu");
  */
 
 function educare_admin_menu() {
-	global $sub_menu;
-	$sub_menu = array_map('strtolower', $sub_menu);
+	global $educare_sub_menu;
+	$educare_sub_menu = array_map('strtolower', $educare_sub_menu);
 	$slug = '';
 
 	if (isset($_GET['page'])) {
 		$slug = sanitize_text_field( $_GET['page'] );
 	}
 
-	foreach ($sub_menu as $page) {
+	foreach ($educare_sub_menu as $page) {
 		$page = str_replace(' ', '-', $page);
+
 		if ("educare-$page" == $slug) {
 			echo '<div id="educare-loading"><div class="educare-spinner"></div></div>';
+			$old_db = educare_update_database(true);
 			
 			if (educare_database_check('educare_settings')) {
 				educare_database_error_notice(true, 'educare_settings');
+			} elseif ($old_db == true) {
+				educare_database_error_notice(true, 'general_update');
 			} else {
 				// Auto fix if anythink wrong in educare database
 				echo educare_ai_fix();
@@ -103,6 +119,49 @@ function educare_admin_menu() {
 }
 
 
+/**
+ * ### Educare Notifications
+ * 
+ * @since 1.6.0
+ * @last-update 1.6.0
+ * 
+ * @return void
+ */
+add_filter('cron_schedules', function ($schedules) {
+	if (!isset($schedules['educare_svr_315am'])) {
+		$schedules['educare_svr_315am'] = array(
+			'interval' => 86400,
+			'display'  => '',
+		);
+	}
+	
+	return $schedules;
+});
+
+add_action('init', function() {
+	if (!wp_next_scheduled('educare_svr_event')) {
+		$timestamp = strtotime('3:15:00 am');
+		wp_schedule_event($timestamp, 'educare_svr_315am', 'educare_svr_event');
+	}
+});
+
+
+
+/**
+ * ### Educare deactivation hook
+ * 
+ * @since 1.6.0
+ * @last-update 1.6.0
+ * 
+ * @return void
+ */
+function educare_deactivation_hook() {
+	wp_clear_scheduled_hook('educare_svr_event');
+	educare_clear_dismissed_notices();
+	delete_option('educare_svr_data');
+  do_action('educare_activation_actions');
+}
+
 
 /**
  * ### Educare enqueue style & javascript
@@ -110,52 +169,58 @@ function educare_admin_menu() {
  * Load CSS, JS to specific pages from created menu and submenu ( only for Educare pages )
  * 
  * @since 1.0.0
- * @last-update 1.2.4
+ * @last-update 1.6.0
  * 
  * @param mixed $hook
  * @return void
  */
-
-function educare_enqueue_styles( $hook) {
-	// globalize educare main menu and sub menu '$slug_hook'
-	global $educare_main_menu, $slug_hook;
+function educare_enqueue_styles($hook) {
+	// globalize educare main menu and sub menu '$educare_slug_hook'
+	global $educare_main_menu, $educare_slug_hook, $post_type;
 	// add main (main menu) page
-	array_push($slug_hook, $educare_main_menu);
+	array_push($educare_slug_hook, $educare_main_menu);
+
+	// for widget
+	wp_enqueue_style('educare-widget', EDUCARE_URL.'assets/css/educare-widget.css');
 
 	// ignore educare style and script if not a educare page
-	if ( !in_array($hook, $slug_hook) ) {
-			return;
+	if ( in_array($hook, $educare_slug_hook) ) {
+		// Educare stylesheet
+		wp_enqueue_style('bootstrap', EDUCARE_URL.'assets/css/bootstrap.min.css');
+		wp_enqueue_style('educare-cleanup', EDUCARE_URL.'assets/css/educare-cleanup.css', array('bootstrap'), '', 'all');
+		wp_enqueue_style('educare', EDUCARE_URL.'assets/css/educare.css', array('bootstrap'), '', 'all');
+		wp_enqueue_style('educare-results', EDUCARE_URL . 'assets/css/results.css', array('educare'), '2.0', 'all');
+		wp_enqueue_style('educare-import-system', EDUCARE_URL.'assets/css/import-system.css', array('educare'), '', 'all');
+		wp_enqueue_style('clone-field', EDUCARE_URL.'assets/css/clone-field.css');
+		// for educare file selector
+		wp_enqueue_media();
+		
+		// JavaScript link
+		wp_enqueue_script('educare-admin', EDUCARE_URL.'assets/js/educare.js', array('jquery'), '2.0', true);
+		wp_enqueue_script('cloneField', EDUCARE_URL.'assets/js/clone-field.js');
+		wp_enqueue_script('unsaved-changes-script', EDUCARE_URL.'assets/js/unsaved-changes.js', array('jquery'), '2.0', true);
+		wp_enqueue_script('educare-default-import-system', EDUCARE_URL.'assets/js/educare-default-import-system.js', array('educare-admin'), '2.0', true);
+
+		wp_enqueue_script('bootstrap', EDUCARE_URL.'assets/js/bootstrap.bundle.min.js', array('jquery'), '5.3.3', true);
+
+		if ($hook == 'educare_page_educare-license-key') {
+			wp_enqueue_script('recaptcha-v2', 'https://www.google.com/recaptcha/api.js', array(), null, true);
+		}
+
+		wp_localize_script( 'educare-admin', 'educareSettings', array(
+			'advance'   => educare_esc_str(educare_check_status('advance')),
+			'confirmation' => educare_check_status('confirmation'),
+			'db_error' => educare_guide_for('db_error', false),
+			'photos' => educare_check_status('photos'),
+			'group_subject' => educare_check_status('group_subject'),
+		) );
+
+		wp_localize_script( 'educare-admin', 'educareNonce', array(
+			'edit_grade_system' => wp_create_nonce( 'edit_grade_system' ),
+		) );
 	}
-
-	// Educare stylesheet
-	wp_enqueue_style('educare', EDUCARE_URL.'assets/css/educare.css');
-	wp_enqueue_style('clone-field', EDUCARE_URL.'assets/css/clone-field.css');
-	// for educare file selector
-	wp_enqueue_media();
-	
-	// JavaScript link
-	wp_enqueue_script('jquery'); // That's men script now place at the bottom
-	wp_enqueue_script('educare-admin', EDUCARE_URL.'assets/js/educare.js', array('jquery'), '1.0', true);
-	wp_enqueue_script('e-pagination', EDUCARE_URL.'assets/js/paginate.js');
-	wp_enqueue_script('cloneField', EDUCARE_URL.'assets/js/clone-field-1.0.js');
-
-	wp_localize_script( 'educare-admin', 'educareSettings', array(
-		'advance'   => educare_esc_str(educare_check_status('advance')),
-		'confirmation' => educare_check_status('confirmation'),
-		'db_error' => educare_guide_for('db_error', '', false),
-		'photos' => educare_check_status('photos'),
-		'group_subject' => educare_check_status('group_subject'),
-	) );
-
-	wp_localize_script( 'educare-admin', 'educareNonce', array(
-		'demo_nonce' => wp_create_nonce( 'educare_demo_nonce' ),
-		'edit_grade_system' => wp_create_nonce( 'edit_grade_system' ),
-	) );
 	
 }
 
 add_action( 'admin_enqueue_scripts', 'educare_enqueue_styles');
 
-
-
-?>
